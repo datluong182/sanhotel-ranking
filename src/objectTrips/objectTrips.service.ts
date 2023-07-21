@@ -3,9 +3,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Paging } from '../app.dto';
 import { tbObjectTrips } from '@prisma/client';
 import { CreateObjectTrip } from './objectTrips.dto';
-import { Builder, WebDriver } from 'selenium-webdriver';
+import { Builder, WebDriver, By } from 'selenium-webdriver';
 import { Options } from 'selenium-webdriver/chrome';
 import { GetElement, GetElements } from 'src/utils';
+import axios from 'axios';
+
+const token = process.env.TOKEN_HUBSPOT;
 
 @Injectable()
 export class ObjectTripsService {
@@ -14,6 +17,17 @@ export class ObjectTripsService {
   }
 
   async getAllObjectTrips(query: Paging): Promise<tbObjectTrips[]> {
+    console.log('get');
+    const response = await axios.get(
+      'https://api.hubapi.com/analytics/v2/reports/social-assists/total',
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+    console.log(response, 'hubspot');
     return await this.prismaService.tbObjectTrips.findMany({
       where: {
         ...query.cond,
@@ -33,13 +47,14 @@ export class ObjectTripsService {
       // .addArguments('headless');
       driver = await new Builder()
         .usingServer('http://localhost:4444/wd/hub')
-        .forBrowser('chrome')
+        .forBrowser('firefox')
         .setChromeOptions(option)
         .build();
       console.log(data.url);
       // await driver.sleep(100000000);
       await driver.get(data.url);
       console.log('get name');
+
       const titleEle = await GetElement(driver, '//h1[@id="HEADING"]');
       if (!titleEle) {
         throw new HttpException(
@@ -50,7 +65,7 @@ export class ObjectTripsService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const name = titleEle.getText();
+      const name = await titleEle.getText();
 
       console.log('get score');
       const scoreReviewEle = await GetElement(
@@ -92,17 +107,47 @@ export class ObjectTripsService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const totalReview = totalReviews[1].getText();
+      const totalReviewText = await totalReviews[1].getText();
 
-      console.log(name, scoreReview, totalReview);
+      const totalReview = parseInt(
+        totalReviewText.replaceAll(',', '').split(' ')?.[0],
+      );
+
+      const rankingEles = GetElements(
+        driver,
+        '//div[@class="ui_column  "]/span[contains(text(), "#")]',
+      );
+      if (!rankingEles) {
+        throw new HttpException(
+          {
+            status: HttpStatus.BAD_REQUEST,
+            detail: 'Không tìm thấy rank reviews',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      let rankings = [];
+      const arrRankingEles = await rankingEles;
+      for (let i = 0; i < arrRankingEles.length; i++) {
+        rankings = rankings.concat(await arrRankingEles[i].getText());
+      }
+
+      console.log(name, scoreReview, totalReview, rankings);
+      const newObjectTrip = await this.prismaService.tbObjectTrips.create({
+        data: {
+          name,
+          url: data.url,
+          scoreReview,
+          totalReviews: totalReview,
+          rank: rankings,
+        },
+      });
+      await driver.quit();
+      return newObjectTrip;
     } catch (e) {
       console.log(e, 'error');
     }
-    // const newObjectTrip = await this.prismaService.tbObjectTrips.create({
-    //   data: {
 
-    //   }
-    // });
     await driver.quit();
     return undefined;
   }

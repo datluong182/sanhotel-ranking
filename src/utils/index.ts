@@ -5,12 +5,9 @@ export const GetElement = async (
   xpath: string,
 ) => {
   try {
-    return driver.findElement(By.xpath(xpath));
+    return await driver.findElement(By.xpath(xpath));
   } catch (e) {
-    console.log('Cannot find element');
-    return null;
-  } finally {
-    console.log('Cannot find element');
+    console.log('Cannot find element', e);
     return null;
   }
 };
@@ -20,11 +17,8 @@ export const GetElements = async (
   xpath: string,
 ): Promise<WebElement[]> => {
   try {
-    return driver.findElements(By.xpath(xpath));
+    return await driver.findElements(By.xpath(xpath));
   } catch (e) {
-    console.log('Cannot find elements');
-    return null;
-  } finally {
     console.log('Cannot find elements');
     return null;
   }
