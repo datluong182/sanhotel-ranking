@@ -1,0 +1,17 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model tbObjectTrips {
+  id           Int    @id @default(autoincrement())
+  name         String
+  url          String
+  rank         Json[]
+  scoreReview  Int
+  totalReviews Int
+}

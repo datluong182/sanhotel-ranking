@@ -1,0 +1,82 @@
+version: '3'
+services:
+  # app:
+  #   restart: on-failure
+  #   build:
+  #     context: .
+  #     dockerfile: ./Dockerfile
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - postgres-db
+  #   environment:
+  #     DATABASE_URL: postgres://postgres:123qwe123@postgres:5432/crawl_db?connection_limit=200
+  #     APIFY_KEY: apify_api_xGJfdAmgr2DnRmTmqGhMt3hhiV3rpS3qUi1l
+  #     DATABASE_USERNAME: postgres
+  #     DATABASE_PASSWORD: 123qwe123
+  #     DATABASE_DB: crawl_db
+  #     DATABASE_PORT: 5432
+  #     DATABASE_HOST: postgres-db
+  #   command: bash -c "npx prisma migrate dev --name init --schema=./database/schema.prisma && npm run start:dev"
+  #   ports:
+  #     - '3000:3000'
+  #   volumes:
+  #     - .:/app/
+  #     - /app/node_modules
+  # chrome:
+  #   image: selenium/node-chrome:beta
+  #   shm_size: 2gb
+  #   depends_on:
+  #     - selenium-hub
+  #   environment:
+  #     - SE_EVENT_BUS_HOST=selenium-hub
+  #     - SE_EVENT_BUS_PUBLISH_PORT=4442
+  #     - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+
+  chrome:
+    image: selenium/node-chrome:4.10.0-20230607
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+  selenium-hub:
+    image: selenium/hub:latest
+    container_name: selenium-hub
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+  postgres-db:
+    image: postgres:12
+    container_name: postgres
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123qwe123
+      POSTGRES_DB: crawl_db
+    command: postgres -c 'max_connections=1000'
+    env_file:
+      - .env
+    # expose:
+    #   - '5433'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: buituan@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+volumes:
+  pgadmin-data:
+  postgres:
+    name: crawl_db
