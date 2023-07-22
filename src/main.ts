@@ -7,11 +7,7 @@ declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const whitelist = [
-    'http://localhost:8000',
-    'http://localhost:3001',
-    'https://crawlreview.vercel.app',
-  ];
+  const whitelist = ['http://localhost:8001'];
   app.enableCors({
     origin: function (origin, callback) {
       if (!origin || whitelist.indexOf(origin) !== -1) {
@@ -25,7 +21,7 @@ async function bootstrap() {
     .setTitle('API')
     .setDescription('APIs crawl score review')
     .setVersion('1.0')
-    .addTag('object-reviews')
+    .addTag('object-trips')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
@@ -35,7 +31,7 @@ async function bootstrap() {
     }),
   );
   console.log('app started !!!');
-  await app.listen(8000);
+  await app.listen(8001);
 
   if (module.hot) {
     module.hot.accept();

@@ -7,8 +7,12 @@ import { Builder, WebDriver, By } from 'selenium-webdriver';
 import { Options } from 'selenium-webdriver/chrome';
 import { GetElement, GetElements } from 'src/utils';
 import axios from 'axios';
+import { ObjectTrip } from './objectTrips.entity';
+import { Cron } from '@nestjs/schedule';
 
 const token = process.env.TOKEN_HUBSPOT;
+
+const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
 
 @Injectable()
 export class ObjectTripsService {
@@ -17,17 +21,17 @@ export class ObjectTripsService {
   }
 
   async getAllObjectTrips(query: Paging): Promise<tbObjectTrips[]> {
-    console.log('get');
-    const response = await axios.get(
-      'https://api.hubapi.com/analytics/v2/reports/social-assists/total',
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-    console.log(response, 'hubspot');
+    // console.log('get');
+    // const response = await axios.get(
+    //   'https://api.hubapi.com/analytics/v2/reports/social-assists/total',
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //       'Content-Type': 'application/json',
+    //     },
+    //   },
+    // );
+    // console.log(response.data, 'hubspot');
     return await this.prismaService.tbObjectTrips.findMany({
       where: {
         ...query.cond,
@@ -40,6 +44,47 @@ export class ObjectTripsService {
   async createObjectTrip(
     data: CreateObjectTrip,
   ): Promise<tbObjectTrips | undefined> {
+    const objectTrip = await this.crawlObjectTrip(data.url);
+    const newObjectTrip = await this.prismaService.tbObjectTrips.create({
+      data: {
+        ...objectTrip,
+        updatedAt: new Date(),
+      },
+    });
+    return newObjectTrip;
+  }
+
+  async updateObjectTrip(data: tbObjectTrips): Promise<tbObjectTrips> {
+    const objectTrip = await this.crawlObjectTrip(data.url);
+    const updatedObjectTrips = await this.prismaService.tbObjectTrips.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        ...objectTrip,
+        updatedAt: new Date(),
+      },
+    });
+    return updatedObjectTrips;
+  }
+
+  async deleteObjectTrip(id: number): Promise<tbObjectTrips> {
+    return await this.prismaService.tbObjectTrips.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
+  @Cron(cronjobCrawlReviewEnv)
+  async crawlSchedule(): Promise<void> {
+    const listObjectTrips = await this.prismaService.tbObjectTrips.findMany();
+    for (let i = 0; i < listObjectTrips.length; i++) {
+      await this.updateObjectTrip(listObjectTrips[i]);
+    }
+  }
+
+  async crawlObjectTrip(url: string): Promise<ObjectTrip | undefined> {
     let driver: WebDriver;
     try {
       console.log('Start chrome');
@@ -50,9 +95,9 @@ export class ObjectTripsService {
         .forBrowser('firefox')
         .setChromeOptions(option)
         .build();
-      console.log(data.url);
+      console.log(url);
       // await driver.sleep(100000000);
-      await driver.get(data.url);
+      await driver.get(url);
       console.log('get name');
 
       const titleEle = await GetElement(driver, '//h1[@id="HEADING"]');
@@ -81,14 +126,14 @@ export class ObjectTripsService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const scoreReview = parseFloat(await scoreReviewEle.getText());
+      const score = parseFloat(await scoreReviewEle.getText());
 
       console.log('get total reviews');
-      const totalReviewEle = GetElements(
+      const numberScoreReviewEle = await GetElements(
         driver,
-        '//div[@class="ui_column  "]/div/a/span',
+        '//div[@id="hrReviewFilters"]/div/div/ul/li/span[text()]',
       );
-      if (!totalReviewEle) {
+      if (!numberScoreReviewEle) {
         throw new HttpException(
           {
             status: HttpStatus.BAD_REQUEST,
@@ -97,21 +142,14 @@ export class ObjectTripsService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const totalReviews = await totalReviewEle;
-      if (totalReviews.length < 2) {
-        throw new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            detail: 'Không tìm thấy tổng số reviews',
-          },
-          HttpStatus.BAD_REQUEST,
+      let numberScoreReviews = [];
+      for (let i = 0; i < numberScoreReviewEle.length; i++) {
+        numberScoreReviews = numberScoreReviews.concat(
+          parseInt(
+            (await numberScoreReviewEle[i].getText()).replaceAll(',', ''),
+          ),
         );
       }
-      const totalReviewText = await totalReviews[1].getText();
-
-      const totalReview = parseInt(
-        totalReviewText.replaceAll(',', '').split(' ')?.[0],
-      );
 
       const rankingEles = GetElements(
         driver,
@@ -132,18 +170,18 @@ export class ObjectTripsService {
         rankings = rankings.concat(await arrRankingEles[i].getText());
       }
 
-      console.log(name, scoreReview, totalReview, rankings);
-      const newObjectTrip = await this.prismaService.tbObjectTrips.create({
-        data: {
-          name,
-          url: data.url,
-          scoreReview,
-          totalReviews: totalReview,
-          rank: rankings,
-        },
-      });
+      console.log(name, score, rankings, numberScoreReviews);
+      const objectTrip: ObjectTrip = {
+        name,
+        url,
+        score,
+        numberScoreReviews,
+        rank: rankings,
+        updatedAt: new Date(),
+      };
+
       await driver.quit();
-      return newObjectTrip;
+      return objectTrip;
     } catch (e) {
       console.log(e, 'error');
     }

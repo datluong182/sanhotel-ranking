@@ -1,4 +1,12 @@
-import { Controller, Get, Query, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Post,
+  Body,
+  Delete,
+  Param,
+} from '@nestjs/common';
 import { tbObjectTrips } from '@prisma/client';
 import { Paging } from '../app.dto';
 import { ObjectTripsService } from './objectTrips.service';
@@ -21,5 +29,16 @@ export class ObjectTripsController {
   ): Promise<tbObjectTrips | undefined> {
     console.log('Start');
     return await this.objectTripsService.createObjectTrip(data);
+  }
+
+  @Post('/check-manual')
+  async checkManualObjectTrip(): Promise<void> {
+    console.log('Start');
+    await this.objectTripsService.crawlSchedule();
+  }
+
+  @Delete(':id')
+  async deleteObjectTrip(@Param('id') id: string): Promise<tbObjectTrips> {
+    return await this.objectTripsService.deleteObjectTrip(parseInt(id));
   }
 }

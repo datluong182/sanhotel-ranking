@@ -6,7 +6,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 // import { ObjectReviewsModule } from './objectReviews/objectReviews.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, ScheduleModule.forRoot()],
   controllers: [ObjectTripsController],
   providers: [ObjectTripsService],
   exports: [ObjectTripsService],

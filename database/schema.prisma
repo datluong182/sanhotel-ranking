@@ -8,10 +8,11 @@ generator client {
 }
 
 model tbObjectTrips {
-  id           Int    @id @default(autoincrement())
-  name         String
-  url          String
-  rank         String[]
-  scoreReview  Int
-  totalReviews Int
+  id                 Int      @id @default(autoincrement())
+  name               String
+  url                String
+  rank               String[]
+  score              Float
+  numberScoreReviews Int[]
+  updatedAt          DateTime
 }
