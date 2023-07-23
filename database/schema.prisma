@@ -11,7 +11,7 @@ model tbObjectTrips {
   id                 Int      @id @default(autoincrement())
   name               String
   url                String
-  rank               String[]
+  rank               Int
   score              Float
   numberScoreReviews Int[]
   updatedAt          DateTime

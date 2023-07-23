@@ -48,6 +48,9 @@ export class ObjectBookingsService {
       },
       skip: query.page,
       take: query.limit,
+      orderBy: {
+        score: 'desc'
+      }
     });
     return {
       count,

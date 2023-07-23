@@ -48,6 +48,9 @@ export class ObjectTripsService {
       },
       skip: query.page,
       take: query.limit,
+      orderBy: {
+        updatedAt:  'desc'
+      }
     });
     return {
       count,
@@ -171,11 +174,11 @@ export class ObjectTripsService {
       }
 
       console.log("get ranking")
-      const rankingEles = GetElements(
+      const rankingEle = await GetElement(
         driver,
         '//div[@class="ui_column  "]/span[contains(text(), "#")]',
       );
-      if (!rankingEles) {
+      if (!rankingEle) {
         throw new HttpException(
           {
             status: HttpStatus.BAD_REQUEST,
@@ -184,24 +187,24 @@ export class ObjectTripsService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      let rankings = [];
-      const arrRankingEles = await rankingEles;
-      for (let i = 0; i < arrRankingEles.length; i++) {
-        rankings = rankings.concat(await arrRankingEles[i].getText());
-      }
+      
+      let textRank = await rankingEle.getText();
+      textRank = textRank.split(" ")?.[0].split("#")?.[1];
+      const rank = parseInt(textRank);
 
-      console.log(name, score, rankings, numberScoreReviews);
+      console.log(name, score, rank, numberScoreReviews);
       const objectTrip: ObjectTrip = {
         name,
         url,
         score,
         numberScoreReviews,
-        rank: rankings,
+        rank,
         updatedAt: new Date(),
       };
 
       await driver.quit();
-      console.log("crawl done")
+      console.log("crawl done", objectTrip)
+      // return undefined;
       return objectTrip;
     } catch (e) {
       console.log(e, 'error');
