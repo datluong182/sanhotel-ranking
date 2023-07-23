@@ -1,6 +1,6 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Paging } from '../app.dto';
+import { DataList, Paging } from '../app.dto';
 import { tbObjectTrips } from '@prisma/client';
 import { CreateObjectTrip } from './objectTrips.dto';
 import { Builder, WebDriver, By } from 'selenium-webdriver';
@@ -9,10 +9,15 @@ import { GetElement, GetElements } from 'src/utils';
 import axios from 'axios';
 import { ObjectTrip } from './objectTrips.entity';
 import { Cron } from '@nestjs/schedule';
+import moment from 'moment';
 
 const token = process.env.TOKEN_HUBSPOT;
 
 const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
+
+async function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
 
 @Injectable()
 export class ObjectTripsService {
@@ -20,7 +25,7 @@ export class ObjectTripsService {
     console.log('init object trips service');
   }
 
-  async getAllObjectTrips(query: Paging): Promise<tbObjectTrips[]> {
+  async getAllObjectTrips(query: Paging): Promise<DataList<tbObjectTrips>> {
     // console.log('get');
     // const response = await axios.get(
     //   'https://api.hubapi.com/analytics/v2/reports/social-assists/total',
@@ -32,19 +37,31 @@ export class ObjectTripsService {
     //   },
     // );
     // console.log(response.data, 'hubspot');
-    return await this.prismaService.tbObjectTrips.findMany({
+    const count = await this.prismaService.tbObjectTrips.count({
+      where: {
+        ...query.cond,
+      },
+    })
+    const data =  await this.prismaService.tbObjectTrips.findMany({
       where: {
         ...query.cond,
       },
       skip: query.page,
       take: query.limit,
     });
+    return {
+      count,
+      page: query.page,
+      limit: query.limit,
+      data,
+    }
   }
 
   async createObjectTrip(
     data: CreateObjectTrip,
   ): Promise<tbObjectTrips | undefined> {
     const objectTrip = await this.crawlObjectTrip(data.url);
+    if (!objectTrip) return undefined
     const newObjectTrip = await this.prismaService.tbObjectTrips.create({
       data: {
         ...objectTrip,
@@ -56,6 +73,7 @@ export class ObjectTripsService {
 
   async updateObjectTrip(data: tbObjectTrips): Promise<tbObjectTrips> {
     const objectTrip = await this.crawlObjectTrip(data.url);
+    if (!objectTrip) return undefined
     const updatedObjectTrips = await this.prismaService.tbObjectTrips.update({
       where: {
         id: data.id,
@@ -81,6 +99,7 @@ export class ObjectTripsService {
     const listObjectTrips = await this.prismaService.tbObjectTrips.findMany();
     for (let i = 0; i < listObjectTrips.length; i++) {
       await this.updateObjectTrip(listObjectTrips[i]);
+      await sleep(5000)
     }
   }
 
@@ -151,6 +170,7 @@ export class ObjectTripsService {
         );
       }
 
+      console.log("get ranking")
       const rankingEles = GetElements(
         driver,
         '//div[@class="ui_column  "]/span[contains(text(), "#")]',
@@ -181,6 +201,7 @@ export class ObjectTripsService {
       };
 
       await driver.quit();
+      console.log("crawl done")
       return objectTrip;
     } catch (e) {
       console.log(e, 'error');

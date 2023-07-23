@@ -8,7 +8,7 @@ import {
   Param,
 } from '@nestjs/common';
 import { tbObjectTrips } from '@prisma/client';
-import { Paging } from '../app.dto';
+import { DataList, Paging } from '../app.dto';
 import { ObjectTripsService } from './objectTrips.service';
 import { CreateObjectTrip } from './objectTrips.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -19,7 +19,7 @@ export class ObjectTripsController {
   constructor(private readonly objectTripsService: ObjectTripsService) {}
 
   @Get()
-  async getAllObjectTrips(@Query() query: Paging): Promise<tbObjectTrips[]> {
+  async getAllObjectTrips(@Query() query: Paging): Promise<DataList<tbObjectTrips>> {
     return await this.objectTripsService.getAllObjectTrips(query);
   }
 

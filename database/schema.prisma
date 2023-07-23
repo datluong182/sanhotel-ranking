@@ -16,3 +16,12 @@ model tbObjectTrips {
   numberScoreReviews Int[]
   updatedAt          DateTime
 }
+
+model tbObjectBookings {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  url                String
+  score              Float
+  numberScoreReviews Int[]
+  updatedAt          DateTime
+}

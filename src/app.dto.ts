@@ -23,3 +23,11 @@ export class Paging {
   })
   cond: object;
 }
+
+export class DataList<T> {
+  count: number;
+  page: number;
+  limit: number;
+  data: Array<T>;
+}
+
