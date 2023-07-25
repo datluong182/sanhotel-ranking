@@ -23,71 +23,51 @@ services:
   #   volumes:
   #     - .:/app/
   #     - /app/node_modules
-  # chrome:
-  #   image: selenium/node-chrome:beta
-  #   shm_size: 2gb
-  #   depends_on:
-  #     - selenium-hub
-  #   environment:
-  #     - SE_EVENT_BUS_HOST=selenium-hub
-  #     - SE_EVENT_BUS_PUBLISH_PORT=4442
-  #     - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-
-  # chrome:
-  #   image: selenium/node-chrome:4.10.0-20230607
-  #   shm_size: 2gb
-  #   depends_on:
-  #     - selenium-hub
-  #   environment:
-  #     - SE_EVENT_BUS_HOST=selenium-hub
-  #     - SE_EVENT_BUS_PUBLISH_PORT=4442
-  #     - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-  firefox:
-    image: selenium/node-firefox:beta
+  chrome:
+    image: selenium/node-chrome:beta
+    container_name: chrome-ranking
     shm_size: 2gb
-    # depends_on:
-    #   - selenium-hub
+    depends_on:
+      - selenium-hub
     environment:
-      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_HOST=selenium-hub-ranking
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-      - HUB_HOST=selehium-hub
-      - HUB_PORT=4444
-  # selenium-hub:
-  #   image: selenium/hub:latest
-  #   container_name: selenium-hub
-  #   ports:
-  #     - "4442:4442"
-  #     - "4443:4443"
-  #     - "4444:4444"
-  # postgres-db:
-  #   image: postgres:12
-  #   container_name: postgres
-  #   ports:
-  #     - '5433:5432'
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: 123qwe123
-  #     POSTGRES_DB: crawl_db
-  #   command: postgres -c 'max_connections=1000'
-  #   env_file:
-  #     - .env
-  #   # expose:
-  #   #   - '5433'
-  #   volumes:
-  #     - postgres:/var/lib/postgresql/data
-  # pgadmin:
-  #   image: dpage/pgadmin4
-  #   container_name: pgadmin4
-  #   restart: always
-  #   ports:
-  #     - "5050:80"
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: buituan@gmail.com
-  #     PGADMIN_DEFAULT_PASSWORD: admin
-  #   volumes:
-  #     - pgadmin-data:/var/lib/pgadmin
-  # volumes:
-  # pgadmin-data:
-  # postgres:
-  #   name: crawl_db
+  selenium-hub:
+    image: selenium/hub:latest
+    container_name: selenium-hub-ranking
+    ports:
+      - "4445:4442"
+      - "4446:4443"
+      - "4447:4444"
+  postgres-db:
+    image: postgres:12
+    container_name: postgres-ranking
+    ports:
+      - '5434:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123qwe123
+      POSTGRES_DB: crawl_db
+    command: postgres -c 'max_connections=1000'
+    env_file:
+      - .env
+    # expose:
+    #   - '5433'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4-ranking
+    restart: always
+    ports:
+      - "5051:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: buituan@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+volumes:
+  pgadmin-data:
+  postgres:
+    name: crawl-db
