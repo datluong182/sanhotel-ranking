@@ -25,6 +25,17 @@ export class ObjectBookingsService {
     console.log('init object trips service');
   }
 
+  async getLastUpdate(): Promise<{ updatedAt: Date }> {
+    const setting = await this.prismaService.tbObjectBookingsLog.findFirst({
+      orderBy: {
+        updatedAt: 'desc'
+      } 
+    })
+    return {
+      updatedAt: setting.updatedAt,
+    }
+  }
+
   async getAllObjectBookings(query: Paging): Promise<DataList<tbObjectBookings>> {
     // console.log('get');
     // const response = await axios.get(
@@ -74,7 +85,7 @@ export class ObjectBookingsService {
     return newObjectBooking;
   }
 
-  async updateObjectBooking(data: tbObjectBookings): Promise<tbObjectBookings> {
+  async updateObjectBooking(data: tbObjectBookings, updatedAt: Date | undefined = undefined): Promise<tbObjectBookings> {
     const objectBooking = await this.crawlObjectBooking(data.url);
     if (!objectBooking) return undefined;
     const updatedObjectBooking = await this.prismaService.tbObjectBookings.update({
@@ -83,7 +94,7 @@ export class ObjectBookingsService {
       },
       data: {
         ...objectBooking,
-        updatedAt: new Date(),
+        updatedAt: updatedAt? updatedAt : new Date(),
       },
     });
     return updatedObjectBooking;
@@ -100,10 +111,16 @@ export class ObjectBookingsService {
   @Cron(cronjobCrawlReviewEnv)
   async crawlSchedule(): Promise<void> {
     const listObjectBookings = await this.prismaService.tbObjectBookings.findMany();
+    const updatedAt = new Date();
     for (let i = 0; i < listObjectBookings.length; i++) {
-      await this.updateObjectBooking(listObjectBookings[i]);
+      await this.updateObjectBooking(listObjectBookings[i], updatedAt);
       await sleep(5000)
     }
+    await this.prismaService.tbObjectBookingsLog.create({
+      data: {
+        updatedAt,
+      }
+    })
   }
 
   async crawlObjectBooking(url: string): Promise<ObjectBooking | undefined> {
@@ -148,7 +165,22 @@ export class ObjectBookingsService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const score = parseFloat(await scoreReviewEle.getText());
+      let text = await scoreReviewEle.getText();
+      text = text.replaceAll(",", ".");
+      const score = parseFloat(text);
+
+      console.log('get stars');
+      const starsEle = await GetElements(driver, '//span[@data-testid="rating-stars"]/span')
+      if (!starsEle) {
+        throw new HttpException(
+          {
+            status: HttpStatus.BAD_REQUEST,
+            detail: 'Không tìm thấy số sao khách sạn',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const stars = starsEle.length;
 
       console.log('get total reviews');
       const numberReviewsEle = await GetElement(
@@ -165,17 +197,21 @@ export class ObjectBookingsService {
         );
       }
       await driver.executeScript(
-        'arguments[0].click()',
+        'arguments[0].scrollIntoView(true)',
         numberReviewsEle,
       );
+      await numberReviewsEle.click();
+      // await driver.executeScript(
+      //   'arguments[0].click()',
+      //   numberReviewsEle,
+      // );
       await driver.sleep(2000);
       
       let liScore = [];
       await driver.executeScript(
-        'arguments[0].click()',
+        'arguments[0].scrollIntoView(true)',
         await GetElement(driver, '//div[@id="review_score_filter"]/button'),
       );
-      await driver.sleep(2000);
       const liScoreEles = await GetElements(driver, '//div[@id="review_score_filter"]/div/div/ul/li/button/span[@class="review-filter-item__counter"]')
       if (!liScoreEles) {
         throw new HttpException(
@@ -187,11 +223,42 @@ export class ObjectBookingsService {
         );
       }
       for(let i=0; i<liScoreEles.length; i++) {
-        liScore = liScore.concat(await liScoreEles[i].getText())
+        await driver.executeScript(
+          'arguments[0].click()',
+          await GetElement(driver, '//div[@id="review_score_filter"]/button'),
+        );
+        await driver.sleep(3000);
+        const tempLiScoreEles = await GetElements(driver, '//div[@id="review_score_filter"]/div/div/ul/li/button/span[@class="review-filter-item__counter"]')
+        if (!tempLiScoreEles) {
+          throw new HttpException(
+            {
+              status: HttpStatus.BAD_REQUEST,
+              detail: 'Không tìm thấy tổng số reviews',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        await driver.executeScript(
+          'arguments[0].click()',
+          tempLiScoreEles[i],
+        );
+        await driver.sleep(3000);
+        const selected = await GetElement(driver, '//div[@id="review_score_filter"]/button/span/span[@class="review-filter-item__counter"]');
+         if (!selected) {
+          throw new HttpException(
+            {
+              status: HttpStatus.BAD_REQUEST,
+              detail: 'Không tìm thấy tổng số reviews',
+            },
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        liScore = liScore.concat(await selected.getText())
       }
 
       let numberScoreReviews = []
       for(let i=0; i<liScore.length; i++) {
+        console.log(liScore[i], 'liScore[i]')
         let text = liScore[i];        
         text = text.split("(");
         text = text[1].split(")");
@@ -223,6 +290,7 @@ export class ObjectBookingsService {
         name,
         url,
         score,
+        stars,
         numberScoreReviews: numberScoreReviews.map(sc => parseInt(sc)),
         updatedAt: new Date(),
       };

@@ -25,6 +25,17 @@ export class ObjectTripsService {
     console.log('init object trips service');
   }
 
+  async getLastUpdate(): Promise<{ updatedAt: Date }> {
+    const setting = await this.prismaService.tbObjectTripsLog.findFirst({
+      orderBy: {
+        updatedAt: 'desc'
+      } 
+    })
+    return {
+      updatedAt: setting.updatedAt,
+    }
+  }
+
   async getAllObjectTrips(query: Paging): Promise<DataList<tbObjectTrips>> {
     // console.log('get');
     // const response = await axios.get(
@@ -49,7 +60,7 @@ export class ObjectTripsService {
       skip: query.page,
       take: query.limit,
       orderBy: {
-        updatedAt:  'desc'
+        rank: 'asc'
       }
     });
     return {
@@ -74,7 +85,7 @@ export class ObjectTripsService {
     return newObjectTrip;
   }
 
-  async updateObjectTrip(data: tbObjectTrips): Promise<tbObjectTrips> {
+  async updateObjectTrip(data: tbObjectTrips, updatedAt: Date | undefined = undefined): Promise<tbObjectTrips> {
     const objectTrip = await this.crawlObjectTrip(data.url);
     if (!objectTrip) return undefined
     const updatedObjectTrips = await this.prismaService.tbObjectTrips.update({
@@ -83,7 +94,7 @@ export class ObjectTripsService {
       },
       data: {
         ...objectTrip,
-        updatedAt: new Date(),
+        updatedAt: updatedAt? updatedAt : new Date(),
       },
     });
     return updatedObjectTrips;
@@ -100,10 +111,16 @@ export class ObjectTripsService {
   @Cron(cronjobCrawlReviewEnv)
   async crawlSchedule(): Promise<void> {
     const listObjectTrips = await this.prismaService.tbObjectTrips.findMany();
+    const updatedAt = new Date();
     for (let i = 0; i < listObjectTrips.length; i++) {
-      await this.updateObjectTrip(listObjectTrips[i]);
+      await this.updateObjectTrip(listObjectTrips[i], updatedAt);
       await sleep(5000)
     }
+    await this.prismaService.tbObjectTripsLog.create({
+      data: {
+        updatedAt,
+      }
+    })
   }
 
   async crawlObjectTrip(url: string): Promise<ObjectTrip | undefined> {

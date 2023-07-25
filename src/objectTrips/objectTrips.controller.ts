@@ -23,6 +23,11 @@ export class ObjectTripsController {
     return await this.objectTripsService.getAllObjectTrips(query);
   }
 
+  @Get("/last-update")
+  async getLastUpdate(): Promise<{ updatedAt: Date }> {
+    return await this.objectTripsService.getLastUpdate();
+  }
+
   @Post()
   async createObjectTrip(
     @Body() data: CreateObjectTrip,

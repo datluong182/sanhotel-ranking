@@ -12,7 +12,8 @@ async function bootstrap() {
     'http://localhost:3001',
     'http://localhost:3000',
     'http://18.141.28.226:3000',
-    'http://18.141.28.226:8001'
+    'http://18.141.28.226:8001',
+    'http://ranking.sanhotelseries.com'
   ];
   app.enableCors({
     origin: function (origin, callback) {

@@ -23,6 +23,11 @@ export class ObjectBookingsController {
     return await this.objectBookingsService.getAllObjectBookings(query);
   }
 
+  @Get("/last-update")
+  async getLastUpdate(): Promise<{ updatedAt: Date }> {
+    return await this.objectBookingsService.getLastUpdate();
+  }
+
   @Post()
   async createObjectBooking(
     @Body() data: CreateObjectBooking,
