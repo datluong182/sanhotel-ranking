@@ -5,7 +5,7 @@ import { tbObjectTrips } from '@prisma/client';
 import { CreateObjectTrip } from './objectTrips.dto';
 import { Builder, WebDriver, By } from 'selenium-webdriver';
 import { Options } from 'selenium-webdriver/chrome';
-import { GetElement, GetElements } from 'src/utils';
+import { GetElement, GetElements, seleniumUrl } from 'src/utils';
 import axios from 'axios';
 import { ObjectTrip } from './objectTrips.entity';
 import { Cron } from '@nestjs/schedule';
@@ -130,12 +130,12 @@ export class ObjectTripsService {
       const option = new Options().addArguments('--no-proxy-server');
       // .addArguments('headless');
       driver = await new Builder()
-        .usingServer('http://localhost:4444/wd/hub')
-        .forBrowser('firefox')
+        .usingServer(seleniumUrl)
+        .forBrowser('chrome')
         .setChromeOptions(option)
         .build();
       console.log(url);
-      // await driver.sleep(100000000);
+      await driver.sleep(4000);
       await driver.get(url);
       console.log('get name');
 
@@ -156,6 +156,7 @@ export class ObjectTripsService {
         driver,
         '//div[@class="ui_column  "]/div/span',
       );
+      console.log(await scoreReviewEle.getAttribute("innerHTML"), 'html')
       if (!scoreReviewEle) {
         throw new HttpException(
           {
@@ -165,13 +166,23 @@ export class ObjectTripsService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      const score = parseFloat(await scoreReviewEle.getText());
+      let textScore = await scoreReviewEle.getText();
+      console.log(textScore, 'textScore')
+      textScore = textScore.replaceAll(",", ".")
+      const score = parseFloat(textScore);
 
       console.log('get total reviews');
+      const tabReviewEle = await GetElement(driver, '//div[@data-tab="TABS_REVIEWS"]')
+      await driver.executeScript(
+          'arguments[0].scrollIntoView(true);',
+          tabReviewEle,
+        );
+      await driver.sleep(5000);
       const numberScoreReviewEle = await GetElements(
         driver,
         '//div[@id="hrReviewFilters"]/div/div/ul/li/span[text()]',
       );
+      
       if (!numberScoreReviewEle) {
         throw new HttpException(
           {
@@ -182,7 +193,10 @@ export class ObjectTripsService {
         );
       }
       let numberScoreReviews = [];
+      console.log('ele total reviews');
       for (let i = 0; i < numberScoreReviewEle.length; i++) {
+        
+        
         numberScoreReviews = numberScoreReviews.concat(
           parseInt(
             (await numberScoreReviewEle[i].getText()).replaceAll(',', ''),

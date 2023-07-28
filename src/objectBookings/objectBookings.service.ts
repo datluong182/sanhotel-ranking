@@ -5,7 +5,7 @@ import { tbObjectBookings } from '@prisma/client';
 import { CreateObjectBooking } from './objectBookings.dto';
 import { Builder, WebDriver, By } from 'selenium-webdriver';
 import { Options } from 'selenium-webdriver/chrome';
-import { GetElement, GetElements } from 'src/utils';
+import { GetElement, GetElements, seleniumUrl } from 'src/utils';
 import axios from 'axios';
 import { ObjectBooking } from './objectBookings.entity';
 import { Cron } from '@nestjs/schedule';
@@ -130,8 +130,8 @@ export class ObjectBookingsService {
       const option = new Options().addArguments('--no-proxy-server');
       // .addArguments('headless');
       driver = await new Builder()
-        .usingServer('http://localhost:4444/wd/hub')
-        .forBrowser('firefox')
+        .usingServer(seleniumUrl)
+        .forBrowser('chrome')
         .setChromeOptions(option)
         .build();
       console.log(url);

@@ -18,13 +18,13 @@ model tbObjectTrips {
 }
 
 model tbObjectTripsLog {
-  id          Int        @id @default(autoincrement())
-  updatedAt   DateTime
+  id        Int      @id @default(autoincrement())
+  updatedAt DateTime
 }
 
 model tbObjectBookingsLog {
-  id          Int        @id @default(autoincrement())
-  updatedAt   DateTime
+  id        Int      @id @default(autoincrement())
+  updatedAt DateTime
 }
 
 model tbObjectBookings {

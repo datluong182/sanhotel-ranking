@@ -1,0 +1,61 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model tbObjectTrips {
+  id                 Int                @id @default(autoincrement())
+  name               String
+  url                String
+  rank               Int
+  totalHotel         Int
+  score              Float
+  numberScoreReviews Int[]
+  updatedAt          DateTime
+  tbObjectTripsLog   tbObjectTripsLog[]
+}
+
+model tbObjectTripsLog {
+  id                 Int           @id @default(autoincrement())
+  updatedAt          DateTime
+  name               String
+  url                String
+  rank               Int
+  totalHotel         Int
+  score              Float
+  numberScoreReviews Int[]
+  isManual           Boolean
+  objectTrip         tbObjectTrips @relation(fields: [tbObjectTripsId], references: [id], onDelete: Cascade)
+  tbObjectTripsId    Int
+}
+
+model tbObjectBookingsLog {
+  id                 Int              @id @default(autoincrement())
+  updatedAt          DateTime
+  name               String
+  url                String
+  score              Float
+  stars              Int
+  numberScoreReviews Int[]
+  objectBooking      tbObjectBookings @relation(fields: [tbObjectBookingsId], references: [id], onDelete: Cascade)
+  tbObjectBookingsId Int
+}
+
+model tbObjectBookings {
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  url                 String
+  score               Float
+  stars               Int
+  numberScoreReviews  Int[]
+  updatedAt           DateTime
+  tbObjectBookingsLog tbObjectBookingsLog[]
+}
+
+// model tbNewfeeds {
+//   id Int @id @default(autoincrement())
+// }

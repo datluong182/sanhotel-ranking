@@ -1,20 +1,46 @@
-FROM node:16.19.1
+# Set the base image
+FROM node:18-slim
 
-WORKDIR /app
-COPY package*.json ./
-COPY database ./database/
+# Install dependencies required for Prisma and other build dependencies
+RUN apt update && apt install libssl-dev dumb-init -y --no-install-recommends
+
+# Set the working directory
+WORKDIR /usr/src/app
+
+# Copy package.json and package-lock.json first to leverage Docker cache
+COPY package.json .
+COPY package-lock.json .
+
+# Install dependencies for the build
 RUN npm install
-RUN npx prisma generate --schema=./database/schema.prisma
 
+# Copy the entire application source code
 COPY . .
 
+# Generate Prisma client
+RUN npx prisma generate --schema=/usr/src/app/database/schema.prisma
 
-# FROM node:18
+# Build the application
+RUN npm run build
 
-# COPY --from=builder /app/node_modules ./node_modules
-# COPY --from=builder /app/package*.json ./
-# COPY --from=builder /app/dist ./dist
+# Copy remaining files and set ownership to node user
+COPY --chown=node:node .env .env
+COPY --chown=node:node wait-for-it.sh ./wait-for-it.sh
 
+# Install production dependencies (omit devDependencies)
+RUN npm install --omit=dev
 
-EXPOSE 3000
-CMD [ "npm", "run", "start:prod" ]
+# # Copy the Prisma client to the final location
+# COPY --chown=node:node /usr/src/app/node_modules/.prisma/client ./node_modules/.prisma/client
+
+# Set the environment variable for production
+ENV NODE_ENV production
+
+# Expose the required port
+EXPOSE 8001
+
+# Set the user to non-root node user
+USER node
+
+# Start the application using dumb-init for better signal handling
+# CMD ["dumb-init", "npm", "run", "start"]

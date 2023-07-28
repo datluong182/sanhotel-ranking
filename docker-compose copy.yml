@@ -1,19 +1,28 @@
 version: '3'
 services:
-  nestjs:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: nestjs-ranking
-    restart: on-failure
-    ports:
-      - "8001:8001"
-    depends_on:
-      - postgres-db
-    command: bash -c "./wait-for-it.sh -t 600 postgres-db:5432  && npm run migrate-prisma &&  npm run start:prod"
-    volumes:
-      - .:/app
-      - /app/node_modules
+  # app:
+  #   restart: on-failure
+  #   build:
+  #     context: .
+  #     dockerfile: ./Dockerfile
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     - postgres-db
+  #   environment:
+  #     DATABASE_URL: postgres://postgres:123qwe123@postgres:5432/crawl_db?connection_limit=200
+  #     APIFY_KEY: apify_api_xGJfdAmgr2DnRmTmqGhMt3hhiV3rpS3qUi1l
+  #     DATABASE_USERNAME: postgres
+  #     DATABASE_PASSWORD: 123qwe123
+  #     DATABASE_DB: crawl_db
+  #     DATABASE_PORT: 5432
+  #     DATABASE_HOST: postgres-db
+  #   command: bash -c "npx prisma migrate dev --name init --schema=./database/schema.prisma && npm run start:dev"
+  #   ports:
+  #     - '3000:3000'
+  #   volumes:
+  #     - .:/app/
+  #     - /app/node_modules
   chrome:
     image: selenium/node-chrome:beta
     container_name: chrome-ranking
@@ -21,7 +30,7 @@ services:
     depends_on:
       - selenium-hub
     environment:
-      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_HOST=selenium-hub-ranking
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
   selenium-hub:
@@ -33,14 +42,13 @@ services:
       - "4447:4444"
   postgres-db:
     image: postgres:12
-    container_name: postgres_ranking
-    restart: always
+    container_name: postgres-ranking
     ports:
       - '5434:5432'
     environment:
-      POSTGRES_USER: ${DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_DB}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123qwe123
+      POSTGRES_DB: crawl_db
     command: postgres -c 'max_connections=1000'
     env_file:
       - .env
@@ -50,7 +58,7 @@ services:
       - postgres:/var/lib/postgresql/data
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin4_ranking
+    container_name: pgadmin4-ranking
     restart: always
     ports:
       - "5051:80"

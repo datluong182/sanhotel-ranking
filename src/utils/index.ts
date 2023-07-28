@@ -23,3 +23,5 @@ export const GetElements = async (
     return null;
   }
 };
+
+export const seleniumUrl = process.env.SELENIUM_URL
