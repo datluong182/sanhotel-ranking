@@ -1,38 +1,39 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL_DEV")
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
-model tbObjectTrips {
-  id                 Int      @id @default(autoincrement())
-  name               String
-  url                String
-  rank               Int
-  score              Float
-  numberScoreReviews Int[]
-  updatedAt          DateTime
+model tbObject {
+  id                String        @id @default(uuid())
+  name              String
+  url               String
+  score             Float
+  numberScoreReview Int[]
+  updatedAt         DateTime
+  extra             Json
+  platform          PLATFORM
+  tbObjectLog       tbObjectLog[]
 }
 
-model tbObjectTripsLog {
-  id        Int      @id @default(autoincrement())
-  updatedAt DateTime
+enum PLATFORM {
+  TRIP
+  BOOKING
 }
 
-model tbObjectBookingsLog {
-  id        Int      @id @default(autoincrement())
-  updatedAt DateTime
-}
-
-model tbObjectBookings {
-  id                 Int      @id @default(autoincrement())
-  name               String
-  url                String
-  score              Float
-  stars              Int
-  numberScoreReviews Int[]
-  updatedAt          DateTime
+model tbObjectLog {
+  id                String   @id @default(uuid())
+  name              String
+  url               String
+  score             Float
+  numberScoreReview Int[]
+  updatedAt         DateTime
+  extra             Json
+  platform          PLATFORM
+  isManual          Boolean
+  tbObject          tbObject @relation(fields: [tbObjectId], references: [id], onDelete: Cascade)
+  tbObjectId        String
 }

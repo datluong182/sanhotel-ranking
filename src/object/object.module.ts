@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ObjectBookingsController } from './objectBookings.controller';
-import { ObjectBookingsService } from './objectBookings.service';
+import { ObjectController } from './object.controller';
+import { ObjectService } from './object.service';
 import { PrismaModule } from '../prisma/prisma.module';
 // import { ObjectReviewsModule } from './objectReviews/objectReviews.module';
 
 @Module({
   imports: [PrismaModule, ScheduleModule.forRoot()],
-  controllers: [ObjectBookingsController],
-  providers: [ObjectBookingsService],
-  exports: [ObjectBookingsService],
+  controllers: [ObjectController],
+  providers: [ObjectService],
+  exports: [ObjectService],
 })
-export class ObjectBookingsModule {}
+export class ObjectModule {}

@@ -8,12 +8,12 @@ declare const module: any;
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const whitelist = [
-    'http://localhost:8000',
+    'http://localhost:8001',
     'http://localhost:3001',
     'http://localhost:3000',
     'http://18.141.28.226:3000',
     'http://18.141.28.226:8001',
-    'http://ranking.sanhotelseries.com'
+    'http://ranking.sanhotelseries.com',
   ];
   app.enableCors({
     origin: function (origin, callback) {
@@ -28,8 +28,8 @@ async function bootstrap() {
     .setTitle('API')
     .setDescription('APIs crawl score review')
     .setVersion('1.0')
-    .addTag('object-trips')
-    .addTag('object-bookings')
+    .addTag('object')
+    .addTag('object-log')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

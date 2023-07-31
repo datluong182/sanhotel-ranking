@@ -5,12 +5,12 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: nestjs-ranking
-    restart: on-failure
+    # restart: on-failure
     ports:
       - "8001:8001"
     depends_on:
       - postgres-db
-    command: bash -c "./wait-for-it.sh -t 600 postgres-db:5432  && npm run migrate-prisma &&  npm run start:prod"
+    # command: bash -c "./wait-for-it.sh -t 600 postgres-db:5432 && npm run migrate-prisma &&  npm run start:prod"
     volumes:
       - .:/app
       - /app/node_modules

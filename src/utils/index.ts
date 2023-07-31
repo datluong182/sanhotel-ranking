@@ -24,4 +24,7 @@ export const GetElements = async (
   }
 };
 
-export const seleniumUrl = process.env.SELENIUM_URL
+export const seleniumUrl =
+  process.env.NODE_ENV === 'production'
+    ? process.env.SELENIUM_URL
+    : process.env.SELENIUM_URL_DEV;
