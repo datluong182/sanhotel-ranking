@@ -12,7 +12,7 @@ import {
 import { tbObject } from '@prisma/client';
 import { DataList, Paging } from '../app.dto';
 import { ObjectService } from './object.service';
-import { CreateObject, UpdateObjectByUrl } from './object.dto';
+import { CreateObject, GetLastUpdate, UpdateObjectByUrl } from './object.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('object')
@@ -26,8 +26,8 @@ export class ObjectController {
   }
 
   @Get('/last-update')
-  async getLastUpdate(): Promise<{ updatedAt: Date }> {
-    return await this.objectService.getLastUpdate();
+  async getLastUpdate(@Query() query: GetLastUpdate): Promise<{ updatedAt: Date }> {
+    return await this.objectService.getLastUpdate(query);
   }
 
   @Post()

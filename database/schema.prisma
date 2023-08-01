@@ -37,3 +37,10 @@ model tbObjectLog {
   tbObject          tbObject @relation(fields: [tbObjectId], references: [id], onDelete: Cascade)
   tbObjectId        String
 }
+
+model tbLastUpdate {
+  id        String   @id @default(uuid())
+  platform  PLATFORM
+  updatedAt DateTime
+  isManual  Boolean
+}

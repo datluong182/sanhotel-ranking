@@ -2,7 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { DataList, Paging } from '../app.dto';
 import { PLATFORM, Prisma, tbObject } from '@prisma/client';
-import { CreateObject, UpdateObjectByUrl } from './object.dto';
+import { CreateObject, UpdateObjectByUrl, GetLastUpdate } from './object.dto';
 import { Builder, WebDriver, By } from 'selenium-webdriver';
 import { Options } from 'selenium-webdriver/chrome';
 import { GetElement, GetElements, seleniumUrl } from 'src/utils';
@@ -24,11 +24,15 @@ async function sleep(time) {
 @Injectable()
 export class ObjectService {
   constructor(private prismaService: PrismaService) {
-    console.log('init object trips service');
+    console.log('init object service');
   }
 
-  async getLastUpdate(): Promise<{ updatedAt: Date }> {
-    const setting = await this.prismaService.tbObjectLog.findFirst({
+  async getLastUpdate(query: GetLastUpdate): Promise<{ updatedAt: Date }> {
+    const setting = await this.prismaService.tbLastUpdate.findFirst({
+      where: {
+        isManual: true,
+        platform: query.platform,
+      },
       orderBy: {
         updatedAt: 'desc',
       },

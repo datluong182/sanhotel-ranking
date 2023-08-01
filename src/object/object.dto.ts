@@ -15,6 +15,14 @@ export class CreateObject {
   platform: PLATFORM;
 }
 
+export class GetLastUpdate {
+  @ApiProperty({
+    required: true,
+    default: 'TRIP',
+  })
+  platform: PLATFORM;
+}
+
 export class UpdateObjectByUrl {
   @ApiProperty({
     required: true,
