@@ -18,6 +18,7 @@ services:
     image: selenium/node-chrome:beta
     container_name: chrome-ranking
     shm_size: 2gb
+    restart: always
     depends_on:
       - selenium-hub
     environment:
@@ -26,6 +27,7 @@ services:
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
   selenium-hub:
     image: selenium/hub:latest
+    restart: always
     container_name: selenium-hub-ranking
     ports:
       - "4445:4442"
@@ -47,7 +49,8 @@ services:
     # expose:
     #   - '5433'
     volumes:
-      - postgres:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin4_ranking

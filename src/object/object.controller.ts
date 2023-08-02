@@ -25,6 +25,11 @@ export class ObjectController {
     return await this.objectService.getAllObject(query);
   }
 
+  @Get("/:id")
+  async getOneObject(@Param("id") id: string): Promise<{ data: tbObject }> {
+    return await this.objectService.getOneObject(id);
+  }
+
   @Get('/last-update')
   async getLastUpdate(@Query() query: GetLastUpdate): Promise<{ updatedAt: Date }> {
     return await this.objectService.getLastUpdate(query);

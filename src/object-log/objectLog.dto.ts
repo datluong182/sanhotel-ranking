@@ -16,13 +16,13 @@ export class GetObjectLogByTime {
 
   @ApiProperty({
     required: true,
-    default: '2023-06-30T17:00:00.000Z'
+    default: '2023-07-01'
   })
   start: String;
 
   @ApiProperty({
     required: true,
-    default: '2023-07-31T17:00:00.000Z'
+    default: '2023-07-31'
   })
   end: String;
 }

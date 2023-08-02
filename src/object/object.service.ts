@@ -42,6 +42,16 @@ export class ObjectService {
     };
   }
 
+  async getOneObject(id: string): Promise<{ data: tbObject | undefined }> {
+    return {
+      data: await this.prismaService.tbObject.findFirst({
+        where: {
+          id,
+        }
+      })
+    }
+  }
+
   async getAllObject(query: Paging): Promise<DataList<tbObject>> {
     // console.log('get');
     // const response = await axios.get(
@@ -143,7 +153,7 @@ export class ObjectService {
     });
   }
 
-  @Cron(cronjobCrawlReviewEnv)
+  // @Cron(cronjobCrawlReviewEnv)
   async crawlSchedule(isManual = true): Promise<void> {
     const listObjects = await this.prismaService.tbObject.findMany();
     const updatedAt = new Date();
