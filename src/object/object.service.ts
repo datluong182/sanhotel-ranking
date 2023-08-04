@@ -5,13 +5,15 @@ import { PLATFORM, Prisma, tbObject } from '@prisma/client';
 import { CreateObject, UpdateObjectByUrl, GetLastUpdate } from './object.dto';
 import { Builder, WebDriver, By } from 'selenium-webdriver';
 import { Options } from 'selenium-webdriver/chrome';
-import { GetElement, GetElements, seleniumUrl } from 'src/utils';
+import { GetElement, GetElements, getRndInteger, seleniumUrl } from 'src/utils';
 import axios from 'axios';
 import { Objects } from './object.entity';
 import { Cron } from '@nestjs/schedule';
-import moment from 'moment';
+import * as moment from 'moment-timezone';
 import extractDataTrip from './utils/trip';
 import extractDataBoooking from './utils/booking';
+
+moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
 const token = process.env.TOKEN_HUBSPOT;
 
@@ -28,6 +30,7 @@ export class ObjectService {
   }
 
   async getLastUpdate(query: GetLastUpdate): Promise<{ updatedAt: Date }> {
+    console.log(query, 'query');
     const setting = await this.prismaService.tbLastUpdate.findFirst({
       where: {
         isManual: true,
@@ -37,19 +40,35 @@ export class ObjectService {
         updatedAt: 'desc',
       },
     });
+    console.log(setting, 'setting');
     return {
       updatedAt: setting.updatedAt,
     };
   }
 
+  async createLastUpdate(
+    date: string,
+    platform: PLATFORM,
+    isManual = true,
+  ): Promise<void> {
+    await this.prismaService.tbLastUpdate.create({
+      data: {
+        isManual,
+        platform,
+        updatedAt: moment(new Date(date)).toDate(),
+      },
+    });
+  }
+
   async getOneObject(id: string): Promise<{ data: tbObject | undefined }> {
+    console.log('get one');
     return {
       data: await this.prismaService.tbObject.findFirst({
         where: {
           id,
-        }
-      })
-    }
+        },
+      }),
+    };
   }
 
   async getAllObject(query: Paging): Promise<DataList<tbObject>> {
@@ -100,26 +119,70 @@ export class ObjectService {
     return newObjectTrip;
   }
 
+  compareChange(origin: tbObject, newData: UpdateObjectByUrl): string[] {
+    let messsages = [];
+
+    if (
+      newData.extra.rank &&
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      origin.extra?.rank &&
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      origin.extra?.rank !== newData.extra.rank
+    ) {
+      messsages = messsages.concat(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        `Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${newData.extra.rank}`,
+      );
+    }
+    for (let i = 0; i < origin.numberScoreReview.length; i++) {
+      if (origin.numberScoreReview[i] !== newData.numberScoreReview[i]) {
+        messsages = messsages.concat(
+          `Số lượng reviews ${i + 1} sao thay đổi từ ${
+            origin.numberScoreReview[i]
+          } thành ${newData.numberScoreReview[i]}`,
+        );
+      }
+    }
+    return messsages;
+  }
+
   async updateObjectByUrl(data: UpdateObjectByUrl): Promise<void> {
-    console.log('update by url', typeof data.score);
+    const temp: UpdateObjectByUrl = {
+      ...data,
+      extra: {
+        ...data.extra,
+        rank: data.extra.rank + getRndInteger(-2, 2),
+      },
+      numberScoreReview: data.numberScoreReview.map((item, index) => {
+        if (index <= 2) {
+          return item + getRndInteger(0, 2);
+        }
+        return item;
+      }),
+    };
     const origin = await this.prismaService.tbObject.findFirst({
       where: {
         url: data.url,
       },
     });
+
     await this.prismaService.tbObject.update({
       where: {
         id: origin.id,
       },
       data: {
-        ...data,
-        updatedAt: new Date(data.updatedAt),
+        ...temp,
+        updatedAt: moment(new Date(data.updatedAt)).toDate(),
       },
     });
     await this.prismaService.tbObjectLog.create({
       data: {
-        ...data,
-        updatedAt: new Date(data.updatedAt),
+        ...temp,
+        messages: this.compareChange(origin, temp),
+        updatedAt: moment(new Date(data.updatedAt)).toDate(),
         isManual: true,
         tbObjectId: origin.id,
       },
@@ -169,8 +232,17 @@ export class ObjectService {
           updatedAt,
         },
       });
-      await sleep(5000);
     }
+    await this.createLastUpdate(
+      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      PLATFORM.TRIP,
+      isManual,
+    );
+    await this.createLastUpdate(
+      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      PLATFORM.BOOKING,
+      isManual,
+    );
   }
 
   async crawlObject(

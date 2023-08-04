@@ -12,6 +12,10 @@ export const GetElement = async (
   }
 };
 
+export function getRndInteger(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
 export const GetElements = async (
   driver: WebDriver | WebElement,
   xpath: string,

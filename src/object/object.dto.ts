@@ -23,6 +23,26 @@ export class GetLastUpdate {
   platform: PLATFORM;
 }
 
+export class CreateLastUpdate {
+  @ApiProperty({
+    required: true,
+    default: '2023-07-31 23:00:00',
+  })
+  date: string;
+
+  @ApiProperty({
+    required: true,
+    default: 'TRIP',
+  })
+  platform: PLATFORM;
+
+  @ApiProperty({
+    required: true,
+    default: true,
+  })
+  isManual: boolean;
+}
+
 export class UpdateObjectByUrl {
   @ApiProperty({
     required: true,
