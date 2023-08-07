@@ -21,7 +21,16 @@ export class ObjectLogController {
   constructor(private readonly objectService: ObjectLogService) {}
 
   @Get()
-  async getAllObjectLog(@Query() query: GetObjectLogByTime): Promise<{ count: number, data: tbObjectLog[] }> {
+  async getAllObjectLog(
+    @Query() query: GetObjectLogByTime,
+  ): Promise<{ count: number; data: tbObjectLog[] }> {
     return await this.objectService.getAllObjectLog(query);
+  }
+
+  @Get('/newsfeed')
+  async getAllNewsfeed(
+    @Query() query: GetObjectLogByTime,
+  ): Promise<{ count: number; data: tbObjectLog[] }> {
+    return await this.objectService.getAllNewsfeed(query);
   }
 }

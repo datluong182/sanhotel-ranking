@@ -55,4 +55,52 @@ export class ObjectLogService {
       data,
     };
   }
+
+  async getAllNewsfeed(
+    query: GetObjectLogByTime,
+  ): Promise<{ count: number; data: tbObjectLog[] }> {
+    const data = await this.prismaService.tbObjectLog.findMany({
+      where: {
+        messages: {
+          isEmpty: false,
+        },
+        ...((query.start || query.end) && {
+          updatedAt: {
+            ...(query.start && {
+              gt: moment(new Date(query.start))
+                .set({
+                  hour: 23,
+                  minute: 59,
+                  second: 59,
+                })
+                .toDate(),
+            }),
+            ...(query.end && {
+              lt: moment(new Date(query.end))
+                .set({
+                  hour: 0,
+                  minute: 0,
+                  second: 0,
+                })
+                .toDate(),
+            }),
+          },
+        }),
+        ...(query.url && {
+          url: query.url,
+        }),
+        ...(query.platform && {
+          platform: query.platform,
+        }),
+        isManual: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+    return {
+      count: data.length,
+      data,
+    };
+  }
 }

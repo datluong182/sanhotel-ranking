@@ -43,4 +43,4 @@ EXPOSE 8001
 USER node
 
 # Start the application using dumb-init for better signal handling
-# CMD ["dumb-init", "npm", "run", "start"]
+CMD ["sh", "-c", "npm run migrate-prisma && npm run start"]
