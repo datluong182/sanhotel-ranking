@@ -149,19 +149,21 @@ export class ObjectService {
     return messsages;
   }
 
+
+  // remove random fake data
   async updateObjectByUrl(data: UpdateObjectByUrl): Promise<void> {
     const temp: UpdateObjectByUrl = {
       ...data,
-      extra: {
-        ...data.extra,
-        rank: data.extra.rank + getRndInteger(-2, 2),
-      },
-      numberScoreReview: data.numberScoreReview.map((item, index) => {
-        if (index <= 2) {
-          return item + getRndInteger(0, 2);
-        }
-        return item;
-      }),
+      // extra: {
+      //   ...data.extra,
+      //   rank: data.extra.rank + getRndInteger(-2, 2),
+      // },
+      // numberScoreReview: data.numberScoreReview.map((item, index) => {
+      //   if (index <= 2) {
+      //     return item + getRndInteger(0, 2);
+      //   }
+      //   return item;
+      // }),
     };
     const origin = await this.prismaService.tbObject.findFirst({
       where: {
