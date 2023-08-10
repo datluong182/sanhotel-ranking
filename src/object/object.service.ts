@@ -119,7 +119,7 @@ export class ObjectService {
     return newObjectTrip;
   }
 
-  compareChange(origin: tbObject, newData: UpdateObjectByUrl): string[] {
+  compareChange(origin: tbObject, newData: any): string[] {
     let messsages = [];
 
     if (
@@ -177,7 +177,7 @@ export class ObjectService {
       },
       data: {
         ...temp,
-        updatedAt: moment(new Date(data.updatedAt)).toDate(),
+        updatedAt: moment().toDate(),
       },
     });
     await this.prismaService.tbObjectLog.create({
@@ -194,9 +194,15 @@ export class ObjectService {
   async updateObject(
     data: tbObject,
     updatedAt: Date | undefined = undefined,
-  ): Promise<tbObject> {
+  ): Promise<{ updated: tbObject, messages: string[] }> {
     const object = await this.crawlObject(data.url, data.platform);
     if (!object) return undefined;
+    const origin = await this.prismaService.tbObject.findFirst({
+      where: {
+        id: data.id,
+      }
+    })
+    const messages = this.compareChange(origin, object);
     const updatedObjectTrips = await this.prismaService.tbObject.update({
       where: {
         id: data.id,
@@ -207,7 +213,7 @@ export class ObjectService {
         updatedAt: updatedAt ? updatedAt : new Date(),
       },
     });
-    return updatedObjectTrips;
+    return { updated: updatedObjectTrips, messages };
   }
 
   async deleteObject(id: string): Promise<tbObject> {
@@ -218,20 +224,34 @@ export class ObjectService {
     });
   }
 
-  // @Cron(cronjobCrawlReviewEnv)
+  @Cron(cronjobCrawlReviewEnv)
   async crawlSchedule(isManual = true): Promise<void> {
     const listObjects = await this.prismaService.tbObject.findMany();
-    const updatedAt = new Date();
+    const updatedAt = moment().utc().toDate();
     for (let i = 0; i < listObjects.length; i++) {
-      const updated = await this.updateObject(listObjects[i], updatedAt);
+      const { updated, messages } = await this.updateObject(listObjects[i], updatedAt);
+      const temp = {
+        ...updated,
+        // extra: {
+        //   rank: updated.extra["rank"] + getRndInteger(-2, 2),
+        //   totalHotel: updated.extra["totalHotel"],
+        // },
+        // numberScoreReview: updated.numberScoreReview.map((item, index) => {
+        //   if (index <= 2) {
+        //     return item + getRndInteger(0, 2);
+        //   }
+        //   return item;
+        // }),
+      };
       const id = updated.id;
-      delete updated.id;
+      delete temp.id;
       await this.prismaService.tbObjectLog.create({
         data: {
-          ...updated,
+          ...temp,
+          messages,
           isManual,
           tbObjectId: id,
-          updatedAt,
+          updatedAt: moment(new Date(moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'))).toDate(),
         },
       });
     }

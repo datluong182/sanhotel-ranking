@@ -70,6 +70,12 @@ export class ObjectController {
     await this.objectService.crawlSchedule(false);
   }
 
+  @Post('/check-manual/test')
+  async checkManualObjectTest(): Promise<void> {
+    console.log('Start');
+    await this.objectService.crawlSchedule(true);
+  }
+
   @Delete(':id')
   async deleteObjectTrip(@Param('id') id: string): Promise<tbObject> {
     return await this.objectService.deleteObject(id);

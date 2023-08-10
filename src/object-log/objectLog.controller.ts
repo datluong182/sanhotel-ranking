@@ -13,7 +13,7 @@ import { tbObjectLog } from '@prisma/client';
 import { DataList, Paging } from '../app.dto';
 import { ObjectLogService } from './objectLog.service';
 import { ApiTags } from '@nestjs/swagger';
-import { GetObjectLogByTime } from './objectLog.dto';
+import { GetNewsfeedByTime, GetObjectLogByTime } from './objectLog.dto';
 
 @ApiTags('object-log')
 @Controller('object-log')
@@ -29,7 +29,7 @@ export class ObjectLogController {
 
   @Get('/newsfeed')
   async getAllNewsfeed(
-    @Query() query: GetObjectLogByTime,
+    @Query() query: GetNewsfeedByTime,
   ): Promise<{ count: number; data: tbObjectLog[] }> {
     return await this.objectService.getAllNewsfeed(query);
   }
