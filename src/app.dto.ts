@@ -12,19 +12,15 @@ export class Paging {
 
   @ApiProperty({
     required: true,
-    default: 0,
+    default: "0",
   })
-  @IsInt()
-  @Type(() => Number)
-  page: number;
+  page: string;
 
   @ApiProperty({
     required: true,
-    default: 10,
+    default: "10",
   })
-  @IsInt()
-  @Type(() => Number)
-  limit: number;
+  limit: string;
 
   @ApiProperty({
     name: 'cond',
@@ -36,7 +32,7 @@ export class Paging {
 
 export class DataList<T> {
   count: number;
-  page: number;
-  limit: number;
+  page: string;
+  limit: string;
   data: Array<T>;
 }

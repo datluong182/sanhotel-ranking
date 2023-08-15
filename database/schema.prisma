@@ -47,3 +47,16 @@ model tbLastUpdate {
   updatedAt DateTime
   isManual  Boolean
 }
+
+model tbResponse {
+  id        String    @id @default(uuid())
+  name      String
+  value     Float
+  color     String
+  platform  PLATFORM_RESPONSE
+}
+
+enum PLATFORM_RESPONSE {
+  BOOKING
+  HUBSPOT
+}

@@ -15,6 +15,31 @@ export class CreateObject {
   platform: PLATFORM;
 }
 
+export class UpdateObjectResponse {
+  @ApiProperty({
+    required: true,
+   
+  })
+  id: string;
+  @ApiProperty({
+    required: true,
+  })
+  value: number;
+  @ApiProperty({
+    required: true,
+  })
+  color: string;
+}
+
+export class UpdateManyObjectResponse {
+  data: Array<{
+    id: string;
+    value: number;
+    color: string;
+  }>;
+}
+
+
 export class GetLastUpdate {
   @ApiProperty({
     required: true,

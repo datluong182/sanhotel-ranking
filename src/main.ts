@@ -30,6 +30,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('object')
     .addTag('object-log')
+    .addTag('response')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

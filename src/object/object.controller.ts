@@ -16,7 +16,9 @@ import {
   CreateLastUpdate,
   CreateObject,
   GetLastUpdate,
+  UpdateManyObjectResponse,
   UpdateObjectByUrl,
+  UpdateObjectResponse,
 } from './object.dto';
 import { ApiTags } from '@nestjs/swagger';
 

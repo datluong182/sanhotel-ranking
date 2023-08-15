@@ -1,17 +1,16 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { DataList, Paging } from '../app.dto';
-import { PLATFORM, Prisma, tbObject } from '@prisma/client';
-import { CreateObject, UpdateObjectByUrl, GetLastUpdate } from './object.dto';
-import { Builder, WebDriver, By } from 'selenium-webdriver';
-import { Options } from 'selenium-webdriver/chrome';
-import { GetElement, GetElements, getRndInteger, seleniumUrl } from 'src/utils';
-import axios from 'axios';
-import { Objects } from './object.entity';
+import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { PLATFORM, tbObject } from '@prisma/client';
 import * as moment from 'moment-timezone';
-import extractDataTrip from './utils/trip';
+import { Builder } from 'selenium-webdriver';
+import { Options } from 'selenium-webdriver/chrome';
+import { seleniumUrl } from 'src/utils';
+import { DataList, Paging } from '../app.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateObject, GetLastUpdate, UpdateObjectByUrl } from './object.dto';
+import { Objects } from './object.entity';
 import extractDataBoooking from './utils/booking';
+import extractDataTrip from './utils/trip';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -92,11 +91,11 @@ export class ObjectService {
     let data: tbObject[];
     if (query.platform === 'TRIP') {
       data = await this.prismaService
-        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRIP' ORDER BY ("extra"->>'rank') asc OFFSET ${query.page} LIMIT ${query.limit}`;
+        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRIP' ORDER BY ("extra"->>'rank') asc OFFSET ${parseInt(query.page)} LIMIT ${parseInt(query.limit)}`;
     }
     if (query.platform === 'BOOKING') {
       data = await this.prismaService
-        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'BOOKING' ORDER BY score desc OFFSET ${query.page} LIMIT ${query.limit}`;
+        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'BOOKING' ORDER BY score desc OFFSET ${parseInt(query.page)} LIMIT ${parseInt(query.limit)}`;
     }
     return {
       count,
@@ -133,16 +132,31 @@ export class ObjectService {
     ) {
       messsages = messsages.concat(
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
-        `Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${newData.extra.rank}`,
+        //@ts-ignore 
+        `${origin.extra?.rank > newData.extra.rank?"U.": "D."}Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${newData.extra.rank}`,
+      );
+    }
+    if (
+      newData.score &&
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      origin.score &&
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      origin.score !== newData.score
+    ) {
+      messsages = messsages.concat(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore 
+        `${origin.score > newData.score?"D.": "U."}Điểm bình chọn thay đổi từ #${origin.score} đến #${newData.score}`,
       );
     }
     for (let i = 0; i < origin.numberScoreReview.length; i++) {
-      if (origin.numberScoreReview[i] !== newData.numberScoreReview[i]) {
+      if (origin.numberScoreReview[i] && newData.numberScoreReview[i] && origin.numberScoreReview[i] !== newData.numberScoreReview[i]) {
         messsages = messsages.concat(
-          `Số lượng reviews ${i + 1} sao thay đổi từ ${
+          `Số lượng bình luận ${5-i} sao thay đổi từ ${
             origin.numberScoreReview[i]
-          } thành ${newData.numberScoreReview[i]}`,
+          } bình luận thành ${newData.numberScoreReview[i]} bình luận`,
         );
       }
     }
