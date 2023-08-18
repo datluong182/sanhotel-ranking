@@ -78,6 +78,12 @@ export class ObjectController {
     await this.objectService.crawlSchedule(true);
   }
 
+  // @Post('/noti/test')
+  // async sendNotiTest(): Promise<void> {
+  //   console.log('Start');
+  //   await this.objectService.sendNoti(["abc", "cde", "aaaaaa"]);
+  // }
+
   @Delete(':id')
   async deleteObjectTrip(@Param('id') id: string): Promise<tbObject> {
     return await this.objectService.deleteObject(id);

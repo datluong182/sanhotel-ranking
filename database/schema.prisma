@@ -7,6 +7,16 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model tbHotel {
+  id       String     @id @default(uuid())
+  name     String
+  address  String
+  avatar   String?
+  gm       String
+  links    Json
+  tbObject tbObject[]
+}
+
 model tbObject {
   id                String        @id @default(uuid())
   name              String
@@ -17,6 +27,8 @@ model tbObject {
   extra             Json
   platform          PLATFORM
   tbObjectLog       tbObjectLog[]
+  tbHotel           tbHotel       @relation(fields: [tbHotelId], references: [id], onDelete: Cascade)
+  tbHotelId         String
 }
 
 enum PLATFORM {
@@ -49,11 +61,11 @@ model tbLastUpdate {
 }
 
 model tbResponse {
-  id        String    @id @default(uuid())
-  name      String
-  value     Float
-  color     String
-  platform  PLATFORM_RESPONSE
+  id       String            @id @default(uuid())
+  name     String
+  value    Float
+  color    String
+  platform PLATFORM_RESPONSE
 }
 
 enum PLATFORM_RESPONSE {

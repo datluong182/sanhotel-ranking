@@ -31,6 +31,7 @@ async function bootstrap() {
     .addTag('object')
     .addTag('object-log')
     .addTag('response')
+    .addTag('hotel')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

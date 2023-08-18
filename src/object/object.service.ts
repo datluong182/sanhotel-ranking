@@ -11,6 +11,7 @@ import { CreateObject, GetLastUpdate, UpdateObjectByUrl } from './object.dto';
 import { Objects } from './object.entity';
 import extractDataBoooking from './utils/booking';
 import extractDataTrip from './utils/trip';
+import { HttpService } from '@nestjs/axios';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -24,7 +25,7 @@ async function sleep(time) {
 
 @Injectable()
 export class ObjectService {
-  constructor(private prismaService: PrismaService) {
+  constructor(private prismaService: PrismaService, private readonly httpService: HttpService) {
     console.log('init object service');
   }
 
@@ -91,7 +92,7 @@ export class ObjectService {
     let data: tbObject[];
     if (query.platform === 'TRIP') {
       data = await this.prismaService
-        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRIP' ORDER BY ("extra"->>'rank') asc OFFSET ${parseInt(query.page)} LIMIT ${parseInt(query.limit)}`;
+        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${parseInt(query.page)} LIMIT ${parseInt(query.limit)}`;
     }
     if (query.platform === 'BOOKING') {
       data = await this.prismaService
@@ -111,6 +112,7 @@ export class ObjectService {
     const newObjectTrip = await this.prismaService.tbObject.create({
       data: {
         ...objectTrip,
+        tbHotelId: data.tbHotelId,
         platform: data.platform,
         updatedAt: new Date(),
       },
@@ -205,6 +207,46 @@ export class ObjectService {
     });
   }
 
+  formatMessage(message: string) {
+    if (message.search("Số lượng bình luận") !== -1) {
+      return message
+    } else {
+      const arr = message.split(".");
+      let str = "";
+      if (arr.length === 1) {
+        str = arr[0];
+      } else {
+        str = arr[1];
+      }
+      return str
+    }
+  }
+
+  async sendNoti(messages: string[], title: string = "", tbHotelId: string, platform: PLATFORM, object: tbObject): Promise<void>{
+    
+    // const objLog = await this.prismaService.tbObjectLog.findFirst({
+    //   where: {
+    //     id: "15f7f217-ecfe-426f-a737-58fcb01ae600",
+    //   }
+    // })
+    // const obj = await this.prismaService.tbObject.findFirst({})
+    // const str = "Tripadvisor - Khách sạn " + obj.name + `(<a href="http://ranking.sanhotelseries.com/manage/hotel/${obj.tbHotelId}">Ranking ${obj.name}</a> - <a href="${obj.url}">Tripadvisor</a>)` + "\n";
+    const namePlatform = {
+      TRIP: 'Tripadvisor',
+      BOOKING: 'Booking',
+    }
+    let notification_text = title;
+    messages.map(message => {
+      notification_text += ("- " + this.formatMessage(message) + "\n");
+    })
+    notification_text += "Kiểm tra tại\n";
+    notification_text += `- <a href="http://ranking.sanhotelseries.com/manage/hotel/${tbHotelId}">Ranking ${object.name}</a>\n`;
+    notification_text += `- <a href="${object.url}">${namePlatform[platform]}</a>`
+    const url = `https://api.telegram.org/bot${process.env.API_KEY_TELE}/sendMessage?chat_id=${process.env.CHAT_ID_TELE}&text=${encodeURIComponent(notification_text)}&parse_mode=html&disable_web_page_preview=true`
+    console.log(url, object, 'url')
+    this.httpService.axiosRef.get(url);
+  }
+
   async updateObject(
     data: tbObject,
     updatedAt: Date | undefined = undefined,
@@ -227,6 +269,16 @@ export class ObjectService {
         updatedAt: updatedAt ? updatedAt : new Date(),
       },
     });
+    if (messages.length > 0) {
+      let title = "";
+      if (origin.platform === PLATFORM.TRIP) {
+        title = "Tripadvisor - Khách sạn " + object.name + "\n";
+      }
+      if (origin.platform === PLATFORM.BOOKING) {
+        title = "Booking - Khách sạn " + object.name + "\n";
+      }
+      this.sendNoti(messages, title, origin.tbHotelId, origin.platform, origin);
+    }
     return { updated: updatedObjectTrips, messages };
   }
 
@@ -244,7 +296,7 @@ export class ObjectService {
     const updatedAt = moment().utc().toDate();
     for (let i = 0; i < listObjects.length; i++) {
       const { updated, messages } = await this.updateObject(listObjects[i], updatedAt);
-      const temp = {
+      let temp = {
         ...updated,
         // extra: {
         //   rank: updated.extra["rank"] + getRndInteger(-2, 2),
@@ -259,6 +311,7 @@ export class ObjectService {
       };
       const id = updated.id;
       delete temp.id;
+      delete temp.tbHotelId;
       await this.prismaService.tbObjectLog.create({
         data: {
           ...temp,

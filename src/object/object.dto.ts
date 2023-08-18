@@ -13,6 +13,10 @@ export class CreateObject {
     default: 'TRIP',
   })
   platform: PLATFORM;
+  @ApiProperty({
+    required: true,
+  })
+  tbHotelId: string;
 }
 
 export class UpdateObjectResponse {

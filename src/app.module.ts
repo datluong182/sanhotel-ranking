@@ -6,9 +6,10 @@ import { ObjectModule } from './object/object.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ObjectLogModule } from './object-log/objectLog.module';
 import { ResponseModule } from './response/response.module';
+import { HotelModule } from './hotel/hotel.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), PrismaModule, ObjectModule, ObjectLogModule, ResponseModule],
+  imports: [ScheduleModule.forRoot(), PrismaModule, ObjectModule, ObjectLogModule, ResponseModule, HotelModule],
   controllers: [AppController],
   providers: [AppService],
   exports: [AppService],

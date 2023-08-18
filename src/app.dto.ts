@@ -2,14 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class Paging {
-  @ApiProperty({
-    required: true,
-    default: 'TRIP',
-  })
-  @IsString()
-  platform: string;
-
+export class PagingDefault {
   @ApiProperty({
     required: true,
     default: "0",
@@ -28,6 +21,15 @@ export class Paging {
     default: {},
   })
   cond: object;
+}
+
+export class Paging extends PagingDefault{
+  @ApiProperty({
+    required: true,
+    default: 'TRIP',
+  })
+  @IsString()
+  platform: string;
 }
 
 export class DataList<T> {
