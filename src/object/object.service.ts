@@ -235,11 +235,11 @@ export class ObjectService {
       TRIP: 'Tripadvisor',
       BOOKING: 'Booking',
     }
-    let notification_text = title;
+    let notification_text = title + "Đã có những thay đổi:\n";
     messages.map(message => {
       notification_text += ("- " + this.formatMessage(message) + "\n");
     })
-    notification_text += "Kiểm tra tại\n";
+    notification_text += "Kiểm tra tại:\n";
     notification_text += `- <a href="http://ranking.sanhotelseries.com/manage/hotel/${tbHotelId}">Ranking ${object.name}</a>\n`;
     notification_text += `- <a href="${object.url}">${namePlatform[platform]}</a>`
     const url = `https://api.telegram.org/bot${process.env.API_KEY_TELE}/sendMessage?chat_id=${process.env.CHAT_ID_TELE}&text=${encodeURIComponent(notification_text)}&parse_mode=html&disable_web_page_preview=true`
@@ -272,10 +272,10 @@ export class ObjectService {
     if (messages.length > 0) {
       let title = "";
       if (origin.platform === PLATFORM.TRIP) {
-        title = "Tripadvisor - Khách sạn " + object.name + "\n";
+        title = "Kênh OTA: Tripadvisor\nKhách sạn " + object.name + "\n";
       }
       if (origin.platform === PLATFORM.BOOKING) {
-        title = "Booking - Khách sạn " + object.name + "\n";
+        title = "Kênh OTA: Booking\nKhách sạn " + object.name + "\n";
       }
       this.sendNoti(messages, title, origin.tbHotelId, origin.platform, origin);
     }
