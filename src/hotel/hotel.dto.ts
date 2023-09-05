@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { PLATFORM } from "@prisma/client";
 
 export class CreateHotel {
   @ApiProperty({
@@ -31,4 +32,22 @@ export class UpdateHotel extends CreateHotel {
     required: true,
   })
   id: string;
+}
+
+export class QueryFiveStars {
+  @ApiProperty({
+    required: true,
+    default: 'TRIP'
+  })
+  platform: PLATFORM;
+  @ApiProperty({
+    required: true,
+    default: '2023-08-20'
+  })
+  start: string;
+  @ApiProperty({
+    required: true,
+    default: '2023-08-28'
+  })
+  end: string;
 }

@@ -1,5 +1,14 @@
 import { By, WebDriver, WebElement } from 'selenium-webdriver';
 
+export const nomalizeName = (name: string) => {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace("đ", "d")
+    .toLowerCase()
+    .trim();
+};
+
 export const GetElement = async (
   driver: WebDriver | WebElement,
   xpath: string,
@@ -25,6 +34,22 @@ export const GetElements = async (
   } catch (e) {
     console.log('Cannot find elements');
     return null;
+  }
+};
+
+export const ClickElement = async (
+  driver: WebDriver,
+  ele: WebElement,
+): Promise<boolean> => {
+  try {
+    await driver.executeScript(
+      'arguments[0].click()',
+      ele,
+    );
+    return true;
+  } catch (e) {
+    console.log('Cannot click elements');
+    return false;
   }
 };
 

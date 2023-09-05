@@ -2,8 +2,8 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/
 import { ApiTags } from "@nestjs/swagger";
 import { HotelService } from './hotel.service';
 import { DataList, PagingDefault, Paging } from "src/app.dto";
-import { tbHotel } from "@prisma/client";
-import { CreateHotel, UpdateHotel } from "./hotel.dto";
+import { tbHotel, tbObjectLog } from "@prisma/client";
+import { CreateHotel, QueryFiveStars, UpdateHotel } from "./hotel.dto";
 
 @ApiTags('hotel')
 @Controller('hotel')
@@ -14,6 +14,11 @@ export class HotelController {
   @Get()
   async getAllHotel(@Query() query: PagingDefault): Promise<DataList<tbHotel>> {
     return await this.hotelService.getAllHotel(query);
+  }
+
+  @Get("/five-stars")
+  async getChartFiveStars(@Query() query: QueryFiveStars): Promise<{ dataDate: string[]; data: { name: string; data: number[] }[] }> {
+    return await this.hotelService.getChartFiveStars(query);
   }
 
   @Get(":id")

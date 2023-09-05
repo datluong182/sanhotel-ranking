@@ -17,7 +17,7 @@ moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
 const token = process.env.TOKEN_HUBSPOT;
 
-const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
+const cronjobCrawlObjectEnv = process.env.CRONJOB_CRAWL_OBJECT;
 
 async function sleep(time) {
   return new Promise((resolve) => setTimeout(resolve, time));
@@ -240,7 +240,7 @@ export class ObjectService {
       notification_text += ("- " + this.formatMessage(message) + "\n");
     })
     notification_text += "Kiểm tra tại:\n";
-    notification_text += `- <a href="http://ranking.sanhotelseries.com/manage/hotel/${tbHotelId}">Ranking ${object.name}</a>\n`;
+    notification_text += `- <a href="http://ranking.sanhotelseries.com/manage/hotel/detail/${tbHotelId}">Ranking ${object.name}</a>\n`;
     notification_text += `- <a href="${object.url}">${namePlatform[platform]}</a>`
     const url = `https://api.telegram.org/bot${process.env.API_KEY_TELE}/sendMessage?chat_id=${process.env.CHAT_ID_TELE}&text=${encodeURIComponent(notification_text)}&parse_mode=html&disable_web_page_preview=true`
     console.log(url, object, 'url')
@@ -290,7 +290,7 @@ export class ObjectService {
     });
   }
 
-  @Cron(cronjobCrawlReviewEnv)
+  @Cron(cronjobCrawlObjectEnv)
   async crawlSchedule(isManual = true): Promise<void> {
     const listObjects = await this.prismaService.tbObject.findMany();
     const updatedAt = moment().utc().toDate();

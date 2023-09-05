@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PLATFORM } from '@prisma/client';
 
 export class PagingDefault {
   @ApiProperty({
@@ -29,7 +30,7 @@ export class Paging extends PagingDefault{
     default: 'TRIP',
   })
   @IsString()
-  platform: string;
+  platform: PLATFORM;
 }
 
 export class DataList<T> {

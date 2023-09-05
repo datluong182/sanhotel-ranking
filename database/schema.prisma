@@ -8,13 +8,65 @@ generator client {
 }
 
 model tbHotel {
-  id       String     @id @default(uuid())
-  name     String
-  address  String
-  avatar   String?
-  gm       String
-  links    Json
-  tbObject tbObject[]
+  id         String       @id @default(uuid())
+  name       String
+  address    String
+  avatar     String?
+  gm         String
+  links      Json
+  tbObject   tbObject[]
+  tbReview   tbReview[]
+  tbStaff    tbStaff[]
+  tbStaffLog tbStaffLog[]
+}
+
+model tbStaff {
+  id              String       @id @default(uuid())
+  tbHotel         tbHotel      @relation(fields: [tbHotelId], references: [id], onDelete: Cascade)
+  tbHotelId       String
+  role            String
+  name            String
+  otherNames      String[]
+  fiveStarsReview Json
+  tbStaffLog      tbStaffLog[]
+}
+
+model tbStaffLog {
+  id                  String            @id @default(uuid())
+  tbHotel             tbHotel           @relation(fields: [tbHotelId], references: [id], onDelete: Cascade)
+  tbHotelId           String
+  name                String
+  fiveStarsReview     Json
+  updatedAt           DateTime
+  tbStaffLastUpdate   tbStaffLastUpdate @relation(fields: [tbStaffLastUpdateId], references: [id])
+  tbStaffLastUpdateId String
+  tbStaff             tbStaff           @relation(fields: [tbStaffId], references: [id])
+  tbStaffId           String
+}
+
+model tbStaffLastUpdate {
+  id         String       @id @default(uuid())
+  updatedAt  DateTime
+  tbStaffLog tbStaffLog[]
+}
+
+model tbReview {
+  id           String   @id @default(uuid())
+  tbHotel      tbHotel  @relation(fields: [tbHotelId], references: [id], onDelete: Cascade)
+  tbHotelId    String
+  username     String
+  title        String
+  content      String[]
+  extra        Json
+  createdAt    DateTime
+  monthCreated Int
+  yearCreated  Int
+  platform     PLATFORM
+}
+
+model tbLastUpdateReview {
+  id        String   @id @default(uuid())
+  updatedAt DateTime
 }
 
 model tbObject {
@@ -29,13 +81,6 @@ model tbObject {
   tbObjectLog       tbObjectLog[]
   tbHotel           tbHotel       @relation(fields: [tbHotelId], references: [id], onDelete: Cascade)
   tbHotelId         String
-}
-
-enum PLATFORM {
-  TRIP
-  BOOKING
-  GOOGLE
-  EXPEDIA
 }
 
 model tbObjectLog {
@@ -71,4 +116,11 @@ model tbResponse {
 enum PLATFORM_RESPONSE {
   BOOKING
   HUBSPOT
+}
+
+enum PLATFORM {
+  TRIP
+  BOOKING
+  GOOGLE
+  EXPEDIA
 }

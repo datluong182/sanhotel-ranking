@@ -1,0 +1,4 @@
+FROM selenium/node-firefox:beta
+
+# Set the timezone
+ENV TZ=Asia/Ho_Chi_Minh

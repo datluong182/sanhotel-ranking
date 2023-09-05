@@ -7,9 +7,12 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ObjectLogModule } from './object-log/objectLog.module';
 import { ResponseModule } from './response/response.module';
 import { HotelModule } from './hotel/hotel.module';
+import { ReviewModule } from './review/review.module';
+import { StaffModule } from './staff/staff.module';
+import { StaffLogModule } from './staff-log/staff-log.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), PrismaModule, ObjectModule, ObjectLogModule, ResponseModule, HotelModule],
+  imports: [ScheduleModule.forRoot(), PrismaModule, ObjectModule, ObjectLogModule, ResponseModule, HotelModule, ReviewModule, StaffModule, StaffLogModule],
   controllers: [AppController],
   providers: [AppService],
   exports: [AppService],
