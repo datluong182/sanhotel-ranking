@@ -46,6 +46,11 @@ services:
       - "4445:4442"
       - "4446:4443"
       - "4447:4444"
+  browsermob-proxy:
+    # container_name: proxy-ranking
+    image: browsermob/browsermob-proxy
+    ports:
+      - '3002:8080'
   postgres-db:
     image: postgres:12
     container_name: postgres_ranking

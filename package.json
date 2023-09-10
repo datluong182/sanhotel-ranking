@@ -35,6 +35,8 @@
     "apify": "^3.1.4",
     "apify-client": "^2.6.4",
     "axios": "^1.4.0",
+    "browsermob-proxy": "^1.0.13",
+    "browsermob-proxy-client": "^0.1.2",
     "cache-manager": "^5.2.0",
     "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "^0.5.1",
@@ -48,7 +50,8 @@
     "rxjs": "^7.5.5",
     "selenium-webdriver": "^4.10.0",
     "string-comparison": "^1.1.0",
-    "typeorm": "^0.3.12"
+    "typeorm": "^0.3.12",
+    "webdriverio": "^8.16.6"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",

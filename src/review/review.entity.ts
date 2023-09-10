@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from '@prisma/client';
 
 export class Review {
   username: string;
@@ -25,12 +25,15 @@ export class ReviewBooking extends Review {
     score: number;
     reviewId: string;
     link: string;
-  }
+  };
 }
 
-export class NewReview { 
+export class ReviewGoogle extends Review {}
+
+export class NewReview {
   [key: string]: {
     TRIP: ReviewTrip[];
     BOOKING: ReviewBooking[];
-  }
+    GOOGLE: ReviewGoogle[];
+  };
 }

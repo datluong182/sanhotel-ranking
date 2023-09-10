@@ -43,7 +43,7 @@ export class UpdateStaff extends CreateStaff {
   id: string;
 }
 
-export class QueryReviewByDayStaff {
+export class QueryRankByDayStaff {
   @ApiProperty({
     default: '2023-06-30',
   })

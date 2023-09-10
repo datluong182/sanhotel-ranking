@@ -1,11 +1,11 @@
 import { PrismaService } from 'src/prisma/prisma.service';
-import { QueryReviewByDayStaff } from '../staff.dto';
+import { QueryRankByDayStaff } from '../staff.dto';
 import { checkExist, checkExistMoreThanOne } from '../staff.service';
-import { tbReview, tbStaff } from '@prisma/client';
+import { PLATFORM, tbReview, tbStaff } from '@prisma/client';
 
 export const reviewsByDayStaff = async (
   prismaService: PrismaService,
-  query: QueryReviewByDayStaff,
+  query: QueryRankByDayStaff,
 ): Promise<tbReview[]> => {
   const staff = await prismaService.tbStaff.findFirst({
     where: {
@@ -46,12 +46,19 @@ export const reviewsByDayStaff = async (
 
   let reviews: tbReview[] = [];
   listReviews.map((review) => {
-    console.log(review, 'debugger;');
     let checked = false;
     review.content.map((text) => {
       const staffs: tbStaff[] = checkExistMoreThanOne(text, listStaffs);
       if (staffs.length === 1 && staffs[0].id === staff.id) {
-        checked = true;
+        if (query.platform === PLATFORM.TRIP && review.extra['stars'] === 5) {
+          checked = true;
+        }
+        if (
+          query.platform === PLATFORM.BOOKING &&
+          review.extra['score'] >= 9.0
+        ) {
+          checked = true;
+        }
       }
     });
     if (checked) {

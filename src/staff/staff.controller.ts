@@ -15,7 +15,7 @@ import { tbReview, tbStaff } from '@prisma/client';
 import {
   CreateStaff,
   QueryRankingStaff,
-  QueryReviewByDayStaff,
+  QueryRankByDayStaff,
   RankingStaff,
   RankingStaffHotel,
   UpdateStaff,
@@ -29,6 +29,20 @@ export class StaffController {
   @Get()
   async getAllStaff(@Query() query: PagingDefault): Promise<DataList<tbStaff>> {
     return await this.staffService.getAllStaff(query);
+  }
+
+  @Post('/chart-review-by-day')
+  async reviewsByDayStaff(
+    @Body() data: QueryRankByDayStaff,
+  ): Promise<tbReview[]> {
+    return await this.staffService.reviewsByDayStaff(data);
+  }
+
+  @Post('/chart-ranking-by-day')
+  async rankingByDayStaff(
+    @Body() data: QueryRankByDayStaff,
+  ): Promise<{ day: string; value: number }[]> {
+    return await this.staffService.rankingByDay(data);
   }
 
   @Get('/ranking')
@@ -71,12 +85,5 @@ export class StaffController {
   @Delete(':id')
   async deleteStaff(@Param('id') id: string): Promise<tbStaff> {
     return await this.staffService.deleteStaff(id);
-  }
-
-  @Get('/review-by-day')
-  async reviewsByDayStaff(
-    @Query() query: QueryReviewByDayStaff,
-  ): Promise<tbReview[]> {
-    return await this.staffService.reviewsByDayStaff(query);
   }
 }

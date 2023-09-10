@@ -10,7 +10,7 @@ import { DataList, PagingDefault } from 'src/app.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   CreateStaff,
-  QueryReviewByDayStaff,
+  QueryRankByDayStaff,
   QueryRankingStaff,
   RankingStaff,
   RankingStaffHotel,
@@ -19,8 +19,10 @@ import {
 } from './staff.dto';
 import _, { result } from 'lodash';
 import { nomalizeName } from 'src/utils';
-import moment from 'moment';
 import { reviewsByDayStaff } from './performance';
+import * as moment from 'moment-timezone';
+
+moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
 export const checkExist = (subStr: string, str: string) => {
   const regex = new RegExp(`${nomalizeName(subStr)}(?![a-zA-Z])`);
@@ -79,10 +81,109 @@ export class StaffService {
     console.log('init staff service');
   }
 
-  async reviewsByDayStaff(query: QueryReviewByDayStaff): Promise<tbReview[]> {
+  async rankingByDay(
+    query: QueryRankByDayStaff,
+  ): Promise<{ day: string; value: number }[]> {
+    const staff = await this.prismaService.tbStaff.findFirst({
+      where: {
+        id: query.tbStaffId,
+      },
+    });
+    const listReviews = await this.prismaService.tbReview.findMany({
+      where: {
+        tbHotelId: staff.tbHotelId,
+        platform: query.platform,
+        AND: [
+          {
+            createdAt: {
+              gt: new Date(query.start),
+            },
+          },
+          {
+            createdAt: {
+              lte: new Date(query.end),
+            },
+          },
+        ],
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      include: {
+        tbHotel: true,
+      },
+    });
+
+    const listStaffs = await this.prismaService.tbStaff.findMany({
+      where: {
+        tbHotelId: staff.tbHotelId,
+      },
+      include: {
+        tbHotel: true,
+      },
+    });
+
+    let rankingByDay: { day: string; value: number }[] = [];
+
+    let count = 1;
+    while (
+      moment(query.start, 'YYYY-MM-DD')
+        .clone()
+        .add(count, 'day')
+        .isSameOrBefore(moment(query.end, 'YYYY-MM-DD'), 'day')
+    ) {
+      const start = moment(query.start, 'YYYY-MM-DD')
+        .clone()
+        .add(1, 'day')
+        .format('YYYY-MM-DD');
+      const end = moment(query.start, 'YYYY-MM-DD')
+        .clone()
+        .add(count, 'day')
+        .format('YYYY-MM-DD');
+
+      const tempReviews = listReviews.filter(
+        (review) =>
+          moment(review.createdAt).isSameOrAfter(moment(start), 'day') &&
+          moment(review.createdAt).isSameOrBefore(moment(end), 'day'),
+      );
+
+      const result = await this.getRankingBase(
+        {
+          start,
+          end,
+          platform: query.platform,
+          tbHotelId: staff.tbHotelId,
+        },
+        tempReviews,
+        listStaffs,
+      );
+
+      let rank = 0;
+      let currentValue = 100000;
+      result.data.map((item) => {
+        if (currentValue > item.fiveStarsReview) {
+          currentValue = item.fiveStarsReview;
+          rank++;
+        }
+        if (item.tbStaffId === staff.id) {
+          rankingByDay = rankingByDay.concat({
+            day: moment(query.start, 'YYYY-MM-DD')
+              .clone()
+              .add(count, 'day')
+              .format('DD/MM/YYYY'),
+            value: rank,
+          });
+        }
+      });
+      count++;
+    }
+    return rankingByDay;
+  }
+
+  async reviewsByDayStaff(query: QueryRankByDayStaff): Promise<tbReview[]> {
     console.log('review by day');
-    return [];
-    // return await reviewsByDayStaff(this.prismaService, query);
+    // return [];
+    return await reviewsByDayStaff(this.prismaService, query);
   }
 
   async getRankingHotelBadReview(
@@ -320,6 +421,14 @@ export class StaffService {
       },
     });
 
+    return await this.getRankingBase(query, listReviews, listStaffs);
+  }
+
+  async getRankingBase(
+    query: QueryRankingStaff,
+    listReviews: tbReview[],
+    listStaffs: tbStaff[],
+  ): Promise<{ count: number; data: RankingStaff[] }> {
     console.log(listReviews.length, query.start, query.end, 'listStaffs');
 
     let results: RankingStaff[] = [];
@@ -327,7 +436,9 @@ export class StaffService {
       let tempStaff: RankingStaff = {
         tbStaff: staff,
         tbStaffId: staff.id,
-        tbHotel: staff.tbHotel,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        tbHotel: staff?.tbHotel,
         tbHotelId: staff.tbHotelId,
         fiveStarsReview: 0,
         reviews: [],

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import {
   PLATFORM,
   tbHotel,
@@ -11,10 +12,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Builder, Capabilities } from 'selenium-webdriver';
 import { Options } from 'selenium-webdriver/chrome';
 import { seleniumUrl } from 'src/utils';
-import { NewReview, ReviewBooking, ReviewTrip } from './review.entity';
+import {
+  NewReview,
+  ReviewBooking,
+  ReviewGoogle,
+  ReviewTrip,
+} from './review.entity';
 import extractReviewTrip from './utils/trip';
 import extractReviewBooking from './utils/booking';
 import * as moment from 'moment-timezone';
+import extractReviewGoogle from './utils/google';
+import { Proxy } from 'browsermob-proxy-client';
+import { HttpService } from '@nestjs/axios';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -22,7 +31,10 @@ const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
 
 @Injectable()
 export class ReviewService {
-  constructor(private prismaService: PrismaService) {
+  constructor(
+    private prismaService: PrismaService,
+    private readonly httpService: HttpService,
+  ) {
     console.log('init review service');
   }
 
@@ -183,6 +195,7 @@ export class ReviewService {
       [hotel.id]: {
         TRIP: [],
         BOOKING: [],
+        GOOGLE: [],
       },
     };
     const screen = {
@@ -190,12 +203,23 @@ export class ReviewService {
       height: 600,
     };
     let driver;
+    let proxy;
     try {
+      proxy = new Proxy({ host: 'browsermob-proxy', port: 3002 });
+      await proxy.start();
+
+      const seleniumProxy = proxy.seleniumWebDriverProxy();
+
       const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
       capabilities.set('tz', timezone);
       capabilities.set('moz:firefoxOptions', {
         args: ['--headless'],
+      });
+      capabilities.set('browserName', 'firefox');
+      capabilities.set(proxy, {
+        httpProxy: seleniumProxy,
+        sslProxy: seleniumProxy,
       });
       // const option = new Options().addArguments('--no-proxy-server');
       // .addArguments('--headless=new')
@@ -205,11 +229,46 @@ export class ReviewService {
         .withCapabilities(capabilities)
         .build();
 
-      // await driver.executeScript(`
-      //     Intl.DateTimeFormat().resolvedOptions().timeZone = '${timezone}';
-      //     console.log("Timezone set to: " + Intl.DateTimeFormat().resolvedOptions().timeZone);
-      // `);
-      console.log('Start', hotel.links[PLATFORM.TRIP]);
+      await this.httpService.axiosRef.post(
+        'http://browsermob-proxy:3002/proxy/3003/har',
+        {
+          captureContent: true,
+          captureHeaders: true,
+        },
+      );
+
+      console.log('Start GOOGLE');
+      await driver.get(hotel.links[PLATFORM.GOOGLE]);
+
+      // get network rq
+      const harResponse = await this.httpService.axiosRef.get(
+        'http://browsermob-proxy:3002/proxy/3003/har',
+      );
+      const har = harResponse.data;
+      har.log.entries.forEach((entry) => {
+        console.log('Request URL:', entry.request.url);
+        console.log('Response Status:', entry.response.status);
+        console.log('Response Body Size:', entry.response.bodySize);
+      });
+
+      console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
+      const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
+        driver,
+        hotel.links[PLATFORM.GOOGLE],
+      );
+      newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
+
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          detail: 'Debugger',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+
+      return;
+
+      console.log('Start TRIP');
       // crawl review trip
       await driver.get(hotel.links[PLATFORM.TRIP]);
       console.log(hotel.links[PLATFORM.TRIP], 'Trip');
@@ -219,6 +278,7 @@ export class ReviewService {
       );
       newReviewHotel[hotel.id].TRIP = reviewsTrip;
 
+      console.log('Start BOOKING', hotel.links[PLATFORM.BOOKING]);
       // crawl review booking
       // convert url hotel booking to review hotel booking
       let urlBooking: string = hotel.links[PLATFORM.BOOKING];
@@ -272,6 +332,7 @@ export class ReviewService {
       console.log(e, 'error');
     }
     await driver.quit();
+    await proxy.stop();
     return newReviewHotel;
   }
 }
