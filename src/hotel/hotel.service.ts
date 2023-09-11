@@ -162,7 +162,6 @@ export class HotelService {
               .set({ h: 0, m: 0, s: 0 })
               .isSame(moment(date, 'YYYY-MM-DD').set({ h: 0, m: 0, s: 0 })),
         );
-        console.log(tempListReview.length, 'length rv', hotel.name);
 
         if (query.platform === PLATFORM.TRIP) {
           const listTrip = tempListReview.filter(

@@ -28,7 +28,13 @@ export class ReviewBooking extends Review {
   };
 }
 
-export class ReviewGoogle extends Review {}
+export class ReviewGoogle extends Review {
+  extra: {
+    score: number;
+    reviewId: string;
+    link: string;
+  };
+}
 
 export class NewReview {
   [key: string]: {
@@ -36,4 +42,20 @@ export class NewReview {
     BOOKING: ReviewBooking[];
     GOOGLE: ReviewGoogle[];
   };
+}
+
+export class PlaceGoogle {
+  url: string;
+  title: string;
+  address: string;
+  reviews: PlaceGoogleReview[];
+}
+
+export class PlaceGoogleReview {
+  name: string;
+  text: string;
+  publishedAtDate: string;
+  reviewId: string;
+  reviewUrl: string;
+  stars: number;
 }

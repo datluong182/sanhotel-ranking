@@ -20,9 +20,8 @@ import {
 } from './review.entity';
 import extractReviewTrip from './utils/trip';
 import extractReviewBooking from './utils/booking';
-import * as moment from 'moment-timezone';
 import extractReviewGoogle from './utils/google';
-import { Proxy } from 'browsermob-proxy-client';
+import * as moment from 'moment-timezone';
 import { HttpService } from '@nestjs/axios';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
@@ -85,6 +84,7 @@ export class ReviewService {
         hotel.name,
         result[hotel.id].TRIP.length,
         result[hotel.id].BOOKING.length,
+        result[hotel.id].GOOGLE.length,
         'Done hotel',
         hotel.name,
       );
@@ -203,61 +203,53 @@ export class ReviewService {
       height: 600,
     };
     let driver;
-    let proxy;
     try {
-      proxy = new Proxy({ host: 'browsermob-proxy', port: 3002 });
-      await proxy.start();
-
-      const seleniumProxy = proxy.seleniumWebDriverProxy();
-
       const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
       capabilities.set('tz', timezone);
-      capabilities.set('moz:firefoxOptions', {
-        args: ['--headless'],
-      });
+      // capabilities.set('moz:firefoxOptions', {
+      //   args: ['--headless'],
+      // });
       capabilities.set('browserName', 'firefox');
-      capabilities.set(proxy, {
-        httpProxy: seleniumProxy,
-        sslProxy: seleniumProxy,
-      });
-      // const option = new Options().addArguments('--no-proxy-server');
-      // .addArguments('--headless=new')
+
       driver = await new Builder()
         .usingServer(seleniumUrl)
         .forBrowser('firefox')
         .withCapabilities(capabilities)
         .build();
 
-      await this.httpService.axiosRef.post(
-        'http://browsermob-proxy:3002/proxy/3003/har',
-        {
-          captureContent: true,
-          captureHeaders: true,
-        },
-      );
-
       console.log('Start GOOGLE');
       await driver.get(hotel.links[PLATFORM.GOOGLE]);
-
-      // get network rq
-      const harResponse = await this.httpService.axiosRef.get(
-        'http://browsermob-proxy:3002/proxy/3003/har',
-      );
-      const har = harResponse.data;
-      har.log.entries.forEach((entry) => {
-        console.log('Request URL:', entry.request.url);
-        console.log('Response Status:', entry.response.status);
-        console.log('Response Body Size:', entry.response.bodySize);
-      });
 
       console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
       const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
         driver,
+        this.httpService,
         hotel.links[PLATFORM.GOOGLE],
       );
       newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
+      console.log(reviewsGoogle.length, 'reviewsGoogle');
 
+      // dev
+
+      await this.prismaService.tbReview.deleteMany({
+        where: {
+          tbHotelId: hotel.id,
+          platform: PLATFORM.GOOGLE,
+        },
+      });
+      await this.prismaService.tbReview.createMany({
+        data: newReviewHotel[hotel.id].GOOGLE.map((item) => ({
+          ...item,
+          extra: {
+            score: item.extra.score,
+            reviewId: item.extra.reviewId,
+            link: item.extra.link,
+          },
+          platform: PLATFORM.GOOGLE,
+          tbHotelId: hotel.id,
+        })),
+      });
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
@@ -267,6 +259,8 @@ export class ReviewService {
       );
 
       return;
+
+      //dev
 
       console.log('Start TRIP');
       // crawl review trip
@@ -332,7 +326,6 @@ export class ReviewService {
       console.log(e, 'error');
     }
     await driver.quit();
-    await proxy.stop();
     return newReviewHotel;
   }
 }

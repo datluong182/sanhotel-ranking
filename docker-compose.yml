@@ -46,11 +46,14 @@ services:
       - "4445:4442"
       - "4446:4443"
       - "4447:4444"
-  browsermob-proxy:
-    # container_name: proxy-ranking
-    image: browsermob/browsermob-proxy
+  proxyserver:
+    image: qautomatron/docker-browsermob-proxy
     ports:
-      - '3002:8080'
+      - "9090:9090"
+      - "32000:32000"
+    environment:
+      - BMP_PORT=9090
+      - PORT_RANGE=32000-32001
   postgres-db:
     image: postgres:12
     container_name: postgres_ranking

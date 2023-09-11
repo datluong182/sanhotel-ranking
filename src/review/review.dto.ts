@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { PLATFORM } from "@prisma/client";
+import { ApiProperty } from '@nestjs/swagger';
+import { PLATFORM } from '@prisma/client';
 
 export class CreateReview {
   @ApiProperty({
@@ -21,15 +21,15 @@ export class CreateReview {
   @ApiProperty({
     required: true,
   })
-  extra: object
+  extra: object;
   @ApiProperty({
     required: true,
   })
-  createdAt: object
+  createdAt: object;
   @ApiProperty({
     required: true,
   })
-  platform: PLATFORM
+  platform: PLATFORM;
 }
 
 export class UpdateReview extends CreateReview {
