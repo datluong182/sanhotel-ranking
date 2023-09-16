@@ -9,6 +9,7 @@ const extractDataTrip = async (
   platform: PLATFORM,
   url: string,
 ): Promise<Objects | undefined> => {
+  await driver.sleep(2000);
   console.log('get name');
   const titleEle = await GetElement(driver, '//h1[@id="HEADING"]');
   if (!titleEle) {
@@ -27,6 +28,11 @@ const extractDataTrip = async (
     driver,
     '//div[@class="ui_column  "]/div/span',
   );
+  await driver.executeScript(
+    'arguments[0].scrollIntoView(true);',
+    scoreReviewEle,
+  );
+
   console.log(await scoreReviewEle.getAttribute('innerHTML'), 'html');
   if (!scoreReviewEle) {
     throw new HttpException(

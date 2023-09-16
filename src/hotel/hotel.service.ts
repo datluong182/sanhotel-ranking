@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   PLATFORM,
   PLATFORM_RESPONSE,
+  TYPE_HOTEL,
   tbHotel,
   tbObjectLog,
 } from '@prisma/client';
@@ -108,7 +109,11 @@ export class HotelService {
   async getChartFiveStars(
     query: QueryFiveStars,
   ): Promise<{ dataDate: string[]; data: { name: string; data: number[] }[] }> {
-    const listHotels = await this.prismaService.tbHotel.findMany();
+    const listHotels = await this.prismaService.tbHotel.findMany({
+      // where: {
+      //   type: TYPE_HOTEL.ALLY,
+      // },
+    });
     const dataDate = [];
     let count = 0;
     const start = query.start;
@@ -154,14 +159,18 @@ export class HotelService {
       };
       for (let j = 0; j < dataDate.length; j++) {
         const date = dataDate[j];
-        const tempListReview = listReviews.filter(
-          (review) =>
+        const tempListReview = listReviews.filter((review) => {
+          return (
             review.platform === query.platform &&
             review.tbHotelId === hotel.id &&
             moment(review.createdAt)
               .set({ h: 0, m: 0, s: 0 })
-              .isSame(moment(date, 'YYYY-MM-DD').set({ h: 0, m: 0, s: 0 })),
-        );
+              .isSame(
+                moment(date, 'YYYY-MM-DD').set({ h: 0, m: 0, s: 0 }),
+                'day',
+              )
+          );
+        });
 
         if (query.platform === PLATFORM.TRIP) {
           const listTrip = tempListReview.filter(
@@ -175,6 +184,13 @@ export class HotelService {
             (item) => item.extra['score'] >= 9.0,
           );
           item.data.push(listBooking.length);
+        }
+
+        if (query.platform === PLATFORM.GOOGLE) {
+          const listGoogle = tempListReview.filter(
+            (item) => item.extra['score'] === 5,
+          );
+          item.data.push(listGoogle.length);
         }
       }
       data.push(item);

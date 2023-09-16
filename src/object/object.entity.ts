@@ -1,4 +1,4 @@
-import { PLATFORM, Prisma } from '@prisma/client';
+import { PLATFORM, Prisma, tbObjectLog } from '@prisma/client';
 
 export interface Objects {
   name: string;
@@ -14,6 +14,10 @@ export interface ObjectExtra extends Prisma.JsonObject {
   rank?: number;
   totalHotel?: number;
   stars?: number;
+}
+
+export interface NewObjectLog extends tbObjectLog {
+  tbHotelId: string;
 }
 
 // export interface Object {

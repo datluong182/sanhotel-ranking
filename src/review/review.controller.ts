@@ -1,27 +1,40 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ReviewService } from './review.service';
-import { DataList, PagingDefault, Paging } from "src/app.dto";
-import { tbHotel, tbLastUpdateReview, tbReview } from "@prisma/client";
-import { CreateReview, UpdateReview } from "./review.dto";
+import { DataList, PagingDefault, Paging } from 'src/app.dto';
+import { tbHotel, tbLastUpdateReview, tbReview } from '@prisma/client';
+import { CreateReview, UpdateReview } from './review.dto';
+import { NewReview } from './review.entity';
 
 @ApiTags('review')
 @Controller('review')
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 
-
   @Get()
   async getAllReview(@Query() query: Paging): Promise<DataList<tbReview>> {
     return await this.reviewService.getAllReview(query);
   }
 
-  @Get("/check-manual")
-  async crawlReview(): Promise<void> {
+  @Get('/check-manual')
+  async crawlReview(): Promise<{
+    newReview: NewReview;
+    month: number;
+    year: number;
+  }> {
     return await this.reviewService.crawlSchedule();
   }
 
-  @Get("/last-updated")
+  @Get('/last-updated')
   async getLastUpdatedReview(): Promise<tbLastUpdateReview> {
     return await this.reviewService.getLastUpdatedReview();
   }

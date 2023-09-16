@@ -77,6 +77,11 @@ export class QueryRankingStaff {
     default: 'TRIP',
   })
   platform: PLATFORM;
+
+  @ApiProperty({
+    default: true,
+  })
+  allReview: boolean | string;
 }
 
 export class RankingStaff {
@@ -86,7 +91,7 @@ export class RankingStaff {
   tbHotelId: string;
   reviews: tbReview[];
   fiveStarsReview: number;
-  platform: PLATFORM;
+  platform?: PLATFORM;
 }
 
 export class RankingStaffHotel {

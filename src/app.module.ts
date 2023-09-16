@@ -10,9 +10,21 @@ import { HotelModule } from './hotel/hotel.module';
 import { ReviewModule } from './review/review.module';
 import { StaffModule } from './staff/staff.module';
 import { StaffLogModule } from './staff-log/staff-log.module';
+import { CompetitionModule } from './competition/competition.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), PrismaModule, ObjectModule, ObjectLogModule, ResponseModule, HotelModule, ReviewModule, StaffModule, StaffLogModule],
+  imports: [
+    ScheduleModule.forRoot(),
+    PrismaModule,
+    ObjectModule,
+    ObjectLogModule,
+    ResponseModule,
+    HotelModule,
+    ReviewModule,
+    StaffModule,
+    StaffLogModule,
+    CompetitionModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
   exports: [AppService],

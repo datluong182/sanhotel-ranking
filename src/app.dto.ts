@@ -6,13 +6,13 @@ import { PLATFORM } from '@prisma/client';
 export class PagingDefault {
   @ApiProperty({
     required: true,
-    default: "0",
+    default: '0',
   })
   page: string;
 
   @ApiProperty({
     required: true,
-    default: "10",
+    default: '10',
   })
   limit: string;
 
@@ -24,7 +24,7 @@ export class PagingDefault {
   cond: object;
 }
 
-export class Paging extends PagingDefault{
+export class Paging extends PagingDefault {
   @ApiProperty({
     required: true,
     default: 'TRIP',

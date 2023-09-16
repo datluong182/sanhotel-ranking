@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { PLATFORM, tbObject } from '@prisma/client';
+import { PLATFORM, TYPE_HOTEL, tbObject, tbObjectLog } from '@prisma/client';
 import * as moment from 'moment-timezone';
 import { Options } from 'selenium-webdriver/chrome';
 import { Builder, Capabilities } from 'selenium-webdriver';
@@ -8,7 +8,7 @@ import { seleniumUrl } from 'src/utils';
 import { DataList, Paging } from '../app.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateObject, GetLastUpdate, UpdateObjectByUrl } from './object.dto';
-import { Objects } from './object.entity';
+import { NewObjectLog, Objects } from './object.entity';
 import extractDataBoooking from './utils/booking';
 import extractDataTrip from './utils/trip';
 import { HttpService } from '@nestjs/axios';
@@ -123,6 +123,7 @@ export class ObjectService {
   async createObject(data: CreateObject): Promise<tbObject | undefined> {
     console.log(data, 'data create object');
     const objectTrip = await this.crawlObject(data.url, data.platform);
+    console.log(objectTrip, 'crawl object done');
     if (!objectTrip) return undefined;
     const newObjectTrip = await this.prismaService.tbObject.create({
       data: {
@@ -176,19 +177,19 @@ export class ObjectService {
         }Điểm bình chọn thay đổi từ #${origin.score} đến #${newData.score}`,
       );
     }
-    for (let i = 0; i < origin.numberScoreReview.length; i++) {
-      if (
-        origin.numberScoreReview[i] &&
-        newData.numberScoreReview[i] &&
-        origin.numberScoreReview[i] !== newData.numberScoreReview[i]
-      ) {
-        messsages = messsages.concat(
-          `Số lượng bình luận ${5 - i} sao thay đổi từ ${
-            origin.numberScoreReview[i]
-          } bình luận thành ${newData.numberScoreReview[i]} bình luận`,
-        );
-      }
-    }
+    // for (let i = 0; i < origin.numberScoreReview.length; i++) {
+    //   if (
+    //     origin.numberScoreReview[i] &&
+    //     newData.numberScoreReview[i] &&
+    //     origin.numberScoreReview[i] !== newData.numberScoreReview[i]
+    //   ) {
+    //     messsages = messsages.concat(
+    //       `Số lượng đánh giá ${5 - i} sao thay đổi từ ${
+    //         origin.numberScoreReview[i]
+    //       } đánh giá thành ${newData.numberScoreReview[i]} đánh giá`,
+    //     );
+    //   }
+    // }
     return messsages;
   }
 
@@ -234,7 +235,7 @@ export class ObjectService {
   }
 
   formatMessage(message: string) {
-    if (message.search('Số lượng bình luận') !== -1) {
+    if (message.search('Số lượng đánh giá') !== -1) {
       return message;
     } else {
       const arr = message.split('.');
@@ -305,19 +306,19 @@ export class ObjectService {
         updatedAt: updatedAt ? updatedAt : new Date(),
       },
     });
-    if (messages.length > 0) {
-      let title = '';
-      if (origin.platform === PLATFORM.TRIP) {
-        title = 'Kênh OTA: Tripadvisor\nKhách sạn ' + object.name + '\n';
-      }
-      if (origin.platform === PLATFORM.BOOKING) {
-        title = 'Kênh OTA: Booking\nKhách sạn ' + object.name + '\n';
-      }
-      if (origin.platform === PLATFORM.GOOGLE) {
-        title = 'Kênh OTA: Google Reviews\nKhách sạn ' + object.name + '\n';
-      }
-      this.sendNoti(messages, title, origin.tbHotelId, origin.platform, origin);
-    }
+    // if (messages.length > 0) {
+    //   let title = '';
+    //   if (origin.platform === PLATFORM.TRIP) {
+    //     title = 'Kênh OTA: Tripadvisor\nKhách sạn ' + object.name + '\n';
+    //   }
+    //   if (origin.platform === PLATFORM.BOOKING) {
+    //     title = 'Kênh OTA: Booking\nKhách sạn ' + object.name + '\n';
+    //   }
+    //   if (origin.platform === PLATFORM.GOOGLE) {
+    //     title = 'Kênh OTA: Google Reviews\nKhách sạn ' + object.name + '\n';
+    //   }
+    //   this.sendNoti(messages, title, origin.tbHotelId, origin.platform, origin);
+    // }
     return { updated: updatedObjectTrips, messages };
   }
 
@@ -329,9 +330,10 @@ export class ObjectService {
     });
   }
 
-  @Cron(cronjobCrawlObjectEnv)
-  async crawlSchedule(isManual = true): Promise<void> {
-    const listObjects = await this.prismaService.tbObject.findMany();
+  // @Cron(cronjobCrawlObjectEnv)
+  async crawlSchedule(isManual = true): Promise<NewObjectLog[]> {
+    let result: NewObjectLog[] = [];
+    const listObjects = await this.prismaService.tbObject.findMany({});
     const updatedAt = moment().utc().toDate();
     for (let i = 0; i < listObjects.length; i++) {
       const { updated, messages } = await this.updateObject(
@@ -352,9 +354,10 @@ export class ObjectService {
         // }),
       };
       const id = updated.id;
+      const tbHotelId = temp.tbHotelId;
       delete temp.id;
       delete temp.tbHotelId;
-      await this.prismaService.tbObjectLog.create({
+      const newObjectLog = await this.prismaService.tbObjectLog.create({
         data: {
           ...temp,
           messages,
@@ -364,6 +367,10 @@ export class ObjectService {
             new Date(moment(updatedAt).format('YYYY-MM-DD HH:mm:ss')),
           ).toDate(),
         },
+      });
+      result = result.concat({
+        ...newObjectLog,
+        tbHotelId,
       });
     }
     await this.createLastUpdate(
@@ -381,6 +388,7 @@ export class ObjectService {
       PLATFORM.GOOGLE,
       isManual,
     );
+    return result;
   }
 
   async crawlObject(

@@ -11,7 +11,11 @@ export class Review {
 }
 
 export class ReviewTrip extends Review {
-  extra: ExtraTrip;
+  extra: {
+    link: string;
+    stars: number;
+    reviewId: string;
+  };
 }
 
 export class ExtraTrip {

@@ -68,14 +68,23 @@ export class ReviewService {
     };
   }
 
-  @Cron(cronjobCrawlReviewEnv)
-  async crawlSchedule(isManual = true): Promise<void> {
+  // @Cron(cronjobCrawlReviewEnv)
+  async crawlSchedule(
+    isManual = true,
+    currentMonth = moment().get('month') + 1,
+    currentYear = moment().get('year'),
+  ): Promise<{ newReview: NewReview; month: number; year: number }> {
     let result: NewReview = {};
+
     // const updatedAt = moment().utc().toDate();
     const listHotels = await this.prismaService.tbHotel.findMany();
     for (let i = 0; i < listHotels.length; i++) {
       const hotel: tbHotel = listHotels[i];
-      const temp: NewReview = await this.crawlHotel(hotel);
+      const temp: NewReview = await this.crawlHotel(
+        hotel,
+        currentMonth,
+        currentYear,
+      );
       result = {
         ...result,
         ...temp,
@@ -86,7 +95,6 @@ export class ReviewService {
         result[hotel.id].BOOKING.length,
         result[hotel.id].GOOGLE.length,
         'Done hotel',
-        hotel.name,
       );
     }
     console.log('Done crawl all hotel');
@@ -98,7 +106,11 @@ export class ReviewService {
         updatedAt: moment().toDate(),
       },
     });
-
+    return {
+      newReview: result,
+      month: currentMonth,
+      year: currentYear,
+    };
     // const listReviewTrip= await this.prismaService.tbReview.findMany({
     //   where: {
     //     platform: 'TRIP',
@@ -189,7 +201,11 @@ export class ReviewService {
     // }
   }
 
-  async crawlHotel(hotel: tbHotel): Promise<NewReview> {
+  async crawlHotel(
+    hotel: tbHotel,
+    currentMonth: number,
+    currentYear: number,
+  ): Promise<NewReview> {
     console.log('Start firefox');
     const newReviewHotel: NewReview = {
       [hotel.id]: {
@@ -207,10 +223,10 @@ export class ReviewService {
       const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
       capabilities.set('tz', timezone);
-      // capabilities.set('moz:firefoxOptions', {
-      //   args: ['--headless'],
-      // });
-      capabilities.set('browserName', 'firefox');
+      capabilities.set('moz:firefoxOptions', {
+        args: ['--headless'],
+      });
+      // capabilities.set('browserName', 'firefox');
 
       driver = await new Builder()
         .usingServer(seleniumUrl)
@@ -218,51 +234,51 @@ export class ReviewService {
         .withCapabilities(capabilities)
         .build();
 
-      console.log('Start GOOGLE');
-      await driver.get(hotel.links[PLATFORM.GOOGLE]);
-
-      console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
-      const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
-        driver,
-        this.httpService,
-        hotel.links[PLATFORM.GOOGLE],
-      );
-      newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
-      console.log(reviewsGoogle.length, 'reviewsGoogle');
-
       // dev
 
-      await this.prismaService.tbReview.deleteMany({
-        where: {
-          tbHotelId: hotel.id,
-          platform: PLATFORM.GOOGLE,
-        },
-      });
-      await this.prismaService.tbReview.createMany({
-        data: newReviewHotel[hotel.id].GOOGLE.map((item) => ({
-          ...item,
-          extra: {
-            score: item.extra.score,
-            reviewId: item.extra.reviewId,
-            link: item.extra.link,
-          },
-          platform: PLATFORM.GOOGLE,
-          tbHotelId: hotel.id,
-        })),
-      });
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          detail: 'Debugger',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      // console.log('Start review GOOGLE');
+      // await driver.get(hotel.links[PLATFORM.GOOGLE]);
 
-      return;
+      // console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
+      // const reviewsGooglDev: ReviewGoogle[] = await extractReviewGoogle(
+      //   driver,
+      //   this.httpService,
+      //   hotel.links[PLATFORM.GOOGLE],
+      // );
+      // newReviewHotel[hotel.id].GOOGLE = reviewsGooglDev;
+      // // console.log(reviewsGoogle.length, 'reviewsGoogle');
+
+      // await this.prismaService.tbReview.deleteMany({
+      //   where: {
+      //     tbHotelId: hotel.id,
+      //     platform: PLATFORM.GOOGLE,
+      //   },
+      // });
+      // await this.prismaService.tbReview.createMany({
+      //   data: newReviewHotel[hotel.id].GOOGLE.map((item) => ({
+      //     ...item,
+      //     extra: {
+      //       score: item.extra.score,
+      //       reviewId: item.extra.reviewId,
+      //       link: item.extra.link,
+      //     },
+      //     platform: PLATFORM.GOOGLE,
+      //     tbHotelId: hotel.id,
+      //   })),
+      // });
+      // throw new HttpException(
+      //   {
+      //     status: HttpStatus.BAD_REQUEST,
+      //     detail: 'Debugger',
+      //   },
+      //   HttpStatus.BAD_REQUEST,
+      // );
+
+      // return;
 
       //dev
 
-      console.log('Start TRIP');
+      console.log('Start review TRIP');
       // crawl review trip
       await driver.get(hotel.links[PLATFORM.TRIP]);
       console.log(hotel.links[PLATFORM.TRIP], 'Trip');
@@ -272,7 +288,7 @@ export class ReviewService {
       );
       newReviewHotel[hotel.id].TRIP = reviewsTrip;
 
-      console.log('Start BOOKING', hotel.links[PLATFORM.BOOKING]);
+      console.log('Start review BOOKING', hotel.links[PLATFORM.BOOKING]);
       // crawl review booking
       // convert url hotel booking to review hotel booking
       let urlBooking: string = hotel.links[PLATFORM.BOOKING];
@@ -285,10 +301,20 @@ export class ReviewService {
       );
       newReviewHotel[hotel.id].BOOKING = reviewsBooking;
 
+      console.log('Start review GOOGLE');
+      await driver.get(hotel.links[PLATFORM.GOOGLE]);
+
+      console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
+      const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
+        driver,
+        this.httpService,
+        hotel.links[PLATFORM.GOOGLE],
+      );
+      newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
+      // console.log(reviewsGoogle.length, 'reviewsGoogle');
+
       // delete old data review
-      const currentMonth = moment().get('month') + 1;
-      // const currentMonth = 8;
-      const currentYear = moment().get('year');
+
       await this.prismaService.tbReview.deleteMany({
         where: {
           tbHotelId: hotel.id,
@@ -319,6 +345,18 @@ export class ReviewService {
             link: item.extra.link,
           },
           platform: PLATFORM.BOOKING,
+          tbHotelId: hotel.id,
+        })),
+      });
+      await this.prismaService.tbReview.createMany({
+        data: newReviewHotel[hotel.id].GOOGLE.map((item) => ({
+          ...item,
+          extra: {
+            score: item.extra.score,
+            reviewId: item.extra.reviewId,
+            link: item.extra.link,
+          },
+          platform: PLATFORM.GOOGLE,
           tbHotelId: hotel.id,
         })),
       });

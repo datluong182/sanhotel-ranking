@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   PLATFORM,
   PLATFORM_RESPONSE,
+  TYPE_HOTEL,
   tbHotel,
   tbReview,
   tbStaff,
@@ -73,6 +74,29 @@ export const checkExistMoreThanOne = (
     }
   });
   return results;
+};
+
+export const checkIfReviewGood = (
+  platform: PLATFORM,
+  valueReview: number,
+  review: tbReview,
+) => {
+  if (platform === PLATFORM.TRIP) {
+    if (review.extra['stars'] === 5) {
+      return valueReview;
+    }
+  }
+  if (platform === PLATFORM.BOOKING) {
+    if (review.extra['score'] >= 9.0) {
+      return valueReview;
+    }
+  }
+  if (platform === PLATFORM.GOOGLE) {
+    if (review.extra['score'] === 5) {
+      return valueReview;
+    }
+  }
+  return 0;
 };
 
 @Injectable()
@@ -153,9 +177,11 @@ export class StaffService {
           end,
           platform: query.platform,
           tbHotelId: staff.tbHotelId,
+          allReview: true,
         },
         tempReviews,
         listStaffs,
+        true,
       );
 
       let rank = 0;
@@ -217,6 +243,9 @@ export class StaffService {
     const listStaffs = await this.prismaService.tbStaff.findMany({
       where: {
         tbHotelId: query.tbHotelId,
+        tbHotel: {
+          type: TYPE_HOTEL.ALLY,
+        },
       },
       include: {
         tbHotel: true,
@@ -323,6 +352,7 @@ export class StaffService {
     const listHotels = await this.prismaService.tbHotel.findMany({
       where: {
         id: query.tbHotelId,
+        type: TYPE_HOTEL.ALLY,
       },
     });
 
@@ -353,6 +383,10 @@ export class StaffService {
           query.platform === PLATFORM.BOOKING &&
           review.extra['score'] < 9.0
         ) {
+          continue;
+        }
+
+        if (query.platform === PLATFORM.GOOGLE && review.extra['score'] < 5) {
           continue;
         }
 
@@ -387,10 +421,14 @@ export class StaffService {
   async getRanking(
     query: QueryRankingStaff,
   ): Promise<{ count: number; data: RankingStaff[] }> {
+    console.log(query, 'query');
+    query.allReview = query.allReview === 'true' ? true : false;
     const listReviews = await this.prismaService.tbReview.findMany({
       where: {
         tbHotelId: query.tbHotelId,
-        platform: query.platform,
+        ...(!query.allReview && {
+          platform: query.platform,
+        }),
         AND: [
           {
             createdAt: {
@@ -421,13 +459,19 @@ export class StaffService {
       },
     });
 
-    return await this.getRankingBase(query, listReviews, listStaffs);
+    return await this.getRankingBase(
+      query,
+      listReviews,
+      listStaffs,
+      query.allReview,
+    );
   }
 
   async getRankingBase(
     query: QueryRankingStaff,
     listReviews: tbReview[],
     listStaffs: tbStaff[],
+    allReview = true,
   ): Promise<{ count: number; data: RankingStaff[] }> {
     console.log(listReviews.length, query.start, query.end, 'listStaffs');
 
@@ -442,90 +486,155 @@ export class StaffService {
         tbHotelId: staff.tbHotelId,
         fiveStarsReview: 0,
         reviews: [],
-        platform: query.platform,
+        ...(!allReview && {
+          platform: query.platform,
+        }),
       };
 
+      // lấy danh sách các review khách sạn của nhân viên hiện tại
       const tempReview = listReviews.filter(
         (review) => review.tbHotelId === staff.tbHotelId,
       );
 
+      // Lấy danh sách những nhân viên cùng khách sạn với nhân viên hiện tại
       const tempStaffs = listStaffs.filter(
         (s) => s.tbHotelId === staff.tbHotelId,
       );
 
       let sum = 0;
-      if (query.platform === PLATFORM.TRIP) {
-        // Nếu là TRIP, sử dụng số sao stars
-        tempReview.map((review) => {
-          if (review.extra['stars'] === 5) {
-            let checked = false;
-            const substringToCheck = staff.name;
-            review.content.map((text) => {
-              if (checkExist(substringToCheck, text)) {
-                checked = true;
-              }
-            });
-            if (!checked) {
-              review.content.map((text) => {
-                staff.otherNames.map((otherName) => {
-                  if (checkExist(substringToCheck, text)) {
-                    checked = true;
-                  }
-                });
-              });
+      tempReview.map((review) => {
+        review.content.map((text) => {
+          const staffMentioned = checkExistMoreThanOne(text, tempStaffs);
+          const currentStaffExist =
+            staffMentioned.filter((s) => s.id === tempStaff.tbStaffId).length >
+            0;
+          if (currentStaffExist) {
+            const scorePerReview = 1 / staffMentioned.length;
+
+            // Nếu cần tính tổng tất cả các ota
+            if (allReview) {
+              sum += checkIfReviewGood(review.platform, scorePerReview, review);
             }
-            if (checked) {
-              let flag = true;
-              review.content.map((text) => {
-                if (checkAnotherExist(staff.id, tempStaffs, text)) {
-                  flag = false;
-                }
-              });
-              if (flag) {
-                sum += 1;
-                tempStaff.reviews.push(review);
-              }
+
+            // Nếu tính riêng từng ota một
+            if (!allReview) {
+              sum += checkIfReviewGood(query.platform, scorePerReview, review);
             }
+            tempStaff.reviews.push(review);
           }
         });
-      }
-      if (query.platform === PLATFORM.BOOKING) {
-        // Nếu là BOOKING, sử dụng score
-        tempReview.map((review) => {
-          if (review.extra['score'] >= 9.0) {
-            let checked = false;
-            const substringToCheck = staff.name;
-            review.content.map((text) => {
-              if (checkExist(substringToCheck, text)) {
-                checked = true;
-                // sum += 1;
-                // tempStaff.reviews.push(review);
-              }
-            });
-            if (!checked) {
-              review.content.map((text) => {
-                staff.otherNames.map((otherName) => {
-                  if (checkExist(otherName, text)) {
-                    checked = true;
-                  }
-                });
-              });
-            }
-            if (checked) {
-              let flag = true;
-              review.content.map((text) => {
-                if (checkAnotherExist(staff.id, tempStaffs, text)) {
-                  flag = false;
-                }
-              });
-              if (flag) {
-                sum += 1;
-                tempStaff.reviews.push(review);
-              }
-            }
-          }
-        });
-      }
+      });
+
+      // if (query.platform === PLATFORM.TRIP) {
+      //   // Nếu là TRIP, sử dụng số sao stars
+      //   tempReview.map((review) => {
+      //     if (review.extra['stars'] === 5) {
+      //       let checked = false;
+      //       const substringToCheck = staff.name;
+      //       review.content.map((text) => {
+      //         if (checkExist(substringToCheck, text)) {
+      //           checked = true;
+      //         }
+      //       });
+      //       if (!checked) {
+      //         review.content.map((text) => {
+      //           staff.otherNames.map((otherName) => {
+      //             if (checkExist(substringToCheck, text)) {
+      //               checked = true;
+      //             }
+      //           });
+      //         });
+      //       }
+      //       if (checked) {
+      //         let flag = true;
+      //         review.content.map((text) => {
+      //           if (checkAnotherExist(staff.id, tempStaffs, text)) {
+      //             flag = false;
+      //           }
+      //         });
+      //         if (flag) {
+      //           sum += 1;
+      //           tempStaff.reviews.push(review);
+      //         }
+      //       }
+      //     }
+      //   });
+      // }
+      // if (query.platform === PLATFORM.BOOKING) {
+      //   // Nếu là BOOKING, sử dụng score
+      //   tempReview.map((review) => {
+      //     if (review.extra['score'] >= 9.0) {
+      //       let checked = false;
+      //       const substringToCheck = staff.name;
+      //       review.content.map((text) => {
+      //         if (checkExist(substringToCheck, text)) {
+      //           checked = true;
+      //           // sum += 1;
+      //           // tempStaff.reviews.push(review);
+      //         }
+      //       });
+      //       if (!checked) {
+      //         review.content.map((text) => {
+      //           staff.otherNames.map((otherName) => {
+      //             if (checkExist(otherName, text)) {
+      //               checked = true;
+      //             }
+      //           });
+      //         });
+      //       }
+      //       if (checked) {
+      //         let flag = true;
+      //         review.content.map((text) => {
+      //           if (checkAnotherExist(staff.id, tempStaffs, text)) {
+      //             flag = false;
+      //           }
+      //         });
+      //         if (flag) {
+      //           sum += 1;
+      //           tempStaff.reviews.push(review);
+      //         }
+      //       }
+      //     }
+      //   });
+      // }
+
+      // // Đếm nhân viên Google Reviews
+      // if (query.platform === PLATFORM.GOOGLE) {
+      //   tempReview.map((review) => {
+      //     if (review.extra['score'] === 5) {
+      //       let checked = false;
+      //       const substringToCheck = staff.name;
+      //       review.content.map((text) => {
+      //         if (checkExist(substringToCheck, text)) {
+      //           checked = true;
+      //           // sum += 1;
+      //           // tempStaff.reviews.push(review);
+      //         }
+      //       });
+      //       if (!checked) {
+      //         review.content.map((text) => {
+      //           staff.otherNames.map((otherName) => {
+      //             if (checkExist(otherName, text)) {
+      //               checked = true;
+      //             }
+      //           });
+      //         });
+      //       }
+      //       if (checked) {
+      //         let flag = true;
+      //         review.content.map((text) => {
+      //           if (checkAnotherExist(staff.id, tempStaffs, text)) {
+      //             flag = false;
+      //           }
+      //         });
+      //         if (flag) {
+      //           sum += 1;
+      //           tempStaff.reviews.push(review);
+      //         }
+      //       }
+      //     }
+      //   });
+      // }
 
       tempStaff = {
         ...tempStaff,

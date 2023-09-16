@@ -8,16 +8,23 @@ generator client {
 }
 
 model tbHotel {
-  id         String       @id @default(uuid())
-  name       String
-  address    String
-  avatar     String?
-  gm         String
-  links      Json
-  tbObject   tbObject[]
-  tbReview   tbReview[]
-  tbStaff    tbStaff[]
-  tbStaffLog tbStaffLog[]
+  id            String          @id @default(uuid())
+  name          String
+  address       String
+  avatar        String?
+  gm            String
+  links         Json
+  type          TYPE_HOTEL
+  tbObject      tbObject[]
+  tbReview      tbReview[]
+  tbStaff       tbStaff[]
+  tbStaffLog    tbStaffLog[]
+  tbCompetition tbCompetition[]
+}
+
+enum TYPE_HOTEL {
+  ALLY
+  ENEMY
 }
 
 model tbStaff {
@@ -51,17 +58,19 @@ model tbStaffLastUpdate {
 }
 
 model tbReview {
-  id           String   @id @default(uuid())
-  tbHotel      tbHotel  @relation(fields: [tbHotelId], references: [id], onDelete: Cascade)
-  tbHotelId    String
-  username     String
-  title        String
-  content      String[]
-  extra        Json
-  createdAt    DateTime
-  monthCreated Int
-  yearCreated  Int
-  platform     PLATFORM
+  id            String       @id @default(uuid())
+  tbHotel       tbHotel      @relation(fields: [tbHotelId], references: [id], onDelete: Cascade)
+  tbHotelId     String
+  username      String
+  title         String
+  content       String[]
+  extra         Json
+  createdAt     DateTime
+  monthCreated  Int
+  yearCreated   Int
+  platform      PLATFORM
+  tbObjectLog   tbObjectLog? @relation(fields: [tbObjectLogId], references: [id])
+  tbObjectLogId String?
 }
 
 model tbLastUpdateReview {
@@ -84,7 +93,7 @@ model tbObject {
 }
 
 model tbObjectLog {
-  id                String   @id @default(uuid())
+  id                String     @id @default(uuid())
   name              String
   url               String
   score             Float
@@ -94,8 +103,9 @@ model tbObjectLog {
   platform          PLATFORM
   isManual          Boolean
   messages          String[]
-  tbObject          tbObject @relation(fields: [tbObjectId], references: [id], onDelete: Cascade)
+  tbObject          tbObject   @relation(fields: [tbObjectId], references: [id], onDelete: Cascade)
   tbObjectId        String
+  review            tbReview[]
 }
 
 model tbLastUpdate {
@@ -123,4 +133,29 @@ enum PLATFORM {
   BOOKING
   GOOGLE
   EXPEDIA
+}
+
+model tbCompetition {
+  month               Int
+  year                Int
+  // extra bao gồm các thông tin như 
+  // TRIP: rank
+  extra               Json
+  score               Float
+  // Số lượng rv cao all time
+  numberReviewHighAll Int
+  // Số lượng rv cao trong tháng
+  numberReviewHigh    Int
+  // Số lượng rv cao từng ngày trong tháng 
+  reviewHigh          Int[]
+  // Số lượng rv thấp trong tháng
+  numberReviewBad     Int
+  // Số lượng rv thấp từng ngày trong tháng
+  reviewBad           Int[]
+  updatedAt           DateTime
+  platform            PLATFORM
+  tbHotel             tbHotel  @relation(fields: [tbHotelId], references: [id])
+  tbHotelId           String
+
+  @@id([month, year, tbHotelId, platform])
 }

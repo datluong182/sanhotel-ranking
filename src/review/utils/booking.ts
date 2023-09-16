@@ -112,24 +112,26 @@ const extractReviewBooking = async (
       // if (title.search('Lovely hotel with an amazing staff!') !== -1) {
       //   await driver.sleep(1000000);
       // }
-
-      result.push({
-        username: await usernameEles[i].getText(),
-        title: await titleEles[i].getText(),
-        createdAt: moment(createdAtString, 'MMMM D YYYY')
-          .set({ h: 0, m: 0, s: 0 })
-          .toDate(),
-        monthCreated: moment(createdAtString, 'MMMM D YYYY').get('month') + 1,
-        yearCreated: moment(createdAtString, 'MMMM D YYYY').get('year'),
-        extra: {
-          score: parseFloat(
-            (await scoreEles[i].getText()).replaceAll(',', '.').trim(),
-          ),
-          reviewId: await reviewIdEles[i].getAttribute('data-review-url'),
-          link: url,
-        },
-        content,
-      });
+      if (reviewerChoiceEle && i === 0) {
+      } else {
+        result.push({
+          username: await usernameEles[i].getText(),
+          title: await titleEles[i].getText(),
+          createdAt: moment(createdAtString, 'MMMM D YYYY')
+            .set({ h: 0, m: 0, s: 0 })
+            .toDate(),
+          monthCreated: moment(createdAtString, 'MMMM D YYYY').get('month') + 1,
+          yearCreated: moment(createdAtString, 'MMMM D YYYY').get('year'),
+          extra: {
+            score: parseFloat(
+              (await scoreEles[i].getText()).replaceAll(',', '.').trim(),
+            ),
+            reviewId: await reviewIdEles[i].getAttribute('data-review-url'),
+            link: url,
+          },
+          content,
+        });
+      }
     }
 
     if (cancel) {

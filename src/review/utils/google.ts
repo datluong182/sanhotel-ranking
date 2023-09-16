@@ -17,6 +17,9 @@ const extractReviewGoogle = async (
   url: string,
 ): Promise<ReviewGoogle[] | undefined> => {
   let result: ReviewGoogle[] = [];
+  const currentMonth = moment().get('month') + 1;
+  const currentYear = moment().get('year');
+
   const response = await httpService.axiosRef.post(
     `https://api.apify.com/v2/actor-tasks/${actorId}/run-sync-get-dataset-items?token=${api_token}`,
     {
@@ -29,6 +32,10 @@ const extractReviewGoogle = async (
       oneReviewPerRow: false,
       onlyDataFromSearchPage: false,
       reviewsSort: 'newest',
+      reviewsStartDate: `${currentYear}-${currentMonth
+        .toString()
+        .padStart(2, '0')}-01`,
+      // reviewsStartDate: '1970-01-01',
       scrapeResponseFromOwnerText: true,
       scrapeReviewId: true,
       scrapeReviewUrl: true,
@@ -47,14 +54,13 @@ const extractReviewGoogle = async (
       allPlacesNoSearchAction: '',
     },
   );
-  console.log(response.data, 'debugger apify');
   const place: PlaceGoogle = response.data?.[0];
 
   place.reviews.map((review) => {
     result = result.concat({
       username: review.name,
       title: '',
-      content: [review.text],
+      content: [review?.text ?? ''],
       createdAt: moment(review.publishedAtDate).toDate(),
       monthCreated: moment(review.publishedAtDate).get('month') + 1,
       yearCreated: moment(review.publishedAtDate).get('year'),

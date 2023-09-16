@@ -59,6 +59,9 @@ export const reviewsByDayStaff = async (
         ) {
           checked = true;
         }
+        if (query.platform === PLATFORM.GOOGLE && review.extra['score'] === 5) {
+          checked = true;
+        }
       }
     });
     if (checked) {
