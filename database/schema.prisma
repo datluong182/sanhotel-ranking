@@ -14,17 +14,13 @@ model tbHotel {
   avatar        String?
   gm            String
   links         Json
-  type          TYPE_HOTEL
   tbObject      tbObject[]
   tbReview      tbReview[]
   tbStaff       tbStaff[]
   tbStaffLog    tbStaffLog[]
   tbCompetition tbCompetition[]
-}
-
-enum TYPE_HOTEL {
-  ALLY
-  ENEMY
+  type          TYPE_HOTEL?
+  disable       Boolean?
 }
 
 model tbStaff {
@@ -135,6 +131,11 @@ enum PLATFORM {
   EXPEDIA
 }
 
+enum TYPE_HOTEL {
+  ALLY
+  ENEMY
+}
+
 model tbCompetition {
   month               Int
   year                Int
@@ -154,7 +155,7 @@ model tbCompetition {
   reviewBad           Int[]
   updatedAt           DateTime
   platform            PLATFORM
-  tbHotel             tbHotel  @relation(fields: [tbHotelId], references: [id])
+  tbHotel             tbHotel  @relation(fields: [tbHotelId], references: [id], onDelete: Cascade)
   tbHotelId           String
 
   @@id([month, year, tbHotelId, platform])

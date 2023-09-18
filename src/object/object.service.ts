@@ -330,10 +330,21 @@ export class ObjectService {
     });
   }
 
-  // @Cron(cronjobCrawlObjectEnv)
+  @Cron(cronjobCrawlObjectEnv)
   async crawlSchedule(isManual = true): Promise<NewObjectLog[]> {
     let result: NewObjectLog[] = [];
-    const listObjects = await this.prismaService.tbObject.findMany({});
+    const listObjects = await this.prismaService.tbObject.findMany({
+      where: {
+        tbHotel: {
+          disable: {
+            not: true,
+          },
+        },
+      },
+      include: {
+        tbHotel: true,
+      },
+    });
     const updatedAt = moment().utc().toDate();
     for (let i = 0; i < listObjects.length; i++) {
       const { updated, messages } = await this.updateObject(
@@ -401,9 +412,9 @@ export class ObjectService {
       const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
       capabilities.set('tz', timezone);
-      // capabilities.set('moz:firefoxOptions', {
-      //   args: ['--headless'],
-      // });
+      capabilities.set('moz:firefoxOptions', {
+        args: ['--headless'],
+      });
       // const option = new Options().addArguments('--no-proxy-server');
       // .addArguments('--headless=new')
       driver = await new Builder()

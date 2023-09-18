@@ -24,10 +24,16 @@ const extractDataTrip = async (
   const name = await titleEle.getText();
 
   console.log('get score');
-  const scoreReviewEle = await GetElement(
+  await driver.sleep(6000);
+  // const scoreReviewEle = await GetElement(
+  //   driver,
+  //   '//div[@class="ui_column  "]/div/span',
+  // );
+  const scoreReviewEles = await GetElements(
     driver,
-    '//div[@class="ui_column  "]/div/span',
+    '//div[contains(@class,"ui_columns")]/div[contains(@class,"ui_column")]/div/span',
   );
+  const scoreReviewEle = scoreReviewEles[1];
   await driver.executeScript(
     'arguments[0].scrollIntoView(true);',
     scoreReviewEle,

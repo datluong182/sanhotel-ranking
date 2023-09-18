@@ -278,50 +278,76 @@ export class ReviewService {
 
       //dev
 
-      console.log('Start review TRIP');
-      // crawl review trip
-      await driver.get(hotel.links[PLATFORM.TRIP]);
-      console.log(hotel.links[PLATFORM.TRIP], 'Trip');
-      const reviewsTrip: ReviewTrip[] = await extractReviewTrip(
-        driver,
-        hotel.links[PLATFORM.TRIP],
-      );
-      newReviewHotel[hotel.id].TRIP = reviewsTrip;
+      try {
+        console.log('Start review TRIP');
+        // crawl review trip
+        await driver.get(hotel.links[PLATFORM.TRIP]);
+        console.log(hotel.links[PLATFORM.TRIP], 'Trip');
+        const reviewsTrip: ReviewTrip[] = await extractReviewTrip(
+          driver,
+          hotel.links[PLATFORM.TRIP],
+        );
+        newReviewHotel[hotel.id].TRIP = reviewsTrip;
+        await this.prismaService.tbReview.deleteMany({
+          where: {
+            tbHotelId: hotel.id,
+            platform: PLATFORM.TRIP,
+            monthCreated: currentMonth,
+            yearCreated: currentYear,
+          },
+        });
+      } catch (e) {
+        console.log('Lỗi crawl review trip');
+      }
 
-      console.log('Start review BOOKING', hotel.links[PLATFORM.BOOKING]);
-      // crawl review booking
-      // convert url hotel booking to review hotel booking
-      let urlBooking: string = hotel.links[PLATFORM.BOOKING];
-      urlBooking = urlBooking.split('https://www.booking.com/hotel/vn/')?.[1];
-      const pagename = urlBooking.split('.')?.[0];
-      console.log(hotel.links[PLATFORM.BOOKING], 'Booking');
-      const reviewsBooking: ReviewBooking[] = await extractReviewBooking(
-        driver,
-        pagename,
-      );
-      newReviewHotel[hotel.id].BOOKING = reviewsBooking;
+      try {
+        console.log('Start review BOOKING', hotel.links[PLATFORM.BOOKING]);
+        // crawl review booking
+        // convert url hotel booking to review hotel booking
+        let urlBooking: string = hotel.links[PLATFORM.BOOKING];
+        urlBooking = urlBooking.split('https://www.booking.com/hotel/vn/')?.[1];
+        const pagename = urlBooking.split('.')?.[0];
+        console.log(hotel.links[PLATFORM.BOOKING], 'Booking');
+        const reviewsBooking: ReviewBooking[] = await extractReviewBooking(
+          driver,
+          pagename,
+        );
+        newReviewHotel[hotel.id].BOOKING = reviewsBooking;
+        await this.prismaService.tbReview.deleteMany({
+          where: {
+            tbHotelId: hotel.id,
+            platform: PLATFORM.BOOKING,
+            monthCreated: currentMonth,
+            yearCreated: currentYear,
+          },
+        });
+      } catch (e) {
+        console.log('Lỗi crawl review trip');
+      }
 
-      console.log('Start review GOOGLE');
-      await driver.get(hotel.links[PLATFORM.GOOGLE]);
+      try {
+        console.log('Start review GOOGLE');
+        await driver.get(hotel.links[PLATFORM.GOOGLE]);
 
-      console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
-      const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
-        driver,
-        this.httpService,
-        hotel.links[PLATFORM.GOOGLE],
-      );
-      newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
-      // console.log(reviewsGoogle.length, 'reviewsGoogle');
-
-      // delete old data review
-
-      await this.prismaService.tbReview.deleteMany({
-        where: {
-          tbHotelId: hotel.id,
-          monthCreated: currentMonth,
-          yearCreated: currentYear,
-        },
-      });
+        console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
+        const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
+          driver,
+          this.httpService,
+          hotel.links[PLATFORM.GOOGLE],
+        );
+        newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
+        // console.log(reviewsGoogle.length, 'reviewsGoogle');
+        await this.prismaService.tbReview.deleteMany({
+          where: {
+            tbHotelId: hotel.id,
+            platform: PLATFORM.GOOGLE,
+            monthCreated: currentMonth,
+            yearCreated: currentYear,
+          },
+        });
+      } catch (e) {
+        console.log('Lỗi crawl review trip');
+      }
 
       // save new data
       await this.prismaService.tbReview.createMany({
