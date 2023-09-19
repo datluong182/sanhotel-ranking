@@ -22,7 +22,6 @@ export class CreateObject {
 export class UpdateObjectResponse {
   @ApiProperty({
     required: true,
-   
   })
   id: string;
   @ApiProperty({
@@ -42,7 +41,6 @@ export class UpdateManyObjectResponse {
     color: string;
   }>;
 }
-
 
 export class GetLastUpdate {
   @ApiProperty({

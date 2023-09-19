@@ -5,10 +5,17 @@ import { CompetitionService } from './competition.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ReviewModule } from 'src/review/review.module';
 import { ObjectModule } from 'src/object/object.module';
+import { HttpModule } from '@nestjs/axios';
 // import { ObjectReviewsModule } from './objectReviews/objectReviews.module';
 
 @Module({
-  imports: [PrismaModule, ScheduleModule.forRoot(), ReviewModule, ObjectModule],
+  imports: [
+    PrismaModule,
+    ScheduleModule.forRoot(),
+    ReviewModule,
+    ObjectModule,
+    HttpModule,
+  ],
   controllers: [CompetitionController],
   providers: [CompetitionService],
   exports: [CompetitionService],

@@ -94,11 +94,19 @@ export class ObjectService {
       },
     });
     let data: tbObject[];
+    console.log(query.cond, 'cond get object');
     if (query.platform === 'TRIP') {
-      data = await this.prismaService
-        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${parseInt(
-        query.page,
-      )} LIMIT ${parseInt(query.limit)}`;
+      if (query?.cond?.['tbHotel']?.type) {
+        data = await this.prismaService
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${parseInt(
+          query.page,
+        )} LIMIT ${parseInt(query.limit)}`;
+      } else {
+        data = await this.prismaService
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${parseInt(
+          query.page,
+        )} LIMIT ${parseInt(query.limit)}`;
+      }
     }
     if (query.platform === 'BOOKING') {
       data = await this.prismaService
@@ -128,6 +136,7 @@ export class ObjectService {
     const newObjectTrip = await this.prismaService.tbObject.create({
       data: {
         ...objectTrip,
+        extra: {},
         tbHotelId: data.tbHotelId,
         platform: data.platform,
         updatedAt: new Date(),
@@ -140,25 +149,25 @@ export class ObjectService {
     let messsages = [];
 
     if (
-      newData.extra.rank &&
+      newData?.extra?.rank &&
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
-      origin.extra?.rank &&
+      origin?.extra?.rank &&
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
-      origin.extra?.rank !== newData.extra.rank
+      origin?.extra?.rank !== newData?.extra?.rank
     ) {
-      messsages = messsages.concat(
-        `${
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          //@ts-ignore
-          origin.extra?.rank > newData.extra.rank ? 'U.' : 'D.'
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          //@ts-ignore
-        }Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${
-          newData.extra.rank
-        }`,
-      );
+      // messsages = messsages.concat(
+      //   `${
+      //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //     //@ts-ignore
+      //     origin.extra?.rank > newData.extra.rank ? 'U.' : 'D.'
+      //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //     //@ts-ignore
+      //   }Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${
+      //     newData.extra.rank
+      //   }`,
+      // );
     }
     if (
       newData.score &&
@@ -330,7 +339,7 @@ export class ObjectService {
     });
   }
 
-  @Cron(cronjobCrawlObjectEnv)
+  // @Cron(cronjobCrawlObjectEnv)
   async crawlSchedule(isManual = true): Promise<NewObjectLog[]> {
     let result: NewObjectLog[] = [];
     const listObjects = await this.prismaService.tbObject.findMany({
@@ -347,10 +356,15 @@ export class ObjectService {
     });
     const updatedAt = moment().utc().toDate();
     for (let i = 0; i < listObjects.length; i++) {
-      const { updated, messages } = await this.updateObject(
-        listObjects[i],
-        updatedAt,
-      );
+      const resultCrawl = await this.updateObject(listObjects[i], updatedAt);
+      // {
+      //   updated, messages;
+      // }
+      const updated = resultCrawl?.updated ?? undefined;
+      if (!updated) {
+        console.log('Get info', listObjects[i].name, 'FAIL');
+        continue;
+      }
       const temp = {
         ...updated,
         // extra: {
@@ -371,7 +385,7 @@ export class ObjectService {
       const newObjectLog = await this.prismaService.tbObjectLog.create({
         data: {
           ...temp,
-          messages,
+          messages: [],
           isManual,
           tbObjectId: id,
           updatedAt: moment(
@@ -430,7 +444,7 @@ export class ObjectService {
       let object: Objects;
 
       if (platform === PLATFORM.TRIP) {
-        object = await extractDataTrip(driver, platform, url);
+        object = await extractDataTrip(this.httpService, platform, url);
       }
       if (platform === PLATFORM.BOOKING) {
         object = await extractDataBoooking(driver, platform, url);
@@ -455,6 +469,15 @@ export class ObjectService {
       await driver.quit();
       console.log('crawl done', object);
       // return undefined;
+      // if (platform === PLATFORM.TRIP) {
+      //   const sleep = new Promise((resole, reject) => {
+      //     setTimeout(() => {
+      //       resole('Sleep 3s');
+      //     }, 3000);
+      //   });
+      //   console.log(await sleep);
+      // }
+
       return object;
     } catch (e) {
       console.log(e, 'error');

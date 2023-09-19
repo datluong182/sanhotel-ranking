@@ -7,7 +7,7 @@ export interface Objects {
   numberScoreReview: number[];
   updatedAt: Date;
   platform: PLATFORM;
-  extra: ObjectExtra;
+  extra?: ObjectExtra;
 }
 
 export interface ObjectExtra extends Prisma.JsonObject {
@@ -18,6 +18,19 @@ export interface ObjectExtra extends Prisma.JsonObject {
 
 export interface NewObjectLog extends tbObjectLog {
   tbHotelId: string;
+}
+
+export interface InfoTrip {
+  name: string;
+  rating: number;
+  rankingPosition: number;
+  ratingHistogram: {
+    count1: number;
+    count2: number;
+    count3: number;
+    count4: number;
+    count5: number;
+  };
 }
 
 // export interface Object {

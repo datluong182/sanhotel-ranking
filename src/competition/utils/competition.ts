@@ -51,6 +51,7 @@ export const getTopHotelForTrip = async (
       .build();
 
     await driver.get(urlRankHotel);
+
     while (true) {
       await driver.sleep(5000);
 
@@ -129,9 +130,13 @@ export const getTopHotelForTrip = async (
     titleHotelEnemy[0],
   );
 
+  // listUrlHotelEnemy = [listUrlHotelEnemy[0]];
+  // titleHotelEnemy = [titleHotelEnemy[0]];
+  // rankHotelEnemy = [rankHotelEnemy[0]];
+
   // Kiểm tra xem ksan đã tồn tại chưa
   console.log('Check hotel out top and exist');
-  const hotels = await prismaService.tbHotel.findMany();
+  const hotels = await prismaService.tbHotel.findMany({});
   for (let i = 0; i < hotels.length; i++) {
     const hotel = hotels[i];
     let flag = false;
@@ -170,6 +175,7 @@ export const getTopHotelForTrip = async (
               disable: false,
             },
           });
+          // const objectHotel = await prismaService.tbObject.findFirst()
           console.log('Enable hotel', hotel.name, 'again');
         }
       }
@@ -184,6 +190,7 @@ export const getTopHotelForTrip = async (
           [PLATFORM.TRIP]: url,
         },
         type: TYPE_HOTEL.ENEMY,
+        disable: false,
       });
     }
   }

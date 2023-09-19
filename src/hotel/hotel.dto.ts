@@ -28,6 +28,11 @@ export class CreateHotel {
     default: 'ALLY',
   })
   type: TYPE_HOTEL;
+  @ApiProperty({
+    required: true,
+    default: false,
+  })
+  disable: boolean;
 }
 
 export class UpdateHotel extends CreateHotel {

@@ -26,8 +26,14 @@ export class CompetitionController {
     return await this.competitionService.getCompetition(query);
   }
 
+  @Get('/all')
+  async getAllCompetition(): // @Query() query: QueryCompetition,
+  Promise<tbCompetition[]> {
+    return await this.competitionService.getAllCompetition();
+  }
+
   @Get('/check-manual')
-  async checkManual(): Promise<void> {
-    await this.competitionService.updateCompetition();
+  async checkManual(): Promise<{ url: string[]; rank: number[] }> {
+    return await this.competitionService.updateCompetition();
   }
 }

@@ -8,7 +8,7 @@ import { HttpService } from '@nestjs/axios';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
-const actorId = process.env.ACTOR_ID_APIFY;
+const actorId = process.env.ACTOR_ID_APIFY_GOOGLE_REVIEW;
 const api_token = process.env.API_TOKEN_APIFY;
 
 const extractReviewGoogle = async (

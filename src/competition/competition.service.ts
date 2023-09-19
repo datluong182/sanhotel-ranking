@@ -11,7 +11,7 @@ import {
 import { DataList, PagingDefault } from 'src/app.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { QueryCompetition } from './competition.dto';
-import _ from 'lodash';
+import _, { forInRight } from 'lodash';
 import * as moment from 'moment-timezone';
 import { NewReview } from 'src/review/review.entity';
 import { ReviewService } from 'src/review/review.service';
@@ -24,6 +24,7 @@ import {
   getSummaryReviewInMonth,
 } from './utils';
 import { getTopHotelForTrip } from './utils/competition';
+import { HttpService } from '@nestjs/axios';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -35,6 +36,7 @@ export class CompetitionService {
     private prismaService: PrismaService,
     private reviewService: ReviewService,
     private objectService: ObjectService,
+    private readonly httpService: HttpService,
   ) {
     console.log('init competition service');
   }
@@ -55,10 +57,34 @@ export class CompetitionService {
     });
   }
 
-  // @Cron(cronjobCrawlReviewEnv)
-  async updateCompetition() {
+  async getAllCompetition(): Promise<tbCompetition[]> {
+    let result = await this.prismaService.tbCompetition.findMany({
+      where: {
+        tbHotel: {
+          disable: {
+            not: true,
+          },
+        },
+      },
+      include: {
+        tbHotel: true,
+      },
+    });
+    result = result.sort((a, b) => a.extra['rank'] - b.extra['rank']);
+    return result;
+  }
+
+  @Cron(cronjobCrawlReviewEnv)
+  async updateCompetition(): Promise<{ url: string[]; rank: number[] }> {
     const startCrawl = moment();
     console.log('Start crawl');
+
+    // const res: NewObjectLog[] = await this.objectService.crawlSchedule();
+    // console.log(
+    //   res.filter((e) => e.platform === PLATFORM.TRIP),
+    //   'res',
+    // );
+    // return;
 
     // dev get top n hotel
     // ONLY FOR COMPETITION TRIP
@@ -78,66 +104,16 @@ export class CompetitionService {
     const newObjectLogs: NewObjectLog[] =
       await this.objectService.crawlSchedule();
 
-    console.log('Get review trên CSDL');
-    const listHotels = await this.prismaService.tbHotel.findMany();
-    let oldReview: NewReview = {};
-    for (let i = 0; i < listHotels.length; i++) {
-      const hotel = listHotels[i];
-      // Review Trip cũ
-      const listRvTrip = await this.prismaService.tbReview.findMany({
-        where: {
-          tbHotelId: hotel.id,
-          monthCreated: currentMonth,
-          yearCreated: currentYear,
-          platform: PLATFORM.TRIP,
-        },
-      });
-      // Review booking cũ
-      const listRvBooking = await this.prismaService.tbReview.findMany({
-        where: {
-          tbHotelId: hotel.id,
-          monthCreated: currentMonth,
-          yearCreated: currentYear,
-          platform: PLATFORM.BOOKING,
-        },
-      });
-      // Review google cũ
-      const listRvGoogle = await this.prismaService.tbReview.findMany({
-        where: {
-          tbHotelId: hotel.id,
-          monthCreated: currentMonth,
-          yearCreated: currentYear,
-          platform: PLATFORM.GOOGLE,
-        },
-      });
-      //@ts-ignore
-      oldReview = {
-        ...oldReview,
-        [hotel.id]: {
-          TRIP: listRvTrip,
-          BOOKING: listRvBooking,
-          GOOGLE: listRvGoogle,
-        },
-      };
-    }
-
-    console.log('Crawl review');
-    const newReview = await this.reviewService.crawlSchedule(
-      true,
-      currentMonth,
-      currentYear,
-    );
-
     // Cập nhật message cho objectLog
-    console.log('Cập nhật message thay đổi review');
     let count = 0;
+    console.log('Update rank trip');
     for (let i = 0; i < newObjectLogs.length; i++) {
       const objectLog = newObjectLogs[i];
       // const listOld: tbReview[] =
       //   oldReview?.[objectLog.tbHotelId]?.[objectLog.platform] ?? [];
       // const listNew: tbReview[] =
       //   newReview?.[objectLog.tbHotelId]?.[objectLog.platform] ?? [];
-
+      // console.log('Cập nhật message thay đổi review');
       // // Kiểm tra xem có review nào bị xoá không
       // console.log('Kiểm tra xem có rv bị xoá', i);
       // for (let i = 0; i < listOld.length; i++) {
@@ -203,9 +179,16 @@ export class CompetitionService {
       // );
 
       if (objectLog.platform === PLATFORM.TRIP) {
-        console.log('Update rank trip');
+        console.log('Update rank trip', objectLog.url);
         for (let j = 0; j < urlTopHotel.length; j++) {
           if (objectLog.url === urlTopHotel[j]) {
+            console.log('Found url', objectLog.name);
+            newObjectLogs[i] = {
+              ...newObjectLogs[i],
+              extra: {
+                rank: rankTopHotel[j],
+              },
+            };
             await this.prismaService.tbObjectLog.update({
               where: {
                 id: objectLog.id,
@@ -216,101 +199,170 @@ export class CompetitionService {
                 },
               },
             });
+            await this.prismaService.tbObject.update({
+              where: {
+                id: objectLog.tbObjectId,
+              },
+              data: {
+                extra: {
+                  rank: rankTopHotel[j],
+                },
+              },
+            });
             count++;
           }
         }
-
-        console.log('Calc reivew in month');
-        const {
-          numberReviewBad,
-          reviewBadInMonth,
-          numberReviewHigh,
-          reviewHighInMonth,
-        } = await getSummaryReviewInMonth(
-          this.prismaService,
-          objectLog.platform,
-          objectLog.tbHotelId,
-          currentMonth,
-          currentYear,
-        );
-
-        const currentDayInMont = moment().get('date');
-        let reviewHigh = [],
-          reviewBad = [];
-        console.log('Calc reivew high in month');
-        for (let i = 1; i <= currentDayInMont; i++) {
-          let sum = 0;
-          reviewHighInMonth.map((review) => {
-            if (moment(review.createdAt).get('date') === i) {
-              sum += 1;
-            }
-          });
-          reviewHigh = reviewHigh.concat(sum);
-        }
-        console.log('Calc reivew bad in month');
-        for (let i = 1; i <= currentDayInMont; i++) {
-          let sum = 0;
-          reviewBadInMonth.map((review) => {
-            if (moment(review.createdAt).get('date') === i) {
-              sum += 1;
-            }
-          });
-          reviewBad = reviewBad.concat(sum);
-        }
-
-        // Cập nhật thông tin so sánh khách sạn
-        console.log('Update competion hotel');
-        await this.prismaService.tbCompetition.upsert({
-          where: {
-            month_year_tbHotelId_platform: {
-              month: currentMonth,
-              year: currentYear,
-              tbHotelId: objectLog.tbHotelId,
-              platform: objectLog.platform,
-            },
-          },
-          create: {
-            month: currentMonth,
-            year: currentYear,
-            extra: {
-              ...(objectLog.platform === PLATFORM.TRIP && {
-                rank: objectLog.extra['rank'],
-                totalHotel: objectLog.extra['totalHotel'],
-              }),
-            },
-            numberReviewHighAll: objectLog.numberScoreReview[0],
-            numberReviewHigh,
-            reviewHigh,
-            numberReviewBad,
-            reviewBad,
-            score: objectLog.score,
-            tbHotelId: objectLog.tbHotelId,
-            updatedAt: new Date(),
-            platform: objectLog.platform,
-          },
-          update: {
-            month: currentMonth,
-            year: currentYear,
-            extra: {
-              ...(objectLog.platform === PLATFORM.TRIP && {
-                rank: objectLog.extra['rank'],
-                totalHotel: objectLog.extra['totalHotel'],
-              }),
-            },
-            numberReviewHighAll: objectLog.numberScoreReview[0],
-            numberReviewHigh,
-            reviewHigh,
-            numberReviewBad,
-            reviewBad,
-            score: objectLog.score,
-            tbHotelId: objectLog.tbHotelId,
-            updatedAt: new Date(),
-            platform: objectLog.platform,
-          },
-        });
       }
     }
     console.log('Updated rank for', count, 'hotels');
+
+    console.log('Get review trên CSDL');
+    const listHotels = await this.prismaService.tbHotel.findMany();
+    let oldReview: NewReview = {};
+    for (let i = 0; i < listHotels.length; i++) {
+      const hotel = listHotels[i];
+      // Review Trip cũ
+      const listRvTrip = await this.prismaService.tbReview.findMany({
+        where: {
+          tbHotelId: hotel.id,
+          monthCreated: currentMonth,
+          yearCreated: currentYear,
+          platform: PLATFORM.TRIP,
+        },
+      });
+      // Review booking cũ
+      const listRvBooking = await this.prismaService.tbReview.findMany({
+        where: {
+          tbHotelId: hotel.id,
+          monthCreated: currentMonth,
+          yearCreated: currentYear,
+          platform: PLATFORM.BOOKING,
+        },
+      });
+      // Review google cũ
+      const listRvGoogle = await this.prismaService.tbReview.findMany({
+        where: {
+          tbHotelId: hotel.id,
+          monthCreated: currentMonth,
+          yearCreated: currentYear,
+          platform: PLATFORM.GOOGLE,
+        },
+      });
+      //@ts-ignore
+      oldReview = {
+        ...oldReview,
+        [hotel.id]: {
+          TRIP: listRvTrip,
+          BOOKING: listRvBooking,
+          GOOGLE: listRvGoogle,
+        },
+      };
+    }
+
+    console.log('Crawl review');
+    const newReview = await this.reviewService.crawlSchedule(
+      true,
+      currentMonth,
+      currentYear,
+    );
+
+    console.log('Calc reivew in month');
+    for (let i = 0; i < newObjectLogs.length; i++) {
+      const objectLog = newObjectLogs[i];
+      if (objectLog.platform !== PLATFORM.TRIP) continue;
+      const {
+        numberReviewBad,
+        reviewBadInMonth,
+        numberReviewHigh,
+        reviewHighInMonth,
+      } = await getSummaryReviewInMonth(
+        this.prismaService,
+        objectLog.platform,
+        objectLog.tbHotelId,
+        currentMonth,
+        currentYear,
+      );
+
+      const currentDayInMont = moment().get('date');
+      let reviewHigh = [],
+        reviewBad = [];
+      console.log('Calc reivew high in month');
+      for (let i = 1; i <= currentDayInMont; i++) {
+        let sum = 0;
+        reviewHighInMonth.map((review) => {
+          if (moment(review.createdAt).get('date') === i) {
+            sum += 1;
+          }
+        });
+        reviewHigh = reviewHigh.concat(sum);
+      }
+      console.log('Calc reivew bad in month');
+      for (let i = 1; i <= currentDayInMont; i++) {
+        let sum = 0;
+        reviewBadInMonth.map((review) => {
+          if (moment(review.createdAt).get('date') === i) {
+            sum += 1;
+          }
+        });
+        reviewBad = reviewBad.concat(sum);
+      }
+
+      // Cập nhật thông tin so sánh khách sạn
+      console.log('Update competition hotel');
+      await this.prismaService.tbCompetition.upsert({
+        where: {
+          month_year_tbHotelId_platform: {
+            month: currentMonth,
+            year: currentYear,
+            tbHotelId: objectLog.tbHotelId,
+            platform: objectLog.platform,
+          },
+        },
+        create: {
+          month: currentMonth,
+          year: currentYear,
+          extra: {
+            ...(objectLog.platform === PLATFORM.TRIP && {
+              rank: objectLog.extra['rank'],
+              totalHotel: objectLog.extra['totalHotel'],
+            }),
+          },
+          numberReviewHighAll: objectLog.numberScoreReview[0],
+          numberReviewHigh,
+          reviewHigh,
+          numberReviewBad,
+          reviewBad,
+          score: objectLog.score,
+          tbHotelId: objectLog.tbHotelId,
+          updatedAt: new Date(),
+          platform: objectLog.platform,
+        },
+        update: {
+          month: currentMonth,
+          year: currentYear,
+          extra: {
+            ...(objectLog.platform === PLATFORM.TRIP && {
+              rank: objectLog.extra['rank'],
+              totalHotel: objectLog.extra['totalHotel'],
+            }),
+          },
+          numberReviewHighAll: objectLog.numberScoreReview[0],
+          numberReviewHigh,
+          reviewHigh,
+          numberReviewBad,
+          reviewBad,
+          score: objectLog.score,
+          tbHotelId: objectLog.tbHotelId,
+          updatedAt: new Date(),
+          platform: objectLog.platform,
+        },
+      });
+    }
+
     console.log('Crawl hotel, review done!!', startCrawl.fromNow());
+    return {
+      url: urlTopHotel,
+      rank: rankTopHotel,
+    };
   }
 }

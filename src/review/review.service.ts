@@ -77,7 +77,13 @@ export class ReviewService {
     let result: NewReview = {};
 
     // const updatedAt = moment().utc().toDate();
-    const listHotels = await this.prismaService.tbHotel.findMany();
+    const listHotels = await this.prismaService.tbHotel.findMany({
+      where: {
+        disable: {
+          not: true,
+        },
+      },
+    });
     for (let i = 0; i < listHotels.length; i++) {
       const hotel: tbHotel = listHotels[i];
       const temp: NewReview = await this.crawlHotel(
