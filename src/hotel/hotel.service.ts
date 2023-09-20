@@ -110,9 +110,9 @@ export class HotelService {
     query: QueryFiveStars,
   ): Promise<{ dataDate: string[]; data: { name: string; data: number[] }[] }> {
     const listHotels = await this.prismaService.tbHotel.findMany({
-      // where: {
-      //   type: TYPE_HOTEL.ALLY,
-      // },
+      where: {
+        type: query.type,
+      },
     });
     const dataDate = [];
     let count = 0;
@@ -135,6 +135,14 @@ export class HotelService {
     const listReviews = await this.prismaService.tbReview.findMany({
       where: {
         // tbHotelId: hotel.id,
+        tbHotel: {
+          ...(query.type && {
+            type: query.type,
+          }),
+          disable: {
+            not: true,
+          },
+        },
         platform: query.platform,
         //   AND: [
         //   {

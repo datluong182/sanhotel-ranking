@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PLATFORM, TYPE_HOTEL } from '@prisma/client';
 
 export class CreateHotel {
@@ -58,4 +58,8 @@ export class QueryFiveStars {
     default: '2023-08-28',
   })
   end: string;
+  @ApiPropertyOptional({
+    default: TYPE_HOTEL.ALLY,
+  })
+  type?: TYPE_HOTEL;
 }
