@@ -14,6 +14,7 @@ export interface ObjectExtra extends Prisma.JsonObject {
   rank?: number;
   totalHotel?: number;
   stars?: number;
+  subScore?: { [key: string]: number };
 }
 
 export interface NewObjectLog extends tbObjectLog {

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { PLATFORM } from '@prisma/client';
-import { WebDriver } from 'selenium-webdriver';
+import { By, WebDriver } from 'selenium-webdriver';
 import { GetElement, GetElements } from 'src/utils';
 import { Objects } from '../object.entity';
 
@@ -149,6 +149,26 @@ const extractDataBoooking = async (
     numberScoreReview = numberScoreReview.concat(text[0]);
   }
 
+  const subScoreWrapperEle = await GetElements(
+    driver,
+    '(//div[@data-testid="PropertyReviewsRegionBlock"]/div[@class="bui-spacer--larger"]/div/div)[2]/div/div[@data-testid="review-subscore"]',
+  );
+  console.log(subScoreWrapperEle.length, 'get subscores');
+  let subScore: { [key: string]: number } = {};
+  for (let i = 0; i < subScoreWrapperEle.length; i++) {
+    const subScoreEle = await subScoreWrapperEle[i].findElement(
+      By.xpath('./div/div/div/div/div[text()]'),
+    );
+    const keySubScoreEle = await subScoreWrapperEle[i].findElement(
+      By.xpath('./div/div/div/div/div/span'),
+    );
+
+    subScore = {
+      ...subScore,
+      [await keySubScoreEle.getText()]: parseFloat(await subScoreEle.getText()),
+    };
+  }
+
   return {
     name,
     url,
@@ -156,6 +176,7 @@ const extractDataBoooking = async (
     platform,
     extra: {
       stars,
+      subScore,
     },
     numberScoreReview: numberScoreReview.map((sc) => parseInt(sc)),
     updatedAt: new Date(),

@@ -21,7 +21,7 @@ const extractDataTrip = async (
       includeHotels: true,
       includePriceOffers: false,
       includeRestaurants: false,
-      includeTags: false,
+      includeTags: true,
       includeVacationRentals: false,
       language: 'en',
       startUrls: [

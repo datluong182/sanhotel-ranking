@@ -86,14 +86,39 @@ export class CompetitionService {
     // );
     // return;
 
-    // dev get top n hotel
+    // ONLY FOR COMPETITION BOOKING
+    // const objectBooking = await this.prismaService.tbObject.findMany({
+    //   where: {
+    //     platform: PLATFORM.BOOKING,
+    //   },
+    // });
+    // for (let i = 0; i < objectBooking.length; i++) {
+    //   const res = await this.objectService.crawlObject(
+    //     objectBooking[i].url,
+    //     PLATFORM.BOOKING,
+    //   );
+    //   await this.prismaService.tbObject.update({
+    //     where: {
+    //       id: objectBooking[i].id,
+    //     },
+    //     data: {
+    //       extra: {
+    //         ...(objectBooking[i].extra as object),
+    //         subScore: res.extra.subScore ?? {},
+    //       },
+    //     },
+    //   });
+    //   console.log(objectBooking[i].name, res);
+    // }
+    // return;
+    // ONLY FOR COMPETITION BOOKING
+
     // ONLY FOR COMPETITION TRIP
     const { url: urlTopHotel, rank: rankTopHotel } = await getTopHotelForTrip(
       this.prismaService,
       this.objectService,
     );
     // ONLY FOR COMPETITION TRIP
-    // dev get top n hotel
 
     const currentMonth = moment().get('month') + 1;
     // const currentMonth = 8;
@@ -269,7 +294,12 @@ export class CompetitionService {
     console.log('Calc reivew in month');
     for (let i = 0; i < newObjectLogs.length; i++) {
       const objectLog = newObjectLogs[i];
-      if (objectLog.platform !== PLATFORM.TRIP) continue;
+      if (
+        objectLog.platform !== PLATFORM.TRIP &&
+        objectLog.platform !== PLATFORM.BOOKING
+      ) {
+        continue;
+      }
       const {
         numberReviewBad,
         reviewBadInMonth,
@@ -326,6 +356,11 @@ export class CompetitionService {
               rank: objectLog.extra['rank'],
               totalHotel: objectLog.extra['totalHotel'],
             }),
+            ...(objectLog.platform === PLATFORM.BOOKING && {
+              subScore: objectLog.extra['subScore'],
+              score: objectLog.extra['score'],
+              stars: objectLog.extra['stars'],
+            }),
           },
           numberReviewHighAll: objectLog.numberScoreReview[0],
           numberReviewHigh,
@@ -344,6 +379,11 @@ export class CompetitionService {
             ...(objectLog.platform === PLATFORM.TRIP && {
               rank: objectLog.extra['rank'],
               totalHotel: objectLog.extra['totalHotel'],
+            }),
+            ...(objectLog.platform === PLATFORM.BOOKING && {
+              subScore: objectLog.extra['subScore'],
+              score: objectLog.extra['score'],
+              stars: objectLog.extra['stars'],
             }),
           },
           numberReviewHighAll: objectLog.numberScoreReview[0],
