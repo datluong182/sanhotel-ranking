@@ -61,10 +61,10 @@ export class ObjectController {
     return await this.objectService.createObject(data);
   }
 
-  @Patch('/update-by-url')
-  async updateObjectByUrl(@Body() data: UpdateObjectByUrl): Promise<void> {
-    await this.objectService.updateObjectByUrl(data);
-  }
+  // @Patch('/update-by-url')
+  // async updateObjectByUrl(@Body() data: UpdateObjectByUrl): Promise<void> {
+  //   await this.objectService.updateObjectByUrl(data);
+  // }
 
   @Post('/check-manual')
   async checkManualObject(): Promise<void> {

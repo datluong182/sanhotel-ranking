@@ -1,4 +1,4 @@
-import { PLATFORM, TYPE_HOTEL } from '@prisma/client';
+import { PLATFORM, TYPE_HOTEL, tbObject } from '@prisma/client';
 import { Builder, By, Capabilities } from 'selenium-webdriver';
 import { CreateHotel } from 'src/hotel/hotel.dto';
 import { ObjectService } from 'src/object/object.service';
@@ -121,6 +121,14 @@ export const getTopHotelForTrip = async (
     // await driver.sleep(200000);
   } catch (e) {
     console.log(e, 'error');
+    const data: tbObject[] =
+      await prismaService.$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc`;
+
+    return {
+      url: data.map((obj) => obj.url),
+      name: data.map((obj) => obj.name),
+      rank: data.map((obj) => obj.extra['rank']),
+    };
   }
   await driver.quit();
   console.log('Get top hotel done', listUrlHotelEnemy.length);

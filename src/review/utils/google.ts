@@ -12,7 +12,7 @@ const actorId = process.env.ACTOR_ID_APIFY_GOOGLE_REVIEW;
 const api_token = process.env.API_TOKEN_APIFY;
 
 const extractReviewGoogle = async (
-  driver: WebDriver,
+  driver: WebDriver | undefined,
   httpService: HttpService,
   url: string,
 ): Promise<ReviewGoogle[] | undefined> => {

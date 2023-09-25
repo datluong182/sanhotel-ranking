@@ -22,3 +22,48 @@ export class QueryCompetition {
   })
   tbHotelId: PLATFORM;
 }
+
+export class QueryAllCompetition {
+  @ApiProperty({
+    required: true,
+    default: PLATFORM.TRIP,
+  })
+  platform: PLATFORM;
+  @ApiProperty({
+    required: true,
+    default: '9',
+  })
+  month: string;
+  @ApiProperty({
+    required: true,
+    default: '2023',
+  })
+  year: string;
+}
+
+export class UpdateExtraCompetition {
+  @ApiProperty({
+    required: true,
+  })
+  month: number;
+  @ApiProperty({
+    required: true,
+  })
+  year: number;
+  @ApiProperty({
+    required: true,
+  })
+  platform: PLATFORM;
+  @ApiProperty({
+    required: true,
+  })
+  tbHotelId: string;
+  @ApiProperty({
+    required: true,
+  })
+  checkoutInMonth: number;
+  @ApiProperty({
+    required: true,
+  })
+  ratioInMonth: number;
+}

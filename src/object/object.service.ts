@@ -96,23 +96,40 @@ export class ObjectService {
     let data: tbObject[];
     console.log(query.cond, 'cond get object');
     if (query.platform === 'TRIP') {
-      if (query?.cond?.['tbHotel']?.type) {
+      if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ALLY) {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${parseInt(
-          query.page,
-        )} LIMIT ${parseInt(query.limit)}`;
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
+          parseInt(query.page) * parseInt(query.limit)
+        } LIMIT ${parseInt(query.limit)}`;
+      } else if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ENEMY) {
+        data = await this.prismaService
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
+          parseInt(query.page) * parseInt(query.limit)
+        } LIMIT ${parseInt(query.limit)}`;
       } else {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${parseInt(
-          query.page,
-        )} LIMIT ${parseInt(query.limit)}`;
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
+          parseInt(query.page) * parseInt(query.limit)
+        } LIMIT ${parseInt(query.limit)}`;
       }
     }
     if (query.platform === 'BOOKING') {
-      data = await this.prismaService
-        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'BOOKING' ORDER BY score desc OFFSET ${parseInt(
-        query.page,
-      )} LIMIT ${parseInt(query.limit)}`;
+      if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ALLY) {
+        data = await this.prismaService
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
+          parseInt(query.page) * parseInt(query.limit)
+        } LIMIT ${parseInt(query.limit)}`;
+      } else if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ENEMY) {
+        data = await this.prismaService
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
+          parseInt(query.page) * parseInt(query.limit)
+        } LIMIT ${parseInt(query.limit)}`;
+      } else {
+        data = await this.prismaService
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
+          parseInt(query.page) * parseInt(query.limit)
+        } LIMIT ${parseInt(query.limit)}`;
+      }
     }
     if (query.platform === 'GOOGLE') {
       data = await this.prismaService
@@ -157,17 +174,17 @@ export class ObjectService {
       //@ts-ignore
       origin?.extra?.rank !== newData?.extra?.rank
     ) {
-      // messsages = messsages.concat(
-      //   `${
-      //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //     //@ts-ignore
-      //     origin.extra?.rank > newData.extra.rank ? 'U.' : 'D.'
-      //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //     //@ts-ignore
-      //   }Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${
-      //     newData.extra.rank
-      //   }`,
-      // );
+      messsages = messsages.concat(
+        `${
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          //@ts-ignore
+          origin.extra?.rank > newData.extra.rank ? 'U.' : 'D.'
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          //@ts-ignore
+        }Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${
+          newData.extra.rank
+        }`,
+      );
     }
     if (
       newData.score &&
@@ -183,79 +200,118 @@ export class ObjectService {
         //@ts-ignore
         `${
           origin.score > newData.score ? 'D.' : 'U.'
-        }Điểm bình chọn thay đổi từ #${origin.score} đến #${newData.score}`,
+        }Điểm đánh giá thay đổi từ ${origin.score} đến ${newData.score}`,
       );
     }
-    // for (let i = 0; i < origin.numberScoreReview.length; i++) {
-    //   if (
-    //     origin.numberScoreReview[i] &&
-    //     newData.numberScoreReview[i] &&
-    //     origin.numberScoreReview[i] !== newData.numberScoreReview[i]
-    //   ) {
-    //     messsages = messsages.concat(
-    //       `Số lượng đánh giá ${5 - i} sao thay đổi từ ${
-    //         origin.numberScoreReview[i]
-    //       } đánh giá thành ${newData.numberScoreReview[i]} đánh giá`,
-    //     );
-    //   }
-    // }
+    for (let i = 0; i < origin.numberScoreReview.length; i++) {
+      if (
+        origin.numberScoreReview[i] &&
+        newData.numberScoreReview[i] &&
+        origin.numberScoreReview[i] !== newData.numberScoreReview[i]
+      ) {
+        // G: Good, B: Bad
+        if (origin.platform === PLATFORM.TRIP) {
+          messsages = messsages.concat(
+            `${5 - i === 5 ? 'G' : 'B'}.Số lượng đánh giá ${
+              5 - i
+            } sao thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
+              newData.numberScoreReview[i]
+            } đánh giá`,
+          );
+        }
+        if (origin.platform === PLATFORM.BOOKING) {
+          messsages = messsages.concat(
+            `${i === 0 ? 'G' : 'B'}.Số lượng đánh giá ${
+              i === 0
+                ? '9+'
+                : i === 1
+                ? '7-9'
+                : i === 2
+                ? '5-7'
+                : i === 3
+                ? '3-5'
+                : '1-3'
+            }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
+              newData.numberScoreReview[i]
+            } đánh giá`,
+          );
+        }
+        if (origin.platform === PLATFORM.GOOGLE) {
+          messsages = messsages.concat(
+            `${5 - i === 5 ? 'G' : 'B'}.Số lượng đánh giá ${
+              5 - i
+            }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
+              newData.numberScoreReview[i]
+            } đánh giá`,
+          );
+        }
+      }
+    }
     return messsages;
   }
 
   // remove random fake data
-  async updateObjectByUrl(data: UpdateObjectByUrl): Promise<void> {
-    const temp: UpdateObjectByUrl = {
-      ...data,
-      // extra: {
-      //   ...data.extra,
-      //   rank: data.extra.rank + getRndInteger(-2, 2),
-      // },
-      // numberScoreReview: data.numberScoreReview.map((item, index) => {
-      //   if (index <= 2) {
-      //     return item + getRndInteger(0, 2);
-      //   }
-      //   return item;
-      // }),
-    };
-    const origin = await this.prismaService.tbObject.findFirst({
-      where: {
-        url: data.url,
-      },
-    });
+  // async updateObjectByUrl(data: UpdateObjectByUrl): Promise<void> {
+  //   const temp: UpdateObjectByUrl = {
+  //     ...data,
+  //     // extra: {
+  //     //   ...data.extra,
+  //     //   rank: data.extra.rank + getRndInteger(-2, 2),
+  //     // },
+  //     // numberScoreReview: data.numberScoreReview.map((item, index) => {
+  //     //   if (index <= 2) {
+  //     //     return item + getRndInteger(0, 2);
+  //     //   }
+  //     //   return item;
+  //     // }),
+  //   };
+  //   const origin = await this.prismaService.tbObject.findFirst({
+  //     where: {
+  //       url: data.url,
+  //     },
+  //   });
 
-    await this.prismaService.tbObject.update({
-      where: {
-        id: origin.id,
-      },
-      data: {
-        ...temp,
-        updatedAt: moment().toDate(),
-      },
-    });
-    await this.prismaService.tbObjectLog.create({
-      data: {
-        ...temp,
-        messages: this.compareChange(origin, temp),
-        updatedAt: moment(new Date(data.updatedAt)).toDate(),
-        isManual: true,
-        tbObjectId: origin.id,
-      },
-    });
-  }
+  //   await this.prismaService.tbObject.update({
+  //     where: {
+  //       id: origin.id,
+  //     },
+  //     data: {
+  //       ...temp,
+  //       updatedAt: moment().toDate(),
+  //     },
+  //   });
+  //   await this.prismaService.tbObjectLog.create({
+  //     data: {
+  //       ...temp,
+  //       messages: this.compareChange(origin, temp),
+  //       updatedAt: moment(new Date(data.updatedAt)).toDate(),
+  //       isManual: true,
+  //       tbObjectId: origin.id,
+  //     },
+  //   });
+  // }
 
   formatMessage(message: string) {
-    if (message.search('Số lượng đánh giá') !== -1) {
-      return message;
-    } else {
-      const arr = message.split('.');
-      let str = '';
-      if (arr.length === 1) {
-        str = arr[0];
-      } else {
-        str = arr[1];
-      }
-      return str;
+    //Nếu message là thông báo thay đổi số lượng review hoặc thay đổi điểm/xếp hạng (Có G.||B.||U.||D.)
+    let res = '';
+    if (
+      message.search('G.') !== -1 ||
+      message.search('B.') !== -1 ||
+      message.search('U.') !== -1 ||
+      message.search('D.') !== -1
+    ) {
+      res = message.split('.')[1];
+      return res;
     }
+    // Nếu message là thông báo có bình luận được thêm mới hoặc bị xoá - Chỉ thông báo các bình luận xấu
+    if (message.search('|') !== -1) {
+      // Nếu là thông báo có bình luận mới
+      res = message.split('|')[0];
+      return res;
+    }
+    // Nếu là thông báo bình luận bị xoá
+    res = message;
+    return res;
   }
 
   async sendNoti(

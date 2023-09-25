@@ -85,6 +85,9 @@ export class ReviewService {
       },
     });
     for (let i = 0; i < listHotels.length; i++) {
+      // dev
+      // if (listHotels[i].id !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47') continue;
+      // dev
       const hotel: tbHotel = listHotels[i];
       const temp: NewReview = await this.crawlHotel(
         hotel,
@@ -282,7 +285,7 @@ export class ReviewService {
 
       // return;
 
-      //dev
+      // dev
 
       try {
         console.log('Start review TRIP');

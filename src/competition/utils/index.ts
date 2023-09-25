@@ -1,33 +1,34 @@
 import { PLATFORM, tbReview } from '@prisma/client';
 import * as moment from 'moment-timezone';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Review } from 'src/review/review.entity';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
 export const formatReview = (review: tbReview, type: 'add' | 'remove') => {
   let message = '';
   if (review.platform === PLATFORM.TRIP) {
-    if (type === 'remove') {
+    if (type === 'remove' && review.extra['stars'] < 5) {
       message += `Đánh giá ${review.extra['stars']} sao được viết bởi ${review.username} đã bị xoá`;
     }
-    if (type === 'add') {
-      message += `${review.username} đã thêm một đánh giá ${review.extra['stars']} sao`;
+    if (type === 'add' && review.extra['stars'] < 5) {
+      message += `${review.username} đã thêm một đánh giá ${review.extra['stars']} sao|${review.extra['link']}`;
     }
   }
   if (review.platform === PLATFORM.BOOKING) {
-    if (type === 'remove') {
+    if (type === 'remove' && review.extra['score'] < 9.0) {
       message += `Đánh giá ${review.extra['score']} điểm được viết bởi ${review.username} đã bị xoá`;
     }
-    if (type === 'add') {
-      message += `${review.username} đã thêm một đánh giá ${review.extra['score']} điểm`;
+    if (type === 'add' && review.extra['score'] < 9.0) {
+      message += `${review.username} đã thêm một đánh giá ${review.extra['score']} điểm|${review.extra['link']}`;
     }
   }
   if (review.platform === PLATFORM.GOOGLE) {
-    if (type === 'remove') {
+    if (type === 'remove' && review.extra['score'] < 5.0) {
       message += `Đánh giá ${review.extra['score']} điểm được viết bởi ${review.username} đã bị xoá`;
     }
-    if (type === 'add') {
-      message += `${review.username} đã thêm một đánh giá ${review.extra['score']} điểm`;
+    if (type === 'add' && review.extra['score'] < 5.0) {
+      message += `${review.username} đã thêm một đánh giá ${review.extra['score']} điểm||${review.extra['link']}`;
     }
   }
 
@@ -86,9 +87,17 @@ export const getSummaryReviewInMonth = async (
     reviewHigh = reviews.filter((review) => review.extra['stars'] === 5);
   }
 
+  if (platform === PLATFORM.BOOKING) {
+    reviewHigh = reviews.filter((review) => review.extra['score'] >= 9.0);
+  }
+
   // Filter review bad in month
   if (platform === PLATFORM.TRIP) {
     reviewBad = reviews.filter((review) => review.extra['stars'] < 5);
+  }
+
+  if (platform === PLATFORM.BOOKING) {
+    reviewBad = reviews.filter((review) => review.extra['scores'] < 9.0);
   }
 
   return {
