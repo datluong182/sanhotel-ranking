@@ -16,7 +16,7 @@ const extractReviewBooking = async (
   console.log('Start crawl booking');
   while (true) {
     // if (count > 5) break;
-    const url = `https://www.booking.com/reviewlist.html?dist=1&pagename=${pagename}&type=total&offset=${page}&rows=10&cc1=vn`;
+    const url = `https://www.booking.com/reviewlist.html?dist=1&pagename=${pagename}&type=total&offset=${page}&rows=10&cc1=vn&sort=f_recent_desc`;
     await driver.get(url);
     await driver.sleep(500);
 
@@ -86,52 +86,50 @@ const extractReviewBooking = async (
       // console.log(moment(createdAtString, "MMMM D YYYY").format("DD/MM/YYYY"), "booking created at")
 
       // Kiểm tra xem có phải review Reviewer's choice không. Nếu có, trường hợp review thuộc tháng trong qkhu thì bỏ qua không check dừng
-      const reviewerChoiceEle = await GetElement(
-        driver,
-        '//span[@class="c-review-block__badge"]',
-      );
-      if (!reviewerChoiceEle || (reviewerChoiceEle && i !== 0)) {
-        // Điều kiện dừng: Chỉ crawl và cập nhật trong tháng hiện tại. Data tháng trước giữ nguyên. Khi gặp review thuộc tháng trước tháng hiện tại thì dừng vòng lặp
-        // '2023/08/01', 'YYYY/MM/DD'
-        if (
-          moment(createdAtString, 'MMMM D YYYY')
-            .set({ h: 0, m: 0, s: 0 })
-            .isBefore(moment().startOf('month').set({ h: 0, m: 0, s: 0 }))
-        ) {
-          console.log(
-            'last review of month',
-            moment(createdAtString, 'MMMM D YYYY').format('DD/MM/YYYY'),
-          );
-          cancel = true;
-          break;
-        }
+      // const reviewerChoiceEle = await GetElement(
+      //   driver,
+      //   '//span[@class="c-review-block__badge"]',
+      // );
+      // if (!reviewerChoiceEle || (reviewerChoiceEle && i !== 0)) {
+      //   // Điều kiện dừng: Chỉ crawl và cập nhật trong tháng hiện tại. Data tháng trước giữ nguyên. Khi gặp review thuộc tháng trước tháng hiện tại thì dừng vòng lặp
+      //   // '2023/08/01', 'YYYY/MM/DD'
+
+      // }
+
+      if (
+        moment(createdAtString, 'MMMM D YYYY')
+          .set({ h: 0, m: 0, s: 0 })
+          .isBefore(moment().startOf('month').set({ h: 0, m: 0, s: 0 }))
+      ) {
+        console.log(
+          'last review of month',
+          moment(createdAtString, 'MMMM D YYYY').format('DD/MM/YYYY'),
+        );
+        cancel = true;
+        break;
       }
 
-      // const title = await titleEles[i].getText();
-      // console.log(title, 'title');
-      // if (title.search('Lovely hotel with an amazing staff!') !== -1) {
-      //   await driver.sleep(1000000);
+      // if (reviewerChoiceEle && i === 0) {
+      // } else {
+
       // }
-      if (reviewerChoiceEle && i === 0) {
-      } else {
-        result.push({
-          username: await usernameEles[i].getText(),
-          title: await titleEles[i].getText(),
-          createdAt: moment(createdAtString, 'MMMM D YYYY')
-            .set({ h: 0, m: 0, s: 0 })
-            .toDate(),
-          monthCreated: moment(createdAtString, 'MMMM D YYYY').get('month') + 1,
-          yearCreated: moment(createdAtString, 'MMMM D YYYY').get('year'),
-          extra: {
-            score: parseFloat(
-              (await scoreEles[i].getText()).replaceAll(',', '.').trim(),
-            ),
-            reviewId: await reviewIdEles[i].getAttribute('data-review-url'),
-            link: url,
-          },
-          content,
-        });
-      }
+      result.push({
+        username: await usernameEles[i].getText(),
+        title: await titleEles[i].getText(),
+        createdAt: moment(createdAtString, 'MMMM D YYYY')
+          .set({ h: 0, m: 0, s: 0 })
+          .toDate(),
+        monthCreated: moment(createdAtString, 'MMMM D YYYY').get('month') + 1,
+        yearCreated: moment(createdAtString, 'MMMM D YYYY').get('year'),
+        extra: {
+          score: parseFloat(
+            (await scoreEles[i].getText()).replaceAll(',', '.').trim(),
+          ),
+          reviewId: await reviewIdEles[i].getAttribute('data-review-url'),
+          link: url,
+        },
+        content,
+      });
     }
 
     if (cancel) {
@@ -140,12 +138,18 @@ const extractReviewBooking = async (
     }
 
     console.log('booking page', count);
-    const textEmpty = await GetElement(driver, '//*[@class="bui-empty-state"]');
-    if (textEmpty) {
+    // const textEmpty = await GetElement(driver, '//*[@class="bui-empty-state"]');
+    // if (textEmpty) {
+    //   break;
+    // } else {
+    //   count++;
+    //   page += 10;
+    // }
+
+    count++;
+    page += 10;
+    if (count > 20) {
       break;
-    } else {
-      count++;
-      page += 10;
     }
     // break;
   }

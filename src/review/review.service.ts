@@ -86,7 +86,7 @@ export class ReviewService {
     });
     for (let i = 0; i < listHotels.length; i++) {
       // dev
-      // if (listHotels[i].id !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47') continue;
+      // if (listHotels[i].id !== 'd0251494-02e0-493d-b128-0204ed92ac7b') continue;
       // dev
       const hotel: tbHotel = listHotels[i];
       const temp: NewReview = await this.crawlHotel(
@@ -120,94 +120,6 @@ export class ReviewService {
       month: currentMonth,
       year: currentYear,
     };
-    // const listReviewTrip= await this.prismaService.tbReview.findMany({
-    //   where: {
-    //     platform: 'TRIP',
-    //     tbHotelId: listHotels[0].id
-    //   }
-    // });
-    // const listReviewBooking = await this.prismaService.tbReview.findMany({
-    //   where: {
-    //     platform: 'BOOKING',
-    //     tbHotelId: listHotels[0].id
-    //   }
-    // });
-    // const result: NewReview = {
-    //   [listHotels[0].id]: {
-    //     TRIP: listReviewTrip.map(item => ({
-    //       ...item,
-    //       extra: {
-    //         link: item.extra["link"],
-    //         stars: item.extra["stars"],
-    //         reviewId: item.extra["reviewId"],
-    //       }
-    //     })),
-    //     BOOKING: listReviewBooking.map(item => ({
-    //       ...item,
-    //       extra: {
-    //         score: item.extra["score"],
-    //         reviewId: item.extra["reviewId"],
-    //       }
-    //     })),
-    //   }
-    // }
-    // console.log(result[listHotels[0].id].BOOKING.length, result[listHotels[0].id].BOOKING[0], 'length review booking')
-
-    // // create tbStaffLastUpdate
-    // const lastUpdated = await this.prismaService.tbStaffLastUpdate.create({
-    //   data: {
-    //     updatedAt: moment(new Date(moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'))).toDate(),
-    //   }
-    // })
-
-    // // number fiveStarsReview
-    // let listStaffs = await this.prismaService.tbStaff.findMany({
-    //   where: {
-    //     tbHotelId: listHotels[0].id,
-    //   }
-    // });
-    // for(let i=0; i<listStaffs.length; i++) {
-    //   let staff = listStaffs[i];
-
-    //   staff.fiveStarsReview[PLATFORM.TRIP] = 0;
-    //   staff.fiveStarsReview[PLATFORM.BOOKING] = 0;
-
-    //   const listReviewTrip = result[listHotels[0].id].TRIP;
-    //   const listReviewBooking = result[listHotels[0].id].BOOKING;
-    //   console.log(staff,listReviewTrip.length, listReviewBooking.length, 'check each staff')
-    //   let count = 0;
-    //   listReviewTrip.map(review => {
-    //     review.content.map(text => {
-    //       if (text.search(staff.name) !== -1) {
-    //         count++;
-    //       }
-    //     })
-    //   })
-    //   staff.fiveStarsReview[PLATFORM.TRIP] = count;
-
-    //   count = 0;
-    //   listReviewBooking.map(review => {
-    //     review.content.map(text => {
-    //       if (text.search(staff.name) !== -1) {
-    //         count++;
-    //       }
-    //     })
-    //   })
-    //   staff.fiveStarsReview[PLATFORM.BOOKING] = count;
-
-    //   const staffId = staff.id;
-    //   delete staff.id;
-
-    //   await this.prismaService.tbStaffLog.create({
-    //     data: {
-    //       ...staff,
-    //       tbHotelId: listHotels[0].id,
-    //       tbStaffId: staffId,
-    //       tbStaffLastUpdateId: lastUpdated.id,
-    //       updatedAt: moment(new Date(moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'))).toDate(),
-    //     }
-    //   })
-    // }
   }
 
   async crawlHotel(
@@ -306,7 +218,7 @@ export class ReviewService {
           },
         });
       } catch (e) {
-        console.log('Lỗi crawl review trip');
+        console.log('Lỗi crawl review trip', e);
       }
 
       try {
@@ -331,7 +243,7 @@ export class ReviewService {
           },
         });
       } catch (e) {
-        console.log('Lỗi crawl review trip');
+        console.log('Lỗi crawl review booking');
       }
 
       try {
@@ -355,7 +267,7 @@ export class ReviewService {
           },
         });
       } catch (e) {
-        console.log('Lỗi crawl review trip');
+        console.log('Lỗi crawl review google', e);
       }
 
       // save new data

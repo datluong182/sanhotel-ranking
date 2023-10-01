@@ -46,15 +46,24 @@ const extractReviewTrip = async (
     // if (count > 5) {
     //   break;
     // }
-    const reviewAreaEle = await GetElement(driver, '//div[@id="hrAdWrapper"]');
-    if (!reviewAreaEle) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          detail: 'Không tìm thấy',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+    let reviewAreaEle,
+      countFind = 0;
+    while (true) {
+      if (countFind > 10) {
+        throw new HttpException(
+          {
+            status: HttpStatus.BAD_REQUEST,
+            detail: 'Không tìm thấy',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      reviewAreaEle = await GetElement(driver, '//div[@id="hrAdWrapper"]');
+      if (reviewAreaEle) {
+        break;
+      }
+      await driver.sleep(1000);
+      countFind += 1;
     }
     await driver.executeScript(
       'arguments[0].scrollIntoView(true);',

@@ -32,6 +32,7 @@ import {
 import { getTopHotelForTrip } from './utils/competition';
 import { HttpService } from '@nestjs/axios';
 import extractReviewGoogle from 'src/review/utils/google';
+import { platform } from 'os';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -66,25 +67,52 @@ export class CompetitionService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    await this.prismaService.tbCompetition.update({
-      where: {
-        month_year_tbHotelId_platform: {
-          month: data.month,
-          year: data.year,
-          platform: data.platform,
+    if (data.platform === PLATFORM.BOOKING) {
+      const object = await this.prismaService.tbObject.findFirst({
+        where: {
           tbHotelId: data.tbHotelId,
+          platform: data.platform,
         },
-      },
-      data: {
-        ...competition,
-        extra: {
-          //@ts-ignore
-          ...competition.extra,
-          checkoutInMonth: data.checkoutInMonth,
-          ratioInMonth: data.ratioInMonth,
+      });
+      const updated = await this.prismaService.tbObject.update({
+        where: {
+          id: object.id,
         },
-      },
-    });
+        data: {
+          extra: {
+            ...(object.extra as object),
+            checkoutInMonth: data.checkoutInMonth,
+            ratioInMonth:
+              data.checkoutInMonth && data.checkoutInMonth !== 0
+                ? competition.numberReviewHigh / data.checkoutInMonth
+                : -1,
+          },
+        },
+      });
+      console.log(updated, 'updated');
+      await this.prismaService.tbCompetition.update({
+        where: {
+          month_year_tbHotelId_platform: {
+            month: data.month,
+            year: data.year,
+            platform: data.platform,
+            tbHotelId: data.tbHotelId,
+          },
+        },
+        data: {
+          ...competition,
+          extra: {
+            //@ts-ignore
+            ...competition.extra,
+            checkoutInMonth: data.checkoutInMonth,
+            ratioInMonth:
+              data.checkoutInMonth && data.checkoutInMonth !== 0
+                ? competition.numberReviewHigh / data.checkoutInMonth
+                : -1,
+          },
+        },
+      });
+    }
   }
 
   async getCompetition(
@@ -138,6 +166,10 @@ export class CompetitionService {
 
     const startCrawl = moment();
     console.log('Start crawl');
+
+    // await this.reviewService.crawlSchedule(true, currentMonth, currentYear);
+
+    // return;
 
     // ONLY FOR COMPETITION BOOKING
     // const hotelBEnemyBooking = await this.prismaService.tbHotel.findMany({
@@ -280,7 +312,11 @@ export class CompetitionService {
 
     console.log('Update message and send noti. Only for hotel ally');
     // dev check thay đổi review
-    // const newObjectLogs = await this.prismaService.tbObject.findMany();
+    // const newObjectLogs = await this.prismaService.tbObject.findMany({
+    //   where: {
+    //     tbHotelId: 'ad85e6a3-f97d-4926-9e34-65add1617475',
+    //   },
+    // });
     // let res: any = {};
     // dev
     for (let i = 0; i < newObjectLogs.length; i++) {
@@ -296,10 +332,12 @@ export class CompetitionService {
         oldReview?.[objectLog.tbHotelId]?.[objectLog.platform] ?? [];
       const listNew: tbReview[] =
         newReview?.[objectLog.tbHotelId]?.[objectLog.platform] ?? [];
+
+      if (listNew.length === 0 || listOld.length === 0) continue;
       // dev check thay đổi review
       // if (
-      //   hotelByObjectLog.id === '242c9b2a-ccf7-4efa-b7d9-feec03af2a47' &&
-      //   objectLog.platform === PLATFORM.GOOGLE
+      //   hotelByObjectLog.id === 'ad85e6a3-f97d-4926-9e34-65add1617475' &&
+      //   objectLog.platform === PLATFORM.TRIP
       // ) {
       //   res = {
       //     newReview,
@@ -356,6 +394,16 @@ export class CompetitionService {
           }
         }
       }
+
+      console.log('Update message objectlog');
+      await this.prismaService.tbObjectLog.update({
+        where: {
+          id: objectLog.id,
+        },
+        data: {
+          messages: objectLog.messages,
+        },
+      });
 
       console.log('Send noti');
       if (objectLog.messages.length > 0) {

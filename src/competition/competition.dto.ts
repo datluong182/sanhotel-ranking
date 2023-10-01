@@ -62,8 +62,4 @@ export class UpdateExtraCompetition {
     required: true,
   })
   checkoutInMonth: number;
-  @ApiProperty({
-    required: true,
-  })
-  ratioInMonth: number;
 }

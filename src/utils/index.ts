@@ -2,9 +2,9 @@ import { By, WebDriver, WebElement } from 'selenium-webdriver';
 
 export const nomalizeName = (name: string) => {
   return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace("đ", "d")
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace('đ', 'd')
     .toLowerCase()
     .trim();
 };
@@ -14,7 +14,25 @@ export const GetElement = async (
   xpath: string,
 ) => {
   try {
-    return await driver.findElement(By.xpath(xpath));
+    let ele = undefined;
+    let count = 1;
+    while (true) {
+      if (count > 10) {
+        return null;
+      }
+      try {
+        ele = await driver.findElement(By.xpath(xpath));
+        return ele;
+      } catch (e) {}
+      const sleep = new Promise((resole, reject) => {
+        setTimeout(() => {
+          resole('Sleep 2s ' + xpath);
+        }, 2000);
+      });
+      console.log(await sleep);
+
+      count++;
+    }
   } catch (e) {
     console.log('Cannot find element', e);
     return null;
@@ -30,9 +48,27 @@ export const GetElements = async (
   xpath: string,
 ): Promise<WebElement[]> => {
   try {
-    return await driver.findElements(By.xpath(xpath));
+    let eles = undefined;
+    let count = 1;
+    while (true) {
+      if (count > 10) {
+        return null;
+      }
+      try {
+        eles = await driver.findElements(By.xpath(xpath));
+        return eles;
+      } catch (e) {}
+      const sleep = new Promise((resole, reject) => {
+        setTimeout(() => {
+          resole('Sleep 2s ' + xpath);
+        }, 2000);
+      });
+      console.log(await sleep);
+
+      count++;
+    }
   } catch (e) {
-    console.log('Cannot find elements');
+    console.log('Cannot find elements', e);
     return null;
   }
 };
@@ -42,10 +78,7 @@ export const ClickElement = async (
   ele: WebElement,
 ): Promise<boolean> => {
   try {
-    await driver.executeScript(
-      'arguments[0].click()',
-      ele,
-    );
+    await driver.executeScript('arguments[0].click()', ele);
     return true;
   } catch (e) {
     console.log('Cannot click elements');

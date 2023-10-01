@@ -116,17 +116,17 @@ export class ObjectService {
     if (query.platform === 'BOOKING') {
       if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ALLY) {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY ("extra"->'ratioInMonth') desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       } else if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ENEMY) {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY ("extra"->'ratioInMonth') desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       } else {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY ("extra"->'ratioInMonth') desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       }
@@ -359,14 +359,25 @@ export class ObjectService {
       where: {
         id: data.id,
       },
+      include: {
+        tbHotel: true,
+      },
     });
-    const messages = this.compareChange(origin, object);
+    const messages =
+      origin.tbHotel?.type === TYPE_HOTEL.ALLY
+        ? this.compareChange(origin, object)
+        : [];
     const updatedObjectTrips = await this.prismaService.tbObject.update({
       where: {
         id: data.id,
       },
       data: {
+        // ...origin,
         ...object,
+        extra: {
+          ...(origin.extra as object),
+          ...(object.extra as object),
+        },
         platform: data.platform,
         updatedAt: updatedAt ? updatedAt : new Date(),
       },
@@ -412,11 +423,17 @@ export class ObjectService {
     });
     const updatedAt = moment().utc().toDate();
     for (let i = 0; i < listObjects.length; i++) {
+      // if (
+      //   listObjects[i].platform != PLATFORM.BOOKING ||
+      //   listObjects[i].tbHotelId !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47'
+      // )
+      //   continue;
       const resultCrawl = await this.updateObject(listObjects[i], updatedAt);
       // {
       //   updated, messages;
       // }
       const updated = resultCrawl?.updated ?? undefined;
+      const messages = resultCrawl?.messages ?? [];
       if (!updated) {
         console.log('Get info', listObjects[i].name, 'FAIL');
         continue;
@@ -441,7 +458,7 @@ export class ObjectService {
       const newObjectLog = await this.prismaService.tbObjectLog.create({
         data: {
           ...temp,
-          messages: [],
+          messages,
           isManual,
           tbObjectId: id,
           updatedAt: moment(
@@ -526,12 +543,12 @@ export class ObjectService {
       console.log('crawl done', object);
       // return undefined;
       // if (platform === PLATFORM.TRIP) {
-      //   const sleep = new Promise((resole, reject) => {
-      //     setTimeout(() => {
-      //       resole('Sleep 3s');
-      //     }, 3000);
-      //   });
-      //   console.log(await sleep);
+      // const sleep = new Promise((resole, reject) => {
+      //   setTimeout(() => {
+      //     resole('Sleep 3s');
+      //   }, 3000);
+      // });
+      // console.log(await sleep);
       // }
 
       return object;
