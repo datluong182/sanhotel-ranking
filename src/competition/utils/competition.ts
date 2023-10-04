@@ -73,7 +73,7 @@ export const getTopHotelForTrip = async (
 
       const titleEle = await GetElements(
         driver,
-        `//div[@data-automation="hotel-card-title"]/a/div`,
+        `//div[@data-automation="hotel-card-title"]/a/*`,
       );
       console.log(titleEle.length, 'all title');
 
@@ -123,7 +123,7 @@ export const getTopHotelForTrip = async (
     console.log(e, 'error');
     const data: tbObject[] =
       await prismaService.$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc`;
-
+    await driver.quit();
     return {
       url: data.map((obj) => obj.url),
       name: data.map((obj) => obj.name),

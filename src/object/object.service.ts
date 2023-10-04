@@ -13,6 +13,7 @@ import extractDataBoooking from './utils/booking';
 import extractDataTrip from './utils/trip';
 import { HttpService } from '@nestjs/axios';
 import extractDataGoogle from './utils/google';
+import extractDataAgoda from './utils/agoda';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -91,6 +92,11 @@ export class ObjectService {
       where: {
         ...query.cond,
         platform: query.platform as PLATFORM,
+        tbHotel: {
+          disable: {
+            not: true,
+          },
+        },
       },
     });
     let data: tbObject[];
@@ -116,17 +122,17 @@ export class ObjectService {
     if (query.platform === 'BOOKING') {
       if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ALLY) {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY ("extra"->'ratioInMonth') desc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       } else if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ENEMY) {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY ("extra"->'ratioInMonth') desc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       } else {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY ("extra"->'ratioInMonth') desc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       }
@@ -137,6 +143,13 @@ export class ObjectService {
         query.page,
       )} LIMIT ${parseInt(query.limit)}`;
     }
+    if (query.platform === 'AGODA') {
+      data = await this.prismaService
+        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'AGODA' ORDER BY score desc OFFSET ${parseInt(
+        query.page,
+      )} LIMIT ${parseInt(query.limit)}`;
+    }
+
     return {
       count,
       page: query.page,
@@ -147,13 +160,19 @@ export class ObjectService {
 
   async createObject(data: CreateObject): Promise<tbObject | undefined> {
     console.log(data, 'data create object');
+    const hotel = await this.prismaService.tbHotel.findFirst({
+      where: {
+        id: data.tbHotelId,
+      },
+    });
     const objectTrip = await this.crawlObject(data.url, data.platform);
     console.log(objectTrip, 'crawl object done');
     if (!objectTrip) return undefined;
     const newObjectTrip = await this.prismaService.tbObject.create({
       data: {
         ...objectTrip,
-        extra: {},
+        name: hotel.name,
+        extra: objectTrip.extra,
         tbHotelId: data.tbHotelId,
         platform: data.platform,
         updatedAt: new Date(),
@@ -245,51 +264,19 @@ export class ObjectService {
             } đánh giá`,
           );
         }
+        if (origin.platform === PLATFORM.AGODA) {
+          messsages = messsages.concat(
+            `${5 - i === 5 ? 'G' : 'B'}.Số lượng đánh giá ${
+              5 - i
+            }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
+              newData.numberScoreReview[i]
+            } đánh giá`,
+          );
+        }
       }
     }
     return messsages;
   }
-
-  // remove random fake data
-  // async updateObjectByUrl(data: UpdateObjectByUrl): Promise<void> {
-  //   const temp: UpdateObjectByUrl = {
-  //     ...data,
-  //     // extra: {
-  //     //   ...data.extra,
-  //     //   rank: data.extra.rank + getRndInteger(-2, 2),
-  //     // },
-  //     // numberScoreReview: data.numberScoreReview.map((item, index) => {
-  //     //   if (index <= 2) {
-  //     //     return item + getRndInteger(0, 2);
-  //     //   }
-  //     //   return item;
-  //     // }),
-  //   };
-  //   const origin = await this.prismaService.tbObject.findFirst({
-  //     where: {
-  //       url: data.url,
-  //     },
-  //   });
-
-  //   await this.prismaService.tbObject.update({
-  //     where: {
-  //       id: origin.id,
-  //     },
-  //     data: {
-  //       ...temp,
-  //       updatedAt: moment().toDate(),
-  //     },
-  //   });
-  //   await this.prismaService.tbObjectLog.create({
-  //     data: {
-  //       ...temp,
-  //       messages: this.compareChange(origin, temp),
-  //       updatedAt: moment(new Date(data.updatedAt)).toDate(),
-  //       isManual: true,
-  //       tbObjectId: origin.id,
-  //     },
-  //   });
-  // }
 
   formatMessage(message: string) {
     //Nếu message là thông báo thay đổi số lượng review hoặc thay đổi điểm/xếp hạng (Có G.||B.||U.||D.)
@@ -332,6 +319,7 @@ export class ObjectService {
       TRIP: 'Tripadvisor',
       BOOKING: 'Booking',
       GOOGLE: 'Google Reviews',
+      AGODA: 'Agoda',
     };
     let notification_text = title + 'Đã có những thay đổi:\n';
     messages.map((message) => {
@@ -353,6 +341,11 @@ export class ObjectService {
     data: tbObject,
     updatedAt: Date | undefined = undefined,
   ): Promise<{ updated: tbObject; messages: string[] }> {
+    const hotel = await this.prismaService.tbHotel.findFirst({
+      where: {
+        id: data.tbHotelId,
+      },
+    });
     const object = await this.crawlObject(data.url, data.platform);
     if (!object) return undefined;
     const origin = await this.prismaService.tbObject.findFirst({
@@ -378,6 +371,7 @@ export class ObjectService {
           ...(origin.extra as object),
           ...(object.extra as object),
         },
+        name: hotel.name,
         platform: data.platform,
         updatedAt: updatedAt ? updatedAt : new Date(),
       },
@@ -416,6 +410,10 @@ export class ObjectService {
             not: true,
           },
         },
+        // dev
+        // tbHotelId: '242c9b2a-ccf7-4efa-b7d9-feec03af2a47',
+        // platform: 'AGODA',
+        // dev
       },
       include: {
         tbHotel: true,
@@ -423,11 +421,6 @@ export class ObjectService {
     });
     const updatedAt = moment().utc().toDate();
     for (let i = 0; i < listObjects.length; i++) {
-      // if (
-      //   listObjects[i].platform != PLATFORM.BOOKING ||
-      //   listObjects[i].tbHotelId !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47'
-      // )
-      //   continue;
       const resultCrawl = await this.updateObject(listObjects[i], updatedAt);
       // {
       //   updated, messages;
@@ -486,6 +479,11 @@ export class ObjectService {
       PLATFORM.GOOGLE,
       isManual,
     );
+    await this.createLastUpdate(
+      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      PLATFORM.AGODA,
+      isManual,
+    );
     return result;
   }
 
@@ -525,6 +523,10 @@ export class ObjectService {
 
       if (platform === PLATFORM.GOOGLE) {
         object = await extractDataGoogle(driver, platform, url);
+      }
+
+      if (platform === PLATFORM.AGODA) {
+        object = await extractDataAgoda(platform, this.httpService, url);
       }
 
       // switch (platform) {

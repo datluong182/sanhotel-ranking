@@ -33,6 +33,7 @@ import { getTopHotelForTrip } from './utils/competition';
 import { HttpService } from '@nestjs/axios';
 import extractReviewGoogle from 'src/review/utils/google';
 import { platform } from 'os';
+import extractReviewAgoda from 'src/review/utils/agoda';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -155,6 +156,9 @@ export class CompetitionService {
     if (query.platform === PLATFORM.BOOKING) {
       result = result.sort((a, b) => b.score - a.score);
     }
+    if (query.platform === PLATFORM.AGODA) {
+      result = result.sort((a, b) => b.score - a.score);
+    }
     return result;
   }
 
@@ -167,9 +171,20 @@ export class CompetitionService {
     const startCrawl = moment();
     console.log('Start crawl');
 
-    // await this.reviewService.crawlSchedule(true, currentMonth, currentYear);
+    // const newObjectLogsTmp: NewObjectLog[] =
+    //   await this.objectService.crawlSchedule();
 
-    // return;
+    // // const { newReview: tmp } = await this.reviewService.crawlSchedule(
+    // //   true,
+    // //   currentMonth,
+    // //   currentYear,
+    // // );
+
+    // // return {
+    // //   newObjectLogsTmp,
+    // //   tmp,
+    // //   length: tmp['242c9b2a-ccf7-4efa-b7d9-feec03af2a47'].AGODA.length,
+    // // };
 
     // ONLY FOR COMPETITION BOOKING
     // const hotelBEnemyBooking = await this.prismaService.tbHotel.findMany({
@@ -202,6 +217,7 @@ export class CompetitionService {
       this.prismaService,
       this.objectService,
     );
+    console.log(urlTopHotel.length, 'rank trip');
     // ONLY FOR COMPETITION TRIP
 
     // Get thông tin
@@ -292,6 +308,15 @@ export class CompetitionService {
           platform: PLATFORM.GOOGLE,
         },
       });
+      // Review agoda cũ
+      const listRvAgoda = await this.prismaService.tbReview.findMany({
+        where: {
+          tbHotelId: hotel.id,
+          monthCreated: currentMonth,
+          yearCreated: currentYear,
+          platform: PLATFORM.AGODA,
+        },
+      });
       //@ts-ignore
       oldReview = {
         ...oldReview,
@@ -299,6 +324,7 @@ export class CompetitionService {
           TRIP: listRvTrip,
           BOOKING: listRvBooking,
           GOOGLE: listRvGoogle,
+          AGODA: listRvAgoda,
         },
       };
     }
@@ -328,8 +354,10 @@ export class CompetitionService {
       });
       // Nếu không phải ally thì bỏ qua
       if (hotelByObjectLog.type !== TYPE_HOTEL.ALLY) continue;
+      //@ts-ignore
       const listOld: tbReview[] =
         oldReview?.[objectLog.tbHotelId]?.[objectLog.platform] ?? [];
+      //@ts-ignore
       const listNew: tbReview[] =
         newReview?.[objectLog.tbHotelId]?.[objectLog.platform] ?? [];
 
@@ -418,6 +446,10 @@ export class CompetitionService {
           title =
             'Kênh OTA: Google Reviews\nKhách sạn ' + objectLog.name + '\n';
         }
+        if (objectLog.platform === PLATFORM.AGODA) {
+          title = 'Kênh OTA: AGODA\nKhách sạn ' + objectLog.name + '\n';
+        }
+
         this.objectService.sendNoti(
           objectLog.messages,
           title,
@@ -427,8 +459,6 @@ export class CompetitionService {
         );
       }
     }
-
-    // return res;
 
     console.log('Calc reivew in month');
     for (let i = 0; i < newObjectLogs.length; i++) {

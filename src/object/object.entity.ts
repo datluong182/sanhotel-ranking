@@ -34,11 +34,12 @@ export interface InfoTrip {
   };
 }
 
-// export interface Object {
-//   name: string;
-//   url: string;
-//   rank: number;
-//   score: number;
-//   numberScoreReviews: number[];
-//   updatedAt: Date;
-// }
+export interface ApifyAgoda {
+  url: string;
+  name: string;
+  score: number;
+  numberScoreReview: number[];
+  extra: {
+    subScore: { [key: string]: number };
+  };
+}
