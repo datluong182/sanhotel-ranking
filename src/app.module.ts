@@ -12,6 +12,7 @@ import { StaffModule } from './staff/staff.module';
 import { StaffLogModule } from './staff-log/staff-log.module';
 import { CompetitionModule } from './competition/competition.module';
 import { LoggerModule } from "nestjs-pino";
+import { StaffPointModule } from './staff-points/staff-point.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { LoggerModule } from "nestjs-pino";
     StaffModule,
     StaffLogModule,
     CompetitionModule,
+    StaffPointModule,
   ],
   controllers: [AppController],
   providers: [AppService],
