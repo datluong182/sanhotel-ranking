@@ -11,10 +11,12 @@ import { ReviewModule } from './review/review.module';
 import { StaffModule } from './staff/staff.module';
 import { StaffLogModule } from './staff-log/staff-log.module';
 import { CompetitionModule } from './competition/competition.module';
+import { LoggerModule } from "nestjs-pino";
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    LoggerModule.forRoot(),
     PrismaModule,
     ObjectModule,
     ObjectLogModule,

@@ -2,6 +2,10 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { Logger } from "nestjs-pino";
+import { config } from 'process';
+
+const PORT = process.env.SERVER_PORT;
 
 declare const module: any;
 
@@ -24,6 +28,10 @@ async function bootstrap() {
       }
     },
   });
+  const logger = app.get(Logger);
+
+  app.useLogger(logger);
+
   const config = new DocumentBuilder()
     .setTitle('API')
     .setDescription('APIs crawl score review')
@@ -44,12 +52,15 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  console.log('app started !!!');
-  await app.listen(8001);
+  await app.listen(PORT);
+  
 
+  logger.verbose(`App started on port ${PORT} !`)
+  
   if (module.hot) {
     module.hot.accept();
     module.hot.dispose(() => app.close());
   }
 }
+
 bootstrap();
