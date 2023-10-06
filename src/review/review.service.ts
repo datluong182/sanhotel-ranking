@@ -28,6 +28,7 @@ import * as moment from 'moment-timezone';
 import { HttpService } from '@nestjs/axios';
 import extractReviewAgoda from './utils/agoda';
 import extractReviewExpedia from './utils/expedia';
+import extractReviewTraveloka from './utils/traveloka';
 
 const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
 
@@ -346,11 +347,12 @@ export class ReviewService {
         console.log('Start review TRAVELOKA');
 
         console.log(hotel.links[PLATFORM.TRAVELOKA], 'Traveloka');
-        const reviewsTraveloka: ReviewTraveloka[] = await extractReviewExpedia(
-          this.prismaService,
-          this.httpService,
-          hotel.id,
-        );
+        const reviewsTraveloka: ReviewTraveloka[] =
+          await extractReviewTraveloka(
+            this.prismaService,
+            this.httpService,
+            hotel.id,
+          );
         newReviewHotel[hotel.id].TRAVELOKA = reviewsTraveloka;
         await this.prismaService.tbReview.deleteMany({
           where: {

@@ -35,6 +35,7 @@ import extractReviewGoogle from 'src/review/utils/google';
 import { platform } from 'os';
 import extractReviewAgoda from 'src/review/utils/agoda';
 import extractDataExpedia from 'src/object/utils/expedia';
+import extractDataTraveloka from 'src/object/utils/traveloka';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -169,10 +170,10 @@ export class CompetitionService {
     const startCrawl = moment();
     console.log('Start crawl');
 
-    // return await extractDataExpedia(
+    // return await extractDataTraveloka(
     //   PLATFORM.EXPEDIA,
     //   this.httpService,
-    //   'https://www.expedia.com.vn/en/Hanoi-Hotels-OGallery-Classy-Hotel-Spa.h32682023.Hotel-Information',
+    //   'https://www.traveloka.com/en-en/hotel/vietnam/san-grand-hotel--spa-9000000987418',
     // );
 
     const newObjectLogsTmp: NewObjectLog[] =
