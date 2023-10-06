@@ -86,6 +86,20 @@ export class ObjectLogService {
       `;
     }
 
+    if (query.platform === PLATFORM.TRAVELOKA) {
+      result = await this.prismaService.$queryRaw`
+        SELECT DISTINCT ON (DATE("updatedAt"), "url")
+              *
+        FROM "tbObjectLog"
+        WHERE url = ${
+          query.url
+        } and platform = 'TRAVELOKA' and "updatedAt"::date > ${new Date(
+        query.start,
+      )} and "updatedAt"::date < ${new Date(query.end)}
+        ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
+      `;
+    }
+
     return {
       count: result.length,
       data: result,

@@ -160,7 +160,7 @@ export class CompetitionService {
     return result;
   }
 
-  @Cron(cronjobCrawlReviewEnv)
+  // @Cron(cronjobCrawlReviewEnv)
   async updateCompetition(): Promise<any> {
     const currentMonth = moment().get('month') + 1;
     // const currentMonth = 8;
@@ -321,13 +321,23 @@ export class CompetitionService {
           platform: PLATFORM.AGODA,
         },
       });
-      // Review agoda cũ
+      // Review expedia cũ
       const listRvExpedia = await this.prismaService.tbReview.findMany({
         where: {
           tbHotelId: hotel.id,
           monthCreated: currentMonth,
           yearCreated: currentYear,
           platform: PLATFORM.EXPEDIA,
+        },
+      });
+
+      // Review expedia cũ
+      const listRvTraveloka = await this.prismaService.tbReview.findMany({
+        where: {
+          tbHotelId: hotel.id,
+          monthCreated: currentMonth,
+          yearCreated: currentYear,
+          platform: PLATFORM.TRAVELOKA,
         },
       });
 
@@ -340,6 +350,7 @@ export class CompetitionService {
           GOOGLE: listRvGoogle,
           AGODA: listRvAgoda,
           EXPEDIA: listRvExpedia,
+          TRAVELOKA: listRvTraveloka,
         },
       };
     }
@@ -466,6 +477,9 @@ export class CompetitionService {
         }
         if (objectLog.platform === PLATFORM.EXPEDIA) {
           title = 'Kênh OTA: Expedia\nKhách sạn ' + objectLog.name + '\n';
+        }
+        if (objectLog.platform === PLATFORM.TRAVELOKA) {
+          title = 'Kênh OTA: Traveloka\nKhách sạn ' + objectLog.name + '\n';
         }
 
         this.objectService.sendNoti(

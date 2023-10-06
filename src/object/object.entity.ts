@@ -53,3 +53,13 @@ export interface ApifyExpedia {
     subScore: { [key: string]: number };
   };
 }
+
+export interface ApifyTraveloka {
+  url: string;
+  name: string;
+  score: number;
+  numberScoreReview: number[];
+  extra: {
+    subScore: { [key: string]: number };
+  };
+}

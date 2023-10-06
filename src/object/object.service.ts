@@ -15,6 +15,7 @@ import { HttpService } from '@nestjs/axios';
 import extractDataGoogle from './utils/google';
 import extractDataAgoda from './utils/agoda';
 import extractDataExpedia from './utils/expedia';
+import extractDataTraveloka from './utils/traveloka';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -156,6 +157,12 @@ export class ObjectService {
         query.page,
       )} LIMIT ${parseInt(query.limit)}`;
     }
+    if (query.platform === 'TRAVELOKA') {
+      data = await this.prismaService
+        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRAVELOKA' ORDER BY score desc OFFSET ${parseInt(
+        query.page,
+      )} LIMIT ${parseInt(query.limit)}`;
+    }
 
     return {
       count,
@@ -273,17 +280,34 @@ export class ObjectService {
         }
         if (origin.platform === PLATFORM.AGODA) {
           messsages = messsages.concat(
-            `${5 - i === 5 ? 'G' : 'B'}.Số lượng đánh giá ${
-              5 - i
+            `${i === 0 ? 'G' : 'B'}.Số lượng đánh giá ${
+              i === 0
+                ? '9+'
+                : i === 1
+                ? '8-9'
+                : i === 2
+                ? '7-8'
+                : i === 3
+                ? '6-7'
+                : '1-6'
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
             } đánh giá`,
           );
         }
+
         if (origin.platform === PLATFORM.EXPEDIA) {
           messsages = messsages.concat(
-            `${5 - i === 5 ? 'G' : 'B'}.Số lượng đánh giá ${
-              5 - i
+            `${i === 0 ? 'G' : 'B'}.Số lượng đánh giá ${
+              i === 0
+                ? '9+'
+                : i === 1
+                ? '7-9'
+                : i === 2
+                ? '5-7'
+                : i === 3
+                ? '3-5'
+                : '1-3'
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
             } đánh giá`,
@@ -337,6 +361,7 @@ export class ObjectService {
       GOOGLE: 'Google Reviews',
       AGODA: 'Agoda',
       EXPEDIA: 'Expedia',
+      TRAVELOKA: 'Traveloka',
     };
     let notification_text = title + 'Đã có những thay đổi:\n';
     messages.map((message) => {
@@ -429,7 +454,7 @@ export class ObjectService {
         },
         // dev
         tbHotelId: '242c9b2a-ccf7-4efa-b7d9-feec03af2a47',
-        platform: 'EXPEDIA',
+        platform: 'TRAVELOKA',
         // dev
       },
       include: {
@@ -506,6 +531,11 @@ export class ObjectService {
       PLATFORM.EXPEDIA,
       isManual,
     );
+    await this.createLastUpdate(
+      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      PLATFORM.TRAVELOKA,
+      isManual,
+    );
 
     return result;
   }
@@ -554,6 +584,10 @@ export class ObjectService {
 
       if (platform === PLATFORM.EXPEDIA) {
         object = await extractDataExpedia(platform, this.httpService, url);
+      }
+
+      if (platform === PLATFORM.TRAVELOKA) {
+        object = await extractDataTraveloka(platform, this.httpService, url);
       }
 
       // switch (platform) {

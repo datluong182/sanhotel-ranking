@@ -18,6 +18,7 @@ import {
   ReviewBooking,
   ReviewExpedia,
   ReviewGoogle,
+  ReviewTraveloka,
   ReviewTrip,
 } from './review.entity';
 import extractReviewTrip from './utils/trip';
@@ -107,6 +108,7 @@ export class ReviewService {
         result[hotel.id].GOOGLE.length,
         result[hotel.id].AGODA.length,
         result[hotel.id].EXPEDIA.length,
+        result[hotel.id].TRAVELOKA.length,
         'Done hotel',
       );
     }
@@ -139,6 +141,7 @@ export class ReviewService {
         GOOGLE: [],
         AGODA: [],
         EXPEDIA: [],
+        TRAVELOKA: [],
       },
     };
     const screen = {
@@ -305,38 +308,72 @@ export class ReviewService {
       //   console.log(e, 'error');
       // }
 
-      try {
-        console.log('Start review EXPEDIA');
+      // try {
+      //   console.log('Start review EXPEDIA');
 
-        console.log(hotel.links[PLATFORM.EXPEDIA], 'Expedia');
-        const reviewsExpedia: ReviewExpedia[] = await extractReviewExpedia(
+      //   console.log(hotel.links[PLATFORM.EXPEDIA], 'Expedia');
+      //   const reviewsExpedia: ReviewExpedia[] = await extractReviewExpedia(
+      //     this.prismaService,
+      //     this.httpService,
+      //     hotel.id,
+      //   );
+      //   newReviewHotel[hotel.id].EXPEDIA = reviewsExpedia;
+      //   await this.prismaService.tbReview.deleteMany({
+      //     where: {
+      //       tbHotelId: hotel.id,
+      //       platform: PLATFORM.EXPEDIA,
+      //       monthCreated: currentMonth,
+      //       yearCreated: currentYear,
+      //     },
+      //   });
+      //   await this.prismaService.tbReview.createMany({
+      //     data: newReviewHotel[hotel.id].EXPEDIA.map((item) => ({
+      //       ...item,
+      //       extra: {
+      //         score: item.extra.score,
+      //         reviewId: item.extra.reviewId,
+      //         link: item.extra.link,
+      //       },
+      //       platform: PLATFORM.EXPEDIA,
+      //       tbHotelId: hotel.id,
+      //     })),
+      //   });
+      // } catch (e) {
+      //   console.log('Lỗi crawl review expedia', e);
+      // }
+
+      try {
+        console.log('Start review TRAVELOKA');
+
+        console.log(hotel.links[PLATFORM.TRAVELOKA], 'Traveloka');
+        const reviewsTraveloka: ReviewTraveloka[] = await extractReviewExpedia(
           this.prismaService,
           this.httpService,
           hotel.id,
         );
-        newReviewHotel[hotel.id].EXPEDIA = reviewsExpedia;
+        newReviewHotel[hotel.id].TRAVELOKA = reviewsTraveloka;
         await this.prismaService.tbReview.deleteMany({
           where: {
             tbHotelId: hotel.id,
-            platform: PLATFORM.EXPEDIA,
+            platform: PLATFORM.TRAVELOKA,
             monthCreated: currentMonth,
             yearCreated: currentYear,
           },
         });
         await this.prismaService.tbReview.createMany({
-          data: newReviewHotel[hotel.id].EXPEDIA.map((item) => ({
+          data: newReviewHotel[hotel.id].TRAVELOKA.map((item) => ({
             ...item,
             extra: {
               score: item.extra.score,
               reviewId: item.extra.reviewId,
               link: item.extra.link,
             },
-            platform: PLATFORM.EXPEDIA,
+            platform: PLATFORM.TRAVELOKA,
             tbHotelId: hotel.id,
           })),
         });
       } catch (e) {
-        console.log('Lỗi crawl review expedia', e);
+        console.log('Lỗi crawl review traveloka', e);
       }
     } catch (e) {
       console.log(e, 'error');

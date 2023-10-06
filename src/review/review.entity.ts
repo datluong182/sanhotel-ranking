@@ -56,6 +56,14 @@ export class ReviewExpedia extends Review {
   };
 }
 
+export class ReviewTraveloka extends Review {
+  extra: {
+    score: number;
+    reviewId: string;
+    link: string;
+  };
+}
+
 export class NewReview {
   [key: string]: {
     TRIP: ReviewTrip[];
@@ -63,6 +71,7 @@ export class NewReview {
     GOOGLE: ReviewGoogle[];
     AGODA: ReviewAgoda[];
     EXPEDIA: ReviewExpedia[];
+    TRAVELOKA: ReviewTraveloka[];
   };
 }
 

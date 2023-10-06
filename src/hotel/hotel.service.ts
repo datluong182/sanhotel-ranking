@@ -214,6 +214,13 @@ export class HotelService {
           );
           item.data.push(listBooking.length);
         }
+
+        if (query.platform === PLATFORM.TRAVELOKA) {
+          const listBooking = tempListReview.filter(
+            (item) => item.extra['score'] >= 9.0,
+          );
+          item.data.push(listBooking.length);
+        }
       }
       data.push(item);
     }
