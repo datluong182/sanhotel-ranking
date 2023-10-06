@@ -43,3 +43,13 @@ export interface ApifyAgoda {
     subScore: { [key: string]: number };
   };
 }
+
+export interface ApifyExpedia {
+  url: string;
+  name: string;
+  score: number;
+  numberScoreReview: number[];
+  extra: {
+    subScore: { [key: string]: number };
+  };
+}

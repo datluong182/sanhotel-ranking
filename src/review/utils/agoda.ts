@@ -27,13 +27,13 @@ const extractReviewAgoda = async (
   );
 
   const results = response?.data?.[0]?.reviews ?? [];
-  console.log(results?.length, 'num reviews');
+  console.log(results?.length, 'num reviews agoda');
   let reviews: ReviewAgoda[] = [];
   results.map((result) => {
-    const createdAt = moment(result?.createdAt);
+    const createdAt = moment(result?.createdAt, 'YYYY-MM-DD');
     if (
       createdAt.isSameOrAfter(moment().startOf('month'), 'date') &&
-      createdAt.isSameOrBefore(moment().startOf('month'), 'date')
+      createdAt.isSameOrBefore(moment().endOf('month'), 'date')
     ) {
       reviews = reviews.concat({
         title: result?.title,

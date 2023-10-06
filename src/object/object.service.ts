@@ -14,6 +14,7 @@ import extractDataTrip from './utils/trip';
 import { HttpService } from '@nestjs/axios';
 import extractDataGoogle from './utils/google';
 import extractDataAgoda from './utils/agoda';
+import extractDataExpedia from './utils/expedia';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -149,6 +150,12 @@ export class ObjectService {
         query.page,
       )} LIMIT ${parseInt(query.limit)}`;
     }
+    if (query.platform === 'EXPEDIA') {
+      data = await this.prismaService
+        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'EXPEDIA' ORDER BY score desc OFFSET ${parseInt(
+        query.page,
+      )} LIMIT ${parseInt(query.limit)}`;
+    }
 
     return {
       count,
@@ -273,6 +280,15 @@ export class ObjectService {
             } đánh giá`,
           );
         }
+        if (origin.platform === PLATFORM.EXPEDIA) {
+          messsages = messsages.concat(
+            `${5 - i === 5 ? 'G' : 'B'}.Số lượng đánh giá ${
+              5 - i
+            }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
+              newData.numberScoreReview[i]
+            } đánh giá`,
+          );
+        }
       }
     }
     return messsages;
@@ -320,6 +336,7 @@ export class ObjectService {
       BOOKING: 'Booking',
       GOOGLE: 'Google Reviews',
       AGODA: 'Agoda',
+      EXPEDIA: 'Expedia',
     };
     let notification_text = title + 'Đã có những thay đổi:\n';
     messages.map((message) => {
@@ -411,8 +428,8 @@ export class ObjectService {
           },
         },
         // dev
-        // tbHotelId: '242c9b2a-ccf7-4efa-b7d9-feec03af2a47',
-        // platform: 'AGODA',
+        tbHotelId: '242c9b2a-ccf7-4efa-b7d9-feec03af2a47',
+        platform: 'EXPEDIA',
         // dev
       },
       include: {
@@ -484,6 +501,12 @@ export class ObjectService {
       PLATFORM.AGODA,
       isManual,
     );
+    await this.createLastUpdate(
+      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      PLATFORM.EXPEDIA,
+      isManual,
+    );
+
     return result;
   }
 
@@ -527,6 +550,10 @@ export class ObjectService {
 
       if (platform === PLATFORM.AGODA) {
         object = await extractDataAgoda(platform, this.httpService, url);
+      }
+
+      if (platform === PLATFORM.EXPEDIA) {
+        object = await extractDataExpedia(platform, this.httpService, url);
       }
 
       // switch (platform) {

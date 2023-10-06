@@ -200,6 +200,20 @@ export class HotelService {
           );
           item.data.push(listGoogle.length);
         }
+
+        if (query.platform === PLATFORM.AGODA) {
+          const listBooking = tempListReview.filter(
+            (item) => item.extra['score'] >= 9.0,
+          );
+          item.data.push(listBooking.length);
+        }
+
+        if (query.platform === PLATFORM.EXPEDIA) {
+          const listBooking = tempListReview.filter(
+            (item) => item.extra['score'] >= 9.0,
+          );
+          item.data.push(listBooking.length);
+        }
       }
       data.push(item);
     }

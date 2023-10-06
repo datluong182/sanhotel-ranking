@@ -34,6 +34,7 @@ import { HttpService } from '@nestjs/axios';
 import extractReviewGoogle from 'src/review/utils/google';
 import { platform } from 'os';
 import extractReviewAgoda from 'src/review/utils/agoda';
+import extractDataExpedia from 'src/object/utils/expedia';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -156,9 +157,6 @@ export class CompetitionService {
     if (query.platform === PLATFORM.BOOKING) {
       result = result.sort((a, b) => b.score - a.score);
     }
-    if (query.platform === PLATFORM.AGODA) {
-      result = result.sort((a, b) => b.score - a.score);
-    }
     return result;
   }
 
@@ -171,20 +169,26 @@ export class CompetitionService {
     const startCrawl = moment();
     console.log('Start crawl');
 
-    // const newObjectLogsTmp: NewObjectLog[] =
-    //   await this.objectService.crawlSchedule();
+    // return await extractDataExpedia(
+    //   PLATFORM.EXPEDIA,
+    //   this.httpService,
+    //   'https://www.expedia.com.vn/en/Hanoi-Hotels-OGallery-Classy-Hotel-Spa.h32682023.Hotel-Information',
+    // );
 
-    // // const { newReview: tmp } = await this.reviewService.crawlSchedule(
-    // //   true,
-    // //   currentMonth,
-    // //   currentYear,
-    // // );
+    const newObjectLogsTmp: NewObjectLog[] =
+      await this.objectService.crawlSchedule();
 
-    // // return {
-    // //   newObjectLogsTmp,
-    // //   tmp,
-    // //   length: tmp['242c9b2a-ccf7-4efa-b7d9-feec03af2a47'].AGODA.length,
-    // // };
+    const { newReview: tmp } = await this.reviewService.crawlSchedule(
+      true,
+      currentMonth,
+      currentYear,
+    );
+
+    return {
+      newObjectLogsTmp,
+      tmp,
+      length: tmp['242c9b2a-ccf7-4efa-b7d9-feec03af2a47'].AGODA.length,
+    };
 
     // ONLY FOR COMPETITION BOOKING
     // const hotelBEnemyBooking = await this.prismaService.tbHotel.findMany({
@@ -317,6 +321,16 @@ export class CompetitionService {
           platform: PLATFORM.AGODA,
         },
       });
+      // Review agoda cũ
+      const listRvExpedia = await this.prismaService.tbReview.findMany({
+        where: {
+          tbHotelId: hotel.id,
+          monthCreated: currentMonth,
+          yearCreated: currentYear,
+          platform: PLATFORM.EXPEDIA,
+        },
+      });
+
       //@ts-ignore
       oldReview = {
         ...oldReview,
@@ -325,6 +339,7 @@ export class CompetitionService {
           BOOKING: listRvBooking,
           GOOGLE: listRvGoogle,
           AGODA: listRvAgoda,
+          EXPEDIA: listRvExpedia,
         },
       };
     }
@@ -448,6 +463,9 @@ export class CompetitionService {
         }
         if (objectLog.platform === PLATFORM.AGODA) {
           title = 'Kênh OTA: AGODA\nKhách sạn ' + objectLog.name + '\n';
+        }
+        if (objectLog.platform === PLATFORM.EXPEDIA) {
+          title = 'Kênh OTA: Expedia\nKhách sạn ' + objectLog.name + '\n';
         }
 
         this.objectService.sendNoti(

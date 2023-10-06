@@ -1,6 +1,7 @@
 version: '3'
 services:
   nestjs:
+    image: sanhotel-ranking/backend:beta
     build:
       context: .
       dockerfile: Dockerfile

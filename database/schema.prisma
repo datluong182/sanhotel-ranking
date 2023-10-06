@@ -129,6 +129,7 @@ enum PLATFORM {
   BOOKING
   GOOGLE
   AGODA
+  EXPEDIA
 }
 
 enum TYPE_HOTEL {
