@@ -453,8 +453,8 @@ export class ObjectService {
           },
         },
         // dev
-        tbHotelId: '242c9b2a-ccf7-4efa-b7d9-feec03af2a47',
-        platform: 'TRAVELOKA',
+        // tbHotelId: '242c9b2a-ccf7-4efa-b7d9-feec03af2a47',
+        // platform: 'TRAVELOKA',
         // dev
       },
       include: {

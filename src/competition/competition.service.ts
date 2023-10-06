@@ -176,20 +176,20 @@ export class CompetitionService {
     //   'https://www.traveloka.com/en-en/hotel/vietnam/san-grand-hotel--spa-9000000987418',
     // );
 
-    const newObjectLogsTmp: NewObjectLog[] =
-      await this.objectService.crawlSchedule();
+    // const newObjectLogsTmp: NewObjectLog[] =
+    //   await this.objectService.crawlSchedule();
 
-    const { newReview: tmp } = await this.reviewService.crawlSchedule(
-      true,
-      currentMonth,
-      currentYear,
-    );
+    // const { newReview: tmp } = await this.reviewService.crawlSchedule(
+    //   true,
+    //   currentMonth,
+    //   currentYear,
+    // );
 
-    return {
-      newObjectLogsTmp,
-      tmp,
-      length: tmp['242c9b2a-ccf7-4efa-b7d9-feec03af2a47'].AGODA.length,
-    };
+    // return {
+    //   newObjectLogsTmp,
+    //   tmp,
+    //   length: tmp['242c9b2a-ccf7-4efa-b7d9-feec03af2a47'].AGODA.length,
+    // };
 
     // ONLY FOR COMPETITION BOOKING
     // const hotelBEnemyBooking = await this.prismaService.tbHotel.findMany({
@@ -332,7 +332,7 @@ export class CompetitionService {
         },
       });
 
-      // Review expedia cũ
+      // Review traveloka cũ
       const listRvTraveloka = await this.prismaService.tbReview.findMany({
         where: {
           tbHotelId: hotel.id,

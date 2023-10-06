@@ -90,7 +90,7 @@ export class ReviewService {
     });
     for (let i = 0; i < listHotels.length; i++) {
       // dev
-      if (listHotels[i].id !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47') continue;
+      // if (listHotels[i].id !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47') continue;
       // dev
       const hotel: tbHotel = listHotels[i];
       const temp: NewReview = await this.crawlHotel(
@@ -149,7 +149,7 @@ export class ReviewService {
       width: 1000,
       height: 600,
     };
-    let driver;
+    let driver = undefined;
     try {
       const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
@@ -159,189 +159,204 @@ export class ReviewService {
       });
       // capabilities.set('browserName', 'firefox');
 
-      driver = await new Builder()
-        .usingServer(seleniumUrl)
-        .forBrowser('firefox')
-        .withCapabilities(capabilities)
-        .build();
+      // driver = await new Builder()
+      //   .usingServer(seleniumUrl)
+      //   .forBrowser('firefox')
+      //   .withCapabilities(capabilities)
+      //   .build();
 
-      // try {
-      //   console.log('Start review TRIP');
-      //   // crawl review trip
-      //   await driver.get(hotel.links[PLATFORM.TRIP]);
-      //   console.log(hotel.links[PLATFORM.TRIP], 'Trip');
-      //   const reviewsTrip: ReviewTrip[] = await extractReviewTrip(
-      //     driver,
-      //     hotel.links[PLATFORM.TRIP],
-      //   );
-      //   newReviewHotel[hotel.id].TRIP = reviewsTrip;
-      //   await this.prismaService.tbReview.deleteMany({
-      //     where: {
-      //       tbHotelId: hotel.id,
-      //       platform: PLATFORM.TRIP,
-      //       monthCreated: currentMonth,
-      //       yearCreated: currentYear,
-      //     },
-      //   });
-      //   await this.prismaService.tbReview.createMany({
-      //     data: newReviewHotel[hotel.id].TRIP.map((item) => ({
-      //       ...item,
-      //       extra: {
-      //         link: item.extra.link,
-      //         stars: item.extra.stars,
-      //         reviewId: item.extra.reviewId,
-      //       },
-      //       platform: PLATFORM.TRIP,
-      //       tbHotelId: hotel.id,
-      //     })),
-      //   });
-      // } catch (e) {
-      //   console.log('Lỗi crawl review trip', e);
-      // }
+      try {
+        driver = await new Builder()
+          .usingServer(seleniumUrl)
+          .forBrowser('firefox')
+          .withCapabilities(capabilities)
+          .build();
 
-      // try {
-      //   console.log('Start review BOOKING', hotel.links[PLATFORM.BOOKING]);
-      //   // crawl review booking
-      //   // convert url hotel booking to review hotel booking
-      //   let urlBooking: string = hotel.links[PLATFORM.BOOKING];
-      //   urlBooking = urlBooking.split('https://www.booking.com/hotel/vn/')?.[1];
-      //   const pagename = urlBooking.split('.')?.[0];
-      //   console.log(hotel.links[PLATFORM.BOOKING], 'Booking');
-      //   const reviewsBooking: ReviewBooking[] = await extractReviewBooking(
-      //     driver,
-      //     pagename,
-      //   );
-      //   newReviewHotel[hotel.id].BOOKING = reviewsBooking;
-      //   await this.prismaService.tbReview.deleteMany({
-      //     where: {
-      //       tbHotelId: hotel.id,
-      //       platform: PLATFORM.BOOKING,
-      //       monthCreated: currentMonth,
-      //       yearCreated: currentYear,
-      //     },
-      //   });
-      //   await this.prismaService.tbReview.createMany({
-      //     data: newReviewHotel[hotel.id].BOOKING.map((item) => ({
-      //       ...item,
-      //       extra: {
-      //         score: item.extra.score,
-      //         reviewId: item.extra.reviewId,
-      //         link: item.extra.link,
-      //       },
-      //       platform: PLATFORM.BOOKING,
-      //       tbHotelId: hotel.id,
-      //     })),
-      //   });
-      // } catch (e) {
-      //   console.log('Lỗi crawl review booking');
-      // }
+        console.log('Start review TRIP');
+        // crawl review trip
+        await driver.get(hotel.links[PLATFORM.TRIP]);
+        console.log(hotel.links[PLATFORM.TRIP], 'Trip');
+        const reviewsTrip: ReviewTrip[] = await extractReviewTrip(
+          driver,
+          hotel.links[PLATFORM.TRIP],
+        );
+        newReviewHotel[hotel.id].TRIP = reviewsTrip;
+        await this.prismaService.tbReview.deleteMany({
+          where: {
+            tbHotelId: hotel.id,
+            platform: PLATFORM.TRIP,
+            monthCreated: currentMonth,
+            yearCreated: currentYear,
+          },
+        });
+        await this.prismaService.tbReview.createMany({
+          data: newReviewHotel[hotel.id].TRIP.map((item) => ({
+            ...item,
+            extra: {
+              link: item.extra.link,
+              stars: item.extra.stars,
+              reviewId: item.extra.reviewId,
+            },
+            platform: PLATFORM.TRIP,
+            tbHotelId: hotel.id,
+          })),
+        });
+      } catch (e) {
+        console.log('Lỗi crawl review trip', e);
+      }
 
-      // try {
-      //   console.log('Start review GOOGLE');
-      //   await driver.get(hotel.links[PLATFORM.GOOGLE]);
+      try {
+        driver = await new Builder()
+          .usingServer(seleniumUrl)
+          .forBrowser('firefox')
+          .withCapabilities(capabilities)
+          .build();
 
-      //   console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
-      //   const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
-      //     driver,
-      //     this.httpService,
-      //     hotel.links[PLATFORM.GOOGLE],
-      //   );
-      //   newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
-      //   // console.log(reviewsGoogle.length, 'reviewsGoogle');
-      //   await this.prismaService.tbReview.deleteMany({
-      //     where: {
-      //       tbHotelId: hotel.id,
-      //       platform: PLATFORM.GOOGLE,
-      //       monthCreated: currentMonth,
-      //       yearCreated: currentYear,
-      //     },
-      //   });
-      //   await this.prismaService.tbReview.createMany({
-      //     data: newReviewHotel[hotel.id].GOOGLE.map((item) => ({
-      //       ...item,
-      //       extra: {
-      //         score: item.extra.score,
-      //         reviewId: item.extra.reviewId,
-      //         link: item.extra.link,
-      //       },
-      //       platform: PLATFORM.GOOGLE,
-      //       tbHotelId: hotel.id,
-      //     })),
-      //   });
-      // } catch (e) {
-      //   console.log('Lỗi crawl review google', e);
-      // }
+        console.log('Start review BOOKING', hotel.links[PLATFORM.BOOKING]);
+        // crawl review booking
+        // convert url hotel booking to review hotel booking
+        let urlBooking: string = hotel.links[PLATFORM.BOOKING];
+        urlBooking = urlBooking.split('https://www.booking.com/hotel/vn/')?.[1];
+        const pagename = urlBooking.split('.')?.[0];
+        console.log(hotel.links[PLATFORM.BOOKING], 'Booking');
+        const reviewsBooking: ReviewBooking[] = await extractReviewBooking(
+          driver,
+          pagename,
+        );
+        newReviewHotel[hotel.id].BOOKING = reviewsBooking;
+        await this.prismaService.tbReview.deleteMany({
+          where: {
+            tbHotelId: hotel.id,
+            platform: PLATFORM.BOOKING,
+            monthCreated: currentMonth,
+            yearCreated: currentYear,
+          },
+        });
+        await this.prismaService.tbReview.createMany({
+          data: newReviewHotel[hotel.id].BOOKING.map((item) => ({
+            ...item,
+            extra: {
+              score: item.extra.score,
+              reviewId: item.extra.reviewId,
+              link: item.extra.link,
+            },
+            platform: PLATFORM.BOOKING,
+            tbHotelId: hotel.id,
+          })),
+        });
+      } catch (e) {
+        console.log('Lỗi crawl review booking');
+      }
 
-      //   try {
-      //     console.log('Start review AGODA');
+      try {
+        driver = await new Builder()
+          .usingServer(seleniumUrl)
+          .forBrowser('firefox')
+          .withCapabilities(capabilities)
+          .build();
 
-      //     console.log(hotel.links[PLATFORM.AGODA], 'Agoda');
-      //     const reviewsAgoda: ReviewAgoda[] = await extractReviewAgoda(
-      //       this.prismaService,
-      //       this.httpService,
-      //       hotel.id,
-      //     );
-      //     newReviewHotel[hotel.id].AGODA = reviewsAgoda;
-      //     await this.prismaService.tbReview.deleteMany({
-      //       where: {
-      //         tbHotelId: hotel.id,
-      //         platform: PLATFORM.AGODA,
-      //         monthCreated: currentMonth,
-      //         yearCreated: currentYear,
-      //       },
-      //     });
-      //     await this.prismaService.tbReview.createMany({
-      //       data: newReviewHotel[hotel.id].AGODA.map((item) => ({
-      //         ...item,
-      //         extra: {
-      //           score: item.extra.score,
-      //           reviewId: item.extra.reviewId,
-      //           link: item.extra.link,
-      //         },
-      //         platform: PLATFORM.AGODA,
-      //         tbHotelId: hotel.id,
-      //       })),
-      //     });
-      //   } catch (e) {
-      //     console.log('Lỗi crawl review agoda', e);
-      //   }
-      // } catch (e) {
-      //   console.log(e, 'error');
-      // }
+        console.log('Start review GOOGLE');
+        await driver.get(hotel.links[PLATFORM.GOOGLE]);
 
-      // try {
-      //   console.log('Start review EXPEDIA');
+        console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
+        const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
+          driver,
+          this.httpService,
+          hotel.links[PLATFORM.GOOGLE],
+        );
+        newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
+        // console.log(reviewsGoogle.length, 'reviewsGoogle');
+        await this.prismaService.tbReview.deleteMany({
+          where: {
+            tbHotelId: hotel.id,
+            platform: PLATFORM.GOOGLE,
+            monthCreated: currentMonth,
+            yearCreated: currentYear,
+          },
+        });
+        await this.prismaService.tbReview.createMany({
+          data: newReviewHotel[hotel.id].GOOGLE.map((item) => ({
+            ...item,
+            extra: {
+              score: item.extra.score,
+              reviewId: item.extra.reviewId,
+              link: item.extra.link,
+            },
+            platform: PLATFORM.GOOGLE,
+            tbHotelId: hotel.id,
+          })),
+        });
+      } catch (e) {
+        console.log('Lỗi crawl review google', e);
+      }
 
-      //   console.log(hotel.links[PLATFORM.EXPEDIA], 'Expedia');
-      //   const reviewsExpedia: ReviewExpedia[] = await extractReviewExpedia(
-      //     this.prismaService,
-      //     this.httpService,
-      //     hotel.id,
-      //   );
-      //   newReviewHotel[hotel.id].EXPEDIA = reviewsExpedia;
-      //   await this.prismaService.tbReview.deleteMany({
-      //     where: {
-      //       tbHotelId: hotel.id,
-      //       platform: PLATFORM.EXPEDIA,
-      //       monthCreated: currentMonth,
-      //       yearCreated: currentYear,
-      //     },
-      //   });
-      //   await this.prismaService.tbReview.createMany({
-      //     data: newReviewHotel[hotel.id].EXPEDIA.map((item) => ({
-      //       ...item,
-      //       extra: {
-      //         score: item.extra.score,
-      //         reviewId: item.extra.reviewId,
-      //         link: item.extra.link,
-      //       },
-      //       platform: PLATFORM.EXPEDIA,
-      //       tbHotelId: hotel.id,
-      //     })),
-      //   });
-      // } catch (e) {
-      //   console.log('Lỗi crawl review expedia', e);
-      // }
+      try {
+        console.log('Start review AGODA');
+
+        console.log(hotel.links[PLATFORM.AGODA], 'Agoda');
+        const reviewsAgoda: ReviewAgoda[] = await extractReviewAgoda(
+          this.prismaService,
+          this.httpService,
+          hotel.id,
+        );
+        newReviewHotel[hotel.id].AGODA = reviewsAgoda;
+        await this.prismaService.tbReview.deleteMany({
+          where: {
+            tbHotelId: hotel.id,
+            platform: PLATFORM.AGODA,
+            monthCreated: currentMonth,
+            yearCreated: currentYear,
+          },
+        });
+        await this.prismaService.tbReview.createMany({
+          data: newReviewHotel[hotel.id].AGODA.map((item) => ({
+            ...item,
+            extra: {
+              score: item.extra.score,
+              reviewId: item.extra.reviewId,
+              link: item.extra.link,
+            },
+            platform: PLATFORM.AGODA,
+            tbHotelId: hotel.id,
+          })),
+        });
+      } catch (e) {
+        console.log('Lỗi crawl review agoda', e);
+      }
+
+      try {
+        console.log('Start review EXPEDIA');
+
+        console.log(hotel.links[PLATFORM.EXPEDIA], 'Expedia');
+        const reviewsExpedia: ReviewExpedia[] = await extractReviewExpedia(
+          this.prismaService,
+          this.httpService,
+          hotel.id,
+        );
+        newReviewHotel[hotel.id].EXPEDIA = reviewsExpedia;
+        await this.prismaService.tbReview.deleteMany({
+          where: {
+            tbHotelId: hotel.id,
+            platform: PLATFORM.EXPEDIA,
+            monthCreated: currentMonth,
+            yearCreated: currentYear,
+          },
+        });
+        await this.prismaService.tbReview.createMany({
+          data: newReviewHotel[hotel.id].EXPEDIA.map((item) => ({
+            ...item,
+            extra: {
+              score: item.extra.score,
+              reviewId: item.extra.reviewId,
+              link: item.extra.link,
+            },
+            platform: PLATFORM.EXPEDIA,
+            tbHotelId: hotel.id,
+          })),
+        });
+      } catch (e) {
+        console.log('Lỗi crawl review expedia', e);
+      }
 
       try {
         console.log('Start review TRAVELOKA');
@@ -380,7 +395,9 @@ export class ReviewService {
     } catch (e) {
       console.log(e, 'error');
     }
-    await driver.quit();
+    if (driver) {
+      await driver.quit();
+    }
     return newReviewHotel;
   }
 }
