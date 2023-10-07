@@ -180,3 +180,13 @@ model tbPointHistory {
   updatedBy String
   updatedAt DateTime
 }
+
+model tbUser {
+  id  String @id @default(uuid())
+  staffId String
+  username String 
+  password String
+  enabled Boolean
+  updatedAt DateTime 
+  createdAt DateTime
+}

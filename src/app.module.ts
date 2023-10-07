@@ -13,6 +13,7 @@ import { StaffLogModule } from './staff-log/staff-log.module';
 import { CompetitionModule } from './competition/competition.module';
 import { LoggerModule } from "nestjs-pino";
 import { StaffPointModule } from './staff-points/staff-point.module';
+import { UsersModule } from './users/users.modules';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { StaffPointModule } from './staff-points/staff-point.module';
     StaffLogModule,
     CompetitionModule,
     StaffPointModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

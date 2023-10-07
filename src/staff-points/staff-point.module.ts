@@ -9,5 +9,4 @@ import { StaffRepository } from "src/staff/staff.repository";
     controllers: [StaffPointController],
     providers: [StaffPointService, StaffRepository],
 })
-export class StaffPointModule {
-}
+export class StaffPointModule {}

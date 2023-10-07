@@ -44,9 +44,7 @@ export class StaffPointService {
                 }
             }
         }))
-        for (const staff of staffs) {
-            
-        }
+        this.prismaService.tbPointHistory.create
         await this.prismaService.tbPointHistory.createMany({
             data: pointHistories,
             skipDuplicates: true,
