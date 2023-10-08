@@ -7,7 +7,12 @@ import { Builder, Capabilities } from 'selenium-webdriver';
 import { seleniumUrl } from 'src/utils';
 import { DataList, Paging } from '../app.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateObject, GetLastUpdate, UpdateObjectByUrl } from './object.dto';
+import {
+  CreateObject,
+  GetLastUpdate,
+  UpdateObject,
+  UpdateObjectByUrl,
+} from './object.dto';
 import { NewObjectLog, Objects } from './object.entity';
 import extractDataBoooking from './utils/booking';
 import extractDataTrip from './utils/trip';
@@ -106,17 +111,17 @@ export class ObjectService {
     if (query.platform === 'TRIP') {
       if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ALLY) {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbHotel", "tbObject" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       } else if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ENEMY) {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbHotel", "tbObject" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       } else {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbHotel", "tbObject" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       }
@@ -124,17 +129,17 @@ export class ObjectService {
     if (query.platform === 'BOOKING') {
       if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ALLY) {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbHotel", "tbObject" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       } else if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ENEMY) {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbHotel", "tbObject" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       } else {
         data = await this.prismaService
-          .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
+          .$queryRaw`SELECT * FROM "tbHotel", "tbObject" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
       }
@@ -377,6 +382,24 @@ export class ObjectService {
     )}&parse_mode=html&disable_web_page_preview=true`;
     console.log(url, object, 'url');
     this.httpService.axiosRef.get(url);
+  }
+
+  async updatePropertyObject(data: UpdateObject) {
+    const origin = await this.prismaService.tbObject.findFirst({
+      where: {
+        id: data.id,
+      },
+    });
+    console.log(origin, data.id, 'origin');
+    await this.prismaService.tbObject.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        ...origin,
+        ...data.data,
+      },
+    });
   }
 
   async updateObject(

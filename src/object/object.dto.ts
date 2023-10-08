@@ -19,6 +19,21 @@ export class CreateObject {
   tbHotelId: string;
 }
 
+export class UpdateObject {
+  @ApiProperty({
+    required: true,
+  })
+  id: string;
+  @ApiProperty({
+    name: 'data',
+    type: 'object',
+    default: {},
+  })
+  data: {
+    [key: string]: any;
+  };
+}
+
 export class UpdateObjectResponse {
   @ApiProperty({
     required: true,

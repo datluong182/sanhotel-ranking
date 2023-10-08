@@ -16,6 +16,7 @@ import {
   CreateLastUpdate,
   CreateObject,
   GetLastUpdate,
+  UpdateObject,
   UpdateManyObjectResponse,
   UpdateObjectByUrl,
   UpdateObjectResponse,
@@ -61,10 +62,10 @@ export class ObjectController {
     return await this.objectService.createObject(data);
   }
 
-  // @Patch('/update-by-url')
-  // async updateObjectByUrl(@Body() data: UpdateObjectByUrl): Promise<void> {
-  //   await this.objectService.updateObjectByUrl(data);
-  // }
+  @Put('/update-property')
+  async updateObjectByUrl(@Body() data: UpdateObject): Promise<void> {
+    await this.objectService.updatePropertyObject(data);
+  }
 
   @Post('/check-manual')
   async checkManualObject(): Promise<void> {

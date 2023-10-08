@@ -36,6 +36,7 @@ import { platform } from 'os';
 import extractReviewAgoda from 'src/review/utils/agoda';
 import extractDataExpedia from 'src/object/utils/expedia';
 import extractDataTraveloka from 'src/object/utils/traveloka';
+import { CompetitionOtaReview } from './competition.entity';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -50,72 +51,6 @@ export class CompetitionService {
     private readonly httpService: HttpService,
   ) {
     console.log('init competition service');
-  }
-
-  async updateExtra(data: UpdateExtraCompetition) {
-    const competition = await this.prismaService.tbCompetition.findFirst({
-      where: {
-        month: data.month,
-        year: data.year,
-        platform: data.platform,
-        tbHotelId: data.tbHotelId,
-      },
-    });
-    if (!competition) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          detail: 'Không cập nhật thành công',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    if (data.platform === PLATFORM.BOOKING) {
-      const object = await this.prismaService.tbObject.findFirst({
-        where: {
-          tbHotelId: data.tbHotelId,
-          platform: data.platform,
-        },
-      });
-      const updated = await this.prismaService.tbObject.update({
-        where: {
-          id: object.id,
-        },
-        data: {
-          extra: {
-            ...(object.extra as object),
-            checkoutInMonth: data.checkoutInMonth,
-            ratioInMonth:
-              data.checkoutInMonth && data.checkoutInMonth !== 0
-                ? competition.numberReviewHigh / data.checkoutInMonth
-                : -1,
-          },
-        },
-      });
-      console.log(updated, 'updated');
-      await this.prismaService.tbCompetition.update({
-        where: {
-          month_year_tbHotelId_platform: {
-            month: data.month,
-            year: data.year,
-            platform: data.platform,
-            tbHotelId: data.tbHotelId,
-          },
-        },
-        data: {
-          ...competition,
-          extra: {
-            //@ts-ignore
-            ...competition.extra,
-            checkoutInMonth: data.checkoutInMonth,
-            ratioInMonth:
-              data.checkoutInMonth && data.checkoutInMonth !== 0
-                ? competition.numberReviewHigh / data.checkoutInMonth
-                : -1,
-          },
-        },
-      });
-    }
   }
 
   async getCompetition(
@@ -618,5 +553,101 @@ export class CompetitionService {
 
     console.log('Crawl hotel, review done!!', startCrawl.fromNow());
     return {};
+  }
+
+  async getCompetitionOtaReview() {
+    const currentMonth = moment().get('month') + 1;
+    // const currentMonth = 8;
+    const currentYear = moment().get('year');
+    let result: { [key: string]: CompetitionOtaReview } = {};
+    const hotels = await this.prismaService.tbHotel.findMany({
+      where: {
+        type: TYPE_HOTEL.ALLY,
+      },
+    });
+    for (let i = 0; i < hotels.length; i++) {
+      const hotel = hotels[i];
+      const objects = await this.prismaService.tbObject.findMany({
+        where: {
+          tbHotelId: hotel.id,
+          OR: [
+            {
+              platform: PLATFORM.BOOKING,
+            },
+            {
+              platform: PLATFORM.AGODA,
+            },
+            {
+              platform: PLATFORM.EXPEDIA,
+            },
+            {
+              platform: PLATFORM.TRAVELOKA,
+            },
+          ],
+        },
+      });
+      let reviews = await this.prismaService.tbReview.findMany({
+        where: {
+          tbHotelId: hotel.id,
+          monthCreated: currentMonth,
+          yearCreated: currentYear,
+          OR: [
+            {
+              platform: PLATFORM.BOOKING,
+            },
+            {
+              platform: PLATFORM.AGODA,
+            },
+            {
+              platform: PLATFORM.EXPEDIA,
+            },
+            {
+              platform: PLATFORM.TRAVELOKA,
+            },
+          ],
+        },
+      });
+      reviews = reviews.filter((review) => {
+        if (
+          review.platform === PLATFORM.BOOKING &&
+          review.extra?.['score'] >= 9.0
+        ) {
+          return true;
+        }
+        if (
+          review.platform === PLATFORM.AGODA &&
+          review.extra?.['score'] >= 9.0
+        ) {
+          return true;
+        }
+
+        if (
+          review.platform === PLATFORM.EXPEDIA &&
+          review.extra?.['score'] >= 9.0
+        ) {
+          return true;
+        }
+
+        if (
+          review.platform === PLATFORM.TRAVELOKA &&
+          review.extra?.['score'] >= 9.0
+        ) {
+          return true;
+        }
+
+        return false;
+      });
+
+      result = {
+        ...result,
+        [hotel.id]: {
+          name: hotel.name,
+          reviews,
+          objects,
+        },
+      };
+    }
+
+    return result;
   }
 }

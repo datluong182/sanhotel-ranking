@@ -30,9 +30,9 @@ export class CompetitionController {
     return await this.competitionService.getCompetition(query);
   }
 
-  @Put('/extra')
-  async updateExtra(@Body() data: UpdateExtraCompetition) {
-    await this.competitionService.updateExtra(data);
+  @Get('/ota-review')
+  async getCompetitionOtaReview() {
+    return await this.competitionService.getCompetitionOtaReview();
   }
 
   @Get('/all')

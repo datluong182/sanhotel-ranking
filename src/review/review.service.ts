@@ -32,6 +32,10 @@ import extractReviewTraveloka from './utils/traveloka';
 
 const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
 
+async function sleep(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 @Injectable()
 export class ReviewService {
   constructor(
@@ -165,239 +169,260 @@ export class ReviewService {
       //   .withCapabilities(capabilities)
       //   .build();
 
-      try {
-        driver = await new Builder()
-          .usingServer(seleniumUrl)
-          .forBrowser('firefox')
-          .withCapabilities(capabilities)
-          .build();
+      if (hotel.links[PLATFORM.TRIP]) {
+        try {
+          driver = await new Builder()
+            .usingServer(seleniumUrl)
+            .forBrowser('firefox')
+            .withCapabilities(capabilities)
+            .build();
 
-        console.log('Start review TRIP');
-        // crawl review trip
-        await driver.get(hotel.links[PLATFORM.TRIP]);
-        console.log(hotel.links[PLATFORM.TRIP], 'Trip');
-        const reviewsTrip: ReviewTrip[] = await extractReviewTrip(
-          driver,
-          hotel.links[PLATFORM.TRIP],
-        );
-        newReviewHotel[hotel.id].TRIP = reviewsTrip;
-        await this.prismaService.tbReview.deleteMany({
-          where: {
-            tbHotelId: hotel.id,
-            platform: PLATFORM.TRIP,
-            monthCreated: currentMonth,
-            yearCreated: currentYear,
-          },
-        });
-        await this.prismaService.tbReview.createMany({
-          data: newReviewHotel[hotel.id].TRIP.map((item) => ({
-            ...item,
-            extra: {
-              link: item.extra.link,
-              stars: item.extra.stars,
-              reviewId: item.extra.reviewId,
+          console.log('Start review TRIP');
+          // crawl review trip
+          await driver.get(hotel.links[PLATFORM.TRIP]);
+          console.log(hotel.links[PLATFORM.TRIP], 'Trip');
+          const reviewsTrip: ReviewTrip[] = await extractReviewTrip(
+            driver,
+            hotel.links[PLATFORM.TRIP],
+          );
+          newReviewHotel[hotel.id].TRIP = reviewsTrip;
+          await this.prismaService.tbReview.deleteMany({
+            where: {
+              tbHotelId: hotel.id,
+              platform: PLATFORM.TRIP,
+              monthCreated: currentMonth,
+              yearCreated: currentYear,
             },
-            platform: PLATFORM.TRIP,
-            tbHotelId: hotel.id,
-          })),
-        });
-      } catch (e) {
-        console.log('Lỗi crawl review trip', e);
+          });
+          await this.prismaService.tbReview.createMany({
+            data: newReviewHotel[hotel.id].TRIP.map((item) => ({
+              ...item,
+              extra: {
+                link: item.extra.link,
+                stars: item.extra.stars,
+                reviewId: item.extra.reviewId,
+              },
+              platform: PLATFORM.TRIP,
+              tbHotelId: hotel.id,
+            })),
+          });
+        } catch (e) {
+          console.log(e, 'Lỗi crawl review trip');
+        } finally {
+          await driver.quit();
+          await sleep(1000);
+        }
       }
 
-      try {
-        driver = await new Builder()
-          .usingServer(seleniumUrl)
-          .forBrowser('firefox')
-          .withCapabilities(capabilities)
-          .build();
+      if (hotel.links[PLATFORM.BOOKING]) {
+        try {
+          driver = await new Builder()
+            .usingServer(seleniumUrl)
+            .forBrowser('firefox')
+            .withCapabilities(capabilities)
+            .build();
 
-        console.log('Start review BOOKING', hotel.links[PLATFORM.BOOKING]);
-        // crawl review booking
-        // convert url hotel booking to review hotel booking
-        let urlBooking: string = hotel.links[PLATFORM.BOOKING];
-        urlBooking = urlBooking.split('https://www.booking.com/hotel/vn/')?.[1];
-        const pagename = urlBooking.split('.')?.[0];
-        console.log(hotel.links[PLATFORM.BOOKING], 'Booking');
-        const reviewsBooking: ReviewBooking[] = await extractReviewBooking(
-          driver,
-          pagename,
-        );
-        newReviewHotel[hotel.id].BOOKING = reviewsBooking;
-        await this.prismaService.tbReview.deleteMany({
-          where: {
-            tbHotelId: hotel.id,
-            platform: PLATFORM.BOOKING,
-            monthCreated: currentMonth,
-            yearCreated: currentYear,
-          },
-        });
-        await this.prismaService.tbReview.createMany({
-          data: newReviewHotel[hotel.id].BOOKING.map((item) => ({
-            ...item,
-            extra: {
-              score: item.extra.score,
-              reviewId: item.extra.reviewId,
-              link: item.extra.link,
+          console.log('Start review BOOKING', hotel.links[PLATFORM.BOOKING]);
+          // crawl review booking
+          // convert url hotel booking to review hotel booking
+          let urlBooking: string = hotel.links[PLATFORM.BOOKING];
+          urlBooking = urlBooking.split(
+            'https://www.booking.com/hotel/vn/',
+          )?.[1];
+          const pagename = urlBooking.split('.')?.[0];
+          console.log(hotel.links[PLATFORM.BOOKING], 'Booking');
+          const reviewsBooking: ReviewBooking[] = await extractReviewBooking(
+            driver,
+            pagename,
+          );
+          newReviewHotel[hotel.id].BOOKING = reviewsBooking;
+          await this.prismaService.tbReview.deleteMany({
+            where: {
+              tbHotelId: hotel.id,
+              platform: PLATFORM.BOOKING,
+              monthCreated: currentMonth,
+              yearCreated: currentYear,
             },
-            platform: PLATFORM.BOOKING,
-            tbHotelId: hotel.id,
-          })),
-        });
-      } catch (e) {
-        console.log('Lỗi crawl review booking');
+          });
+          await this.prismaService.tbReview.createMany({
+            data: newReviewHotel[hotel.id].BOOKING.map((item) => ({
+              ...item,
+              extra: {
+                score: item.extra.score,
+                reviewId: item.extra.reviewId,
+                link: item.extra.link,
+              },
+              platform: PLATFORM.BOOKING,
+              tbHotelId: hotel.id,
+            })),
+          });
+        } catch (e) {
+          console.log(e, 'Lỗi crawl review booking');
+        } finally {
+          await driver.quit();
+          await sleep(1000);
+        }
       }
 
-      try {
-        driver = await new Builder()
-          .usingServer(seleniumUrl)
-          .forBrowser('firefox')
-          .withCapabilities(capabilities)
-          .build();
+      if (hotel.links[PLATFORM.GOOGLE]) {
+        try {
+          driver = await new Builder()
+            .usingServer(seleniumUrl)
+            .forBrowser('firefox')
+            .withCapabilities(capabilities)
+            .build();
 
-        console.log('Start review GOOGLE');
-        await driver.get(hotel.links[PLATFORM.GOOGLE]);
+          console.log('Start review GOOGLE');
+          await driver.get(hotel.links[PLATFORM.GOOGLE]);
 
-        console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
-        const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
-          driver,
-          this.httpService,
-          hotel.links[PLATFORM.GOOGLE],
-        );
-        newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
-        // console.log(reviewsGoogle.length, 'reviewsGoogle');
-        await this.prismaService.tbReview.deleteMany({
-          where: {
-            tbHotelId: hotel.id,
-            platform: PLATFORM.GOOGLE,
-            monthCreated: currentMonth,
-            yearCreated: currentYear,
-          },
-        });
-        await this.prismaService.tbReview.createMany({
-          data: newReviewHotel[hotel.id].GOOGLE.map((item) => ({
-            ...item,
-            extra: {
-              score: item.extra.score,
-              reviewId: item.extra.reviewId,
-              link: item.extra.link,
+          console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
+          const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
+            driver,
+            this.httpService,
+            hotel.links[PLATFORM.GOOGLE],
+          );
+          newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
+          // console.log(reviewsGoogle.length, 'reviewsGoogle');
+          await this.prismaService.tbReview.deleteMany({
+            where: {
+              tbHotelId: hotel.id,
+              platform: PLATFORM.GOOGLE,
+              monthCreated: currentMonth,
+              yearCreated: currentYear,
             },
-            platform: PLATFORM.GOOGLE,
-            tbHotelId: hotel.id,
-          })),
-        });
-      } catch (e) {
-        console.log('Lỗi crawl review google', e);
+          });
+          await this.prismaService.tbReview.createMany({
+            data: newReviewHotel[hotel.id].GOOGLE.map((item) => ({
+              ...item,
+              extra: {
+                score: item.extra.score,
+                reviewId: item.extra.reviewId,
+                link: item.extra.link,
+              },
+              platform: PLATFORM.GOOGLE,
+              tbHotelId: hotel.id,
+            })),
+          });
+        } catch (e) {
+          console.log(e, 'Lỗi crawl review google');
+        } finally {
+          await driver.quit();
+          await sleep(1000);
+        }
       }
 
-      try {
-        console.log('Start review AGODA');
+      if (hotel.links[PLATFORM.AGODA]) {
+        try {
+          console.log('Start review AGODA');
 
-        console.log(hotel.links[PLATFORM.AGODA], 'Agoda');
-        const reviewsAgoda: ReviewAgoda[] = await extractReviewAgoda(
-          this.prismaService,
-          this.httpService,
-          hotel.id,
-        );
-        newReviewHotel[hotel.id].AGODA = reviewsAgoda;
-        await this.prismaService.tbReview.deleteMany({
-          where: {
-            tbHotelId: hotel.id,
-            platform: PLATFORM.AGODA,
-            monthCreated: currentMonth,
-            yearCreated: currentYear,
-          },
-        });
-        await this.prismaService.tbReview.createMany({
-          data: newReviewHotel[hotel.id].AGODA.map((item) => ({
-            ...item,
-            extra: {
-              score: item.extra.score,
-              reviewId: item.extra.reviewId,
-              link: item.extra.link,
-            },
-            platform: PLATFORM.AGODA,
-            tbHotelId: hotel.id,
-          })),
-        });
-      } catch (e) {
-        console.log('Lỗi crawl review agoda', e);
-      }
-
-      try {
-        console.log('Start review EXPEDIA');
-
-        console.log(hotel.links[PLATFORM.EXPEDIA], 'Expedia');
-        const reviewsExpedia: ReviewExpedia[] = await extractReviewExpedia(
-          this.prismaService,
-          this.httpService,
-          hotel.id,
-        );
-        newReviewHotel[hotel.id].EXPEDIA = reviewsExpedia;
-        await this.prismaService.tbReview.deleteMany({
-          where: {
-            tbHotelId: hotel.id,
-            platform: PLATFORM.EXPEDIA,
-            monthCreated: currentMonth,
-            yearCreated: currentYear,
-          },
-        });
-        await this.prismaService.tbReview.createMany({
-          data: newReviewHotel[hotel.id].EXPEDIA.map((item) => ({
-            ...item,
-            extra: {
-              score: item.extra.score,
-              reviewId: item.extra.reviewId,
-              link: item.extra.link,
-            },
-            platform: PLATFORM.EXPEDIA,
-            tbHotelId: hotel.id,
-          })),
-        });
-      } catch (e) {
-        console.log('Lỗi crawl review expedia', e);
-      }
-
-      try {
-        console.log('Start review TRAVELOKA');
-
-        console.log(hotel.links[PLATFORM.TRAVELOKA], 'Traveloka');
-        const reviewsTraveloka: ReviewTraveloka[] =
-          await extractReviewTraveloka(
+          console.log(hotel.links[PLATFORM.AGODA], 'Agoda');
+          const reviewsAgoda: ReviewAgoda[] = await extractReviewAgoda(
             this.prismaService,
             this.httpService,
             hotel.id,
           );
-        newReviewHotel[hotel.id].TRAVELOKA = reviewsTraveloka;
-        await this.prismaService.tbReview.deleteMany({
-          where: {
-            tbHotelId: hotel.id,
-            platform: PLATFORM.TRAVELOKA,
-            monthCreated: currentMonth,
-            yearCreated: currentYear,
-          },
-        });
-        await this.prismaService.tbReview.createMany({
-          data: newReviewHotel[hotel.id].TRAVELOKA.map((item) => ({
-            ...item,
-            extra: {
-              score: item.extra.score,
-              reviewId: item.extra.reviewId,
-              link: item.extra.link,
+          newReviewHotel[hotel.id].AGODA = reviewsAgoda;
+          await this.prismaService.tbReview.deleteMany({
+            where: {
+              tbHotelId: hotel.id,
+              platform: PLATFORM.AGODA,
+              monthCreated: currentMonth,
+              yearCreated: currentYear,
             },
-            platform: PLATFORM.TRAVELOKA,
-            tbHotelId: hotel.id,
-          })),
-        });
-      } catch (e) {
-        console.log('Lỗi crawl review traveloka', e);
+          });
+          await this.prismaService.tbReview.createMany({
+            data: newReviewHotel[hotel.id].AGODA.map((item) => ({
+              ...item,
+              extra: {
+                score: item.extra.score,
+                reviewId: item.extra.reviewId,
+                link: item.extra.link,
+              },
+              platform: PLATFORM.AGODA,
+              tbHotelId: hotel.id,
+            })),
+          });
+        } catch (e) {
+          console.log(e, 'Lỗi crawl review agoda');
+        }
+      }
+
+      if (hotel.links[PLATFORM.EXPEDIA]) {
+        try {
+          console.log('Start review EXPEDIA');
+
+          console.log(hotel.links[PLATFORM.EXPEDIA], 'Expedia');
+          const reviewsExpedia: ReviewExpedia[] = await extractReviewExpedia(
+            this.prismaService,
+            this.httpService,
+            hotel.id,
+          );
+          newReviewHotel[hotel.id].EXPEDIA = reviewsExpedia;
+          await this.prismaService.tbReview.deleteMany({
+            where: {
+              tbHotelId: hotel.id,
+              platform: PLATFORM.EXPEDIA,
+              monthCreated: currentMonth,
+              yearCreated: currentYear,
+            },
+          });
+          await this.prismaService.tbReview.createMany({
+            data: newReviewHotel[hotel.id].EXPEDIA.map((item) => ({
+              ...item,
+              extra: {
+                score: item.extra.score,
+                reviewId: item.extra.reviewId,
+                link: item.extra.link,
+              },
+              platform: PLATFORM.EXPEDIA,
+              tbHotelId: hotel.id,
+            })),
+          });
+        } catch (e) {
+          console.log(e, 'Lỗi crawl review expedia');
+        }
+      }
+
+      if (hotel.links[PLATFORM.TRAVELOKA]) {
+        try {
+          console.log('Start review TRAVELOKA');
+
+          console.log(hotel.links[PLATFORM.TRAVELOKA], 'Traveloka');
+          const reviewsTraveloka: ReviewTraveloka[] =
+            await extractReviewTraveloka(
+              this.prismaService,
+              this.httpService,
+              hotel.id,
+            );
+          newReviewHotel[hotel.id].TRAVELOKA = reviewsTraveloka;
+          await this.prismaService.tbReview.deleteMany({
+            where: {
+              tbHotelId: hotel.id,
+              platform: PLATFORM.TRAVELOKA,
+              monthCreated: currentMonth,
+              yearCreated: currentYear,
+            },
+          });
+          await this.prismaService.tbReview.createMany({
+            data: newReviewHotel[hotel.id].TRAVELOKA.map((item) => ({
+              ...item,
+              extra: {
+                score: item.extra.score,
+                reviewId: item.extra.reviewId,
+                link: item.extra.link,
+              },
+              platform: PLATFORM.TRAVELOKA,
+              tbHotelId: hotel.id,
+            })),
+          });
+        } catch (e) {
+          console.log(e, 'Lỗi crawl review traveloka');
+        }
       }
     } catch (e) {
       console.log(e, 'error');
     }
-    if (driver) {
-      await driver.quit();
-    }
+
     return newReviewHotel;
   }
 }
