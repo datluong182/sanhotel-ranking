@@ -1,19 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 import {
   PLATFORM,
   PLATFORM_RESPONSE,
   TYPE_HOTEL,
   tbHotel,
   tbObjectLog,
-} from '@prisma/client';
-import { DataList, PagingDefault } from 'src/app.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateHotel, QueryFiveStars, UpdateHotel } from './hotel.dto';
-import _ from 'lodash';
-import { ObjectLogService } from 'src/object-log/objectLog.service';
-import * as moment from 'moment-timezone';
+} from "@prisma/client";
+import { DataList, PagingDefault } from "src/app.dto";
+import { PrismaService } from "src/prisma/prisma.service";
+import { CreateHotel, QueryFiveStars, UpdateHotel } from "./hotel.dto";
+import _ from "lodash";
+import { ObjectLogService } from "src/object-log/objectLog.service";
+import * as moment from "moment-timezone";
 
-moment.tz.setDefault('Asia/Ho_Chi_Minh');
+moment.tz.setDefault("Asia/Ho_Chi_Minh");
 
 @Injectable()
 export class HotelService {
@@ -21,7 +21,7 @@ export class HotelService {
     private prismaService: PrismaService,
     private objectLogService: ObjectLogService,
   ) {
-    console.log('init object service');
+    console.log("init object service");
   }
 
   async createHotel(data: CreateHotel): Promise<tbHotel | undefined> {
@@ -120,14 +120,14 @@ export class HotelService {
     const end = query.end;
     while (true) {
       if (
-        moment(start, 'YYYY-MM-DD')
-          .add(count, 'day')
-          .isAfter(moment(end, 'YYYY-MM-DD'), 'day')
+        moment(start, "YYYY-MM-DD")
+          .add(count, "day")
+          .isAfter(moment(end, "YYYY-MM-DD"), "day")
       ) {
         break;
       }
       dataDate.push(
-        moment(start, 'YYYY-MM-DD').add(count, 'day').format('YYYY-MM-DD'),
+        moment(start, "YYYY-MM-DD").add(count, "day").format("YYYY-MM-DD"),
       );
       count++;
     }
@@ -158,7 +158,7 @@ export class HotelService {
         // ]
       },
     });
-    console.log(listReviews.length, 'length all rv');
+    console.log(listReviews.length, "length all rv");
     for (let i = 0; i < listHotels.length; i++) {
       const hotel = listHotels[i];
       const item = {
@@ -174,29 +174,29 @@ export class HotelService {
             moment(review.createdAt)
               .set({ h: 0, m: 0, s: 0 })
               .isSame(
-                moment(date, 'YYYY-MM-DD').set({ h: 0, m: 0, s: 0 }),
-                'day',
+                moment(date, "YYYY-MM-DD").set({ h: 0, m: 0, s: 0 }),
+                "day",
               )
           );
         });
 
         if (query.platform === PLATFORM.TRIP) {
           const listTrip = tempListReview.filter(
-            (item) => item.extra['stars'] === 5,
+            (item) => item.extra["stars"] === 5,
           );
           item.data.push(listTrip.length);
         }
 
         if (query.platform === PLATFORM.BOOKING) {
           const listBooking = tempListReview.filter(
-            (item) => item.extra['score'] >= 9.0,
+            (item) => item.extra["score"] >= 9.0,
           );
           item.data.push(listBooking.length);
         }
 
         if (query.platform === PLATFORM.GOOGLE) {
           const listGoogle = tempListReview.filter(
-            (item) => item.extra['score'] === 5,
+            (item) => item.extra["score"] === 5,
           );
           item.data.push(listGoogle.length);
         }

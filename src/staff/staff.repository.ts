@@ -5,21 +5,32 @@ import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
 export class StaffRepository {
-    constructor(
-        private readonly logger: Logger,
-        private readonly prismaService: PrismaService,
-    ) {
+  private;
 
-    }
+  constructor(
+    private readonly logger: Logger,
+    private readonly prismaService: PrismaService,
+  ) {}
 
-    public async findAllStaffByIds(staffIds: string[]): Promise<tbStaff[]> {
-        return this.prismaService.tbStaff.findMany({
-            where: {
-                staffId: {
-                    in: staffIds
-                }
-            }
-        })
-    }
-    
+  private getStaffQuery() {
+    return this.prismaService.tbStaff;
+  }
+
+  public async findAllStaffByStaffIds(staffIds: string[]): Promise<tbStaff[]> {
+    return this.getStaffQuery().findMany({
+      where: {
+        staffId: {
+          in: staffIds,
+        },
+      },
+    });
+  }
+
+  public async findFirstStaffByStaffId(staffId: string): Promise<tbStaff> {
+    return this.getStaffQuery().findFirst({
+      where: {
+        staffId,
+      },
+    });
+  }
 }

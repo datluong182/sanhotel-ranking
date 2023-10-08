@@ -7,19 +7,19 @@ import {
   Post,
   Put,
   Query,
-} from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { CompetitionService } from './competition.service';
-import { DataList, PagingDefault, Paging } from 'src/app.dto';
-import { tbCompetition, tbHotel, tbObjectLog } from '@prisma/client';
+} from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
+import { CompetitionService } from "./competition.service";
+import { DataList, PagingDefault, Paging } from "src/app.dto";
+import { tbCompetition, tbHotel, tbObjectLog } from "@prisma/client";
 import {
   QueryAllCompetition,
   QueryCompetition,
   UpdateExtraCompetition,
-} from './competition.dto';
+} from "./competition.dto";
 
-@ApiTags('competition')
-@Controller('competition')
+@ApiTags("competition")
+@Controller("competition")
 export class CompetitionController {
   constructor(private readonly competitionService: CompetitionService) {}
 
@@ -30,19 +30,19 @@ export class CompetitionController {
     return await this.competitionService.getCompetition(query);
   }
 
-  @Put('/extra')
+  @Put("/extra")
   async updateExtra(@Body() data: UpdateExtraCompetition) {
     await this.competitionService.updateExtra(data);
   }
 
-  @Get('/all')
+  @Get("/all")
   async getAllCompetition(
     @Query() query: QueryAllCompetition,
   ): Promise<tbCompetition[]> {
     return await this.competitionService.getAllCompetition(query);
   }
 
-  @Get('/check-manual')
+  @Get("/check-manual")
   async checkManual(): Promise<any> {
     return await this.competitionService.updateCompetition();
   }

@@ -1,22 +1,22 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PLATFORM, TYPE_HOTEL } from '@prisma/client';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PLATFORM, TYPE_HOTEL } from "@prisma/client";
 
 export class CreateHotel {
   @ApiProperty({
     required: true,
-    default: 'San Grand Hotel',
+    default: "San Grand Hotel",
   })
   name: string;
   @ApiProperty({
     required: true,
-    default: 'No.02 Cau Go Alley Hoan Kiem, Hanoi',
+    default: "No.02 Cau Go Alley Hoan Kiem, Hanoi",
   })
   address: string;
   @ApiProperty({})
   avatar?: string;
   @ApiProperty({
     required: true,
-    default: 'Nguyen Van A',
+    default: "Nguyen Van A",
   })
   gm: string;
   @ApiProperty({
@@ -25,7 +25,7 @@ export class CreateHotel {
   links: { [key: string]: string };
   @ApiProperty({
     required: true,
-    default: 'ALLY',
+    default: "ALLY",
   })
   type: TYPE_HOTEL;
   @ApiProperty({
@@ -45,17 +45,17 @@ export class UpdateHotel extends CreateHotel {
 export class QueryFiveStars {
   @ApiProperty({
     required: true,
-    default: 'TRIP',
+    default: "TRIP",
   })
   platform: PLATFORM;
   @ApiProperty({
     required: true,
-    default: '2023-08-20',
+    default: "2023-08-20",
   })
   start: string;
   @ApiProperty({
     required: true,
-    default: '2023-08-28',
+    default: "2023-08-28",
   })
   end: string;
   @ApiPropertyOptional({

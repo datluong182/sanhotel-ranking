@@ -1,20 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
-import { PLATFORM, TYPE_HOTEL, tbObject, tbObjectLog } from '@prisma/client';
-import * as moment from 'moment-timezone';
-import { Options } from 'selenium-webdriver/chrome';
-import { Builder, Capabilities } from 'selenium-webdriver';
-import { seleniumUrl } from 'src/utils';
-import { DataList, Paging } from '../app.dto';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateObject, GetLastUpdate, UpdateObjectByUrl } from './object.dto';
-import { NewObjectLog, Objects } from './object.entity';
-import extractDataBoooking from './utils/booking';
-import extractDataTrip from './utils/trip';
-import { HttpService } from '@nestjs/axios';
-import extractDataGoogle from './utils/google';
+import { Injectable } from "@nestjs/common";
+import { Cron } from "@nestjs/schedule";
+import { PLATFORM, TYPE_HOTEL, tbObject, tbObjectLog } from "@prisma/client";
+import * as moment from "moment-timezone";
+import { Options } from "selenium-webdriver/chrome";
+import { Builder, Capabilities } from "selenium-webdriver";
+import { seleniumUrl } from "src/utils";
+import { DataList, Paging } from "../app.dto";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateObject, GetLastUpdate, UpdateObjectByUrl } from "./object.dto";
+import { NewObjectLog, Objects } from "./object.entity";
+import extractDataBoooking from "./utils/booking";
+import extractDataTrip from "./utils/trip";
+import { HttpService } from "@nestjs/axios";
+import extractDataGoogle from "./utils/google";
 
-moment.tz.setDefault('Asia/Ho_Chi_Minh');
+moment.tz.setDefault("Asia/Ho_Chi_Minh");
 
 const token = process.env.TOKEN_HUBSPOT;
 
@@ -30,21 +30,21 @@ export class ObjectService {
     private prismaService: PrismaService,
     private readonly httpService: HttpService,
   ) {
-    console.log('init object service');
+    console.log("init object service");
   }
 
   async getLastUpdate(query: GetLastUpdate): Promise<{ updatedAt: Date }> {
-    console.log(query, 'query');
+    console.log(query, "query");
     const setting = await this.prismaService.tbLastUpdate.findFirst({
       where: {
         isManual: true,
         platform: query.platform,
       },
       orderBy: {
-        updatedAt: 'desc',
+        updatedAt: "desc",
       },
     });
-    console.log(setting, 'setting');
+    console.log(setting, "setting");
     return {
       updatedAt: setting.updatedAt,
     };
@@ -65,7 +65,7 @@ export class ObjectService {
   }
 
   async getOneObject(id: string): Promise<{ data: tbObject | undefined }> {
-    console.log('get one');
+    console.log("get one");
     return {
       data: await this.prismaService.tbObject.findFirst({
         where: {
@@ -94,14 +94,14 @@ export class ObjectService {
       },
     });
     let data: tbObject[];
-    console.log(query.cond, 'cond get object');
-    if (query.platform === 'TRIP') {
-      if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ALLY) {
+    console.log(query.cond, "cond get object");
+    if (query.platform === "TRIP") {
+      if (query?.cond?.["tbHotel"]?.type === TYPE_HOTEL.ALLY) {
         data = await this.prismaService
           .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
-      } else if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ENEMY) {
+      } else if (query?.cond?.["tbHotel"]?.type === TYPE_HOTEL.ENEMY) {
         data = await this.prismaService
           .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and  "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
@@ -113,13 +113,13 @@ export class ObjectService {
         } LIMIT ${parseInt(query.limit)}`;
       }
     }
-    if (query.platform === 'BOOKING') {
-      if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ALLY) {
+    if (query.platform === "BOOKING") {
+      if (query?.cond?.["tbHotel"]?.type === TYPE_HOTEL.ALLY) {
         data = await this.prismaService
           .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
         } LIMIT ${parseInt(query.limit)}`;
-      } else if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ENEMY) {
+      } else if (query?.cond?.["tbHotel"]?.type === TYPE_HOTEL.ENEMY) {
         data = await this.prismaService
           .$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'BOOKING' ORDER BY score desc OFFSET ${
           parseInt(query.page) * parseInt(query.limit)
@@ -131,7 +131,7 @@ export class ObjectService {
         } LIMIT ${parseInt(query.limit)}`;
       }
     }
-    if (query.platform === 'GOOGLE') {
+    if (query.platform === "GOOGLE") {
       data = await this.prismaService
         .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'GOOGLE' ORDER BY score desc OFFSET ${parseInt(
         query.page,
@@ -146,9 +146,9 @@ export class ObjectService {
   }
 
   async createObject(data: CreateObject): Promise<tbObject | undefined> {
-    console.log(data, 'data create object');
+    console.log(data, "data create object");
     const objectTrip = await this.crawlObject(data.url, data.platform);
-    console.log(objectTrip, 'crawl object done');
+    console.log(objectTrip, "crawl object done");
     if (!objectTrip) return undefined;
     const newObjectTrip = await this.prismaService.tbObject.create({
       data: {
@@ -178,7 +178,7 @@ export class ObjectService {
         `${
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           //@ts-ignore
-          origin.extra?.rank > newData.extra.rank ? 'U.' : 'D.'
+          origin.extra?.rank > newData.extra.rank ? "U." : "D."
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           //@ts-ignore
         }Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${
@@ -199,7 +199,7 @@ export class ObjectService {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         //@ts-ignore
         `${
-          origin.score > newData.score ? 'D.' : 'U.'
+          origin.score > newData.score ? "D." : "U."
         }Điểm đánh giá thay đổi từ ${origin.score} đến ${newData.score}`,
       );
     }
@@ -212,7 +212,7 @@ export class ObjectService {
         // G: Good, B: Bad
         if (origin.platform === PLATFORM.TRIP) {
           messsages = messsages.concat(
-            `${5 - i === 5 ? 'G' : 'B'}.Số lượng đánh giá ${
+            `${5 - i === 5 ? "G" : "B"}.Số lượng đánh giá ${
               5 - i
             } sao thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
@@ -221,16 +221,16 @@ export class ObjectService {
         }
         if (origin.platform === PLATFORM.BOOKING) {
           messsages = messsages.concat(
-            `${i === 0 ? 'G' : 'B'}.Số lượng đánh giá ${
+            `${i === 0 ? "G" : "B"}.Số lượng đánh giá ${
               i === 0
-                ? '9+'
+                ? "9+"
                 : i === 1
-                ? '7-9'
+                ? "7-9"
                 : i === 2
-                ? '5-7'
+                ? "5-7"
                 : i === 3
-                ? '3-5'
-                : '1-3'
+                ? "3-5"
+                : "1-3"
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
             } đánh giá`,
@@ -238,7 +238,7 @@ export class ObjectService {
         }
         if (origin.platform === PLATFORM.GOOGLE) {
           messsages = messsages.concat(
-            `${5 - i === 5 ? 'G' : 'B'}.Số lượng đánh giá ${
+            `${5 - i === 5 ? "G" : "B"}.Số lượng đánh giá ${
               5 - i
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
@@ -293,20 +293,20 @@ export class ObjectService {
 
   formatMessage(message: string) {
     //Nếu message là thông báo thay đổi số lượng review hoặc thay đổi điểm/xếp hạng (Có G.||B.||U.||D.)
-    let res = '';
+    let res = "";
     if (
-      message.search('G.') !== -1 ||
-      message.search('B.') !== -1 ||
-      message.search('U.') !== -1 ||
-      message.search('D.') !== -1
+      message.search("G.") !== -1 ||
+      message.search("B.") !== -1 ||
+      message.search("U.") !== -1 ||
+      message.search("D.") !== -1
     ) {
-      res = message.split('.')[1];
+      res = message.split(".")[1];
       return res;
     }
     // Nếu message là thông báo có bình luận được thêm mới hoặc bị xoá - Chỉ thông báo các bình luận xấu
-    if (message.search('|') !== -1) {
+    if (message.search("|") !== -1) {
       // Nếu là thông báo có bình luận mới
-      res = message.split('|')[0];
+      res = message.split("|")[0];
       return res;
     }
     // Nếu là thông báo bình luận bị xoá
@@ -316,7 +316,7 @@ export class ObjectService {
 
   async sendNoti(
     messages: string[],
-    title = '',
+    title = "",
     tbHotelId: string,
     platform: PLATFORM,
     object: tbObject,
@@ -329,15 +329,15 @@ export class ObjectService {
     // const obj = await this.prismaService.tbObject.findFirst({})
     // const str = "Tripadvisor - Khách sạn " + obj.name + `(<a href="http://ranking.sanhotelseries.com/manage/hotel/${obj.tbHotelId}">Ranking ${obj.name}</a> - <a href="${obj.url}">Tripadvisor</a>)` + "\n";
     const namePlatform = {
-      TRIP: 'Tripadvisor',
-      BOOKING: 'Booking',
-      GOOGLE: 'Google Reviews',
+      TRIP: "Tripadvisor",
+      BOOKING: "Booking",
+      GOOGLE: "Google Reviews",
     };
-    let notification_text = title + 'Đã có những thay đổi:\n';
+    let notification_text = title + "Đã có những thay đổi:\n";
     messages.map((message) => {
-      notification_text += '- ' + this.formatMessage(message) + '\n';
+      notification_text += "- " + this.formatMessage(message) + "\n";
     });
-    notification_text += 'Kiểm tra tại:\n';
+    notification_text += "Kiểm tra tại:\n";
     notification_text += `- <a href="http://ranking.sanhotelseries.com/manage/hotel/detail/${tbHotelId}">Ranking ${object.name}</a>\n`;
     notification_text += `- <a href="${object.url}">${namePlatform[platform]}</a>`;
     const url = `https://api.telegram.org/bot${
@@ -345,7 +345,7 @@ export class ObjectService {
     }/sendMessage?chat_id=${process.env.CHAT_ID_TELE}&text=${encodeURIComponent(
       notification_text,
     )}&parse_mode=html&disable_web_page_preview=true`;
-    console.log(url, object, 'url');
+    console.log(url, object, "url");
     this.httpService.axiosRef.get(url);
   }
 
@@ -418,7 +418,7 @@ export class ObjectService {
       // }
       const updated = resultCrawl?.updated ?? undefined;
       if (!updated) {
-        console.log('Get info', listObjects[i].name, 'FAIL');
+        console.log("Get info", listObjects[i].name, "FAIL");
         continue;
       }
       const temp = {
@@ -445,7 +445,7 @@ export class ObjectService {
           isManual,
           tbObjectId: id,
           updatedAt: moment(
-            new Date(moment(updatedAt).format('YYYY-MM-DD HH:mm:ss')),
+            new Date(moment(updatedAt).format("YYYY-MM-DD HH:mm:ss")),
           ).toDate(),
         },
       });
@@ -455,17 +455,17 @@ export class ObjectService {
       });
     }
     await this.createLastUpdate(
-      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
       PLATFORM.TRIP,
       isManual,
     );
     await this.createLastUpdate(
-      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
       PLATFORM.BOOKING,
       isManual,
     );
     await this.createLastUpdate(
-      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      moment(updatedAt).format("YYYY-MM-DD HH:mm:ss"),
       PLATFORM.GOOGLE,
       isManual,
     );
@@ -478,24 +478,24 @@ export class ObjectService {
   ): Promise<Objects | undefined> {
     let driver;
     try {
-      console.log('Start firefox', platform, seleniumUrl);
-      const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
+      console.log("Start firefox", platform, seleniumUrl);
+      const timezone = "Asia/Ho_Chi_Minh"; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
-      capabilities.set('tz', timezone);
-      capabilities.set('moz:firefoxOptions', {
-        args: ['--headless'],
+      capabilities.set("tz", timezone);
+      capabilities.set("moz:firefoxOptions", {
+        args: ["--headless"],
       });
       // const option = new Options().addArguments('--no-proxy-server');
       // .addArguments('--headless=new')
       driver = await new Builder()
         .usingServer(seleniumUrl)
-        .forBrowser('firefox')
+        .forBrowser("firefox")
         .withCapabilities(capabilities)
         .build();
 
       console.log(url);
       await driver.get(url);
-      console.log('start extract');
+      console.log("start extract");
 
       let object: Objects;
 
@@ -523,7 +523,7 @@ export class ObjectService {
       // }
 
       await driver.quit();
-      console.log('crawl done', object);
+      console.log("crawl done", object);
       // return undefined;
       // if (platform === PLATFORM.TRIP) {
       //   const sleep = new Promise((resole, reject) => {
@@ -536,7 +536,7 @@ export class ObjectService {
 
       return object;
     } catch (e) {
-      console.log(e, 'error');
+      console.log(e, "error");
     }
 
     await driver.quit();

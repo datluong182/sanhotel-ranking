@@ -1,24 +1,24 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsString } from 'class-validator';
-import { Type } from 'class-transformer';
-import { PLATFORM } from '@prisma/client';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsInt, IsString } from "class-validator";
+import { Type } from "class-transformer";
+import { PLATFORM } from "@prisma/client";
 
 export class PagingDefault {
   @ApiProperty({
     required: true,
-    default: '0',
+    default: "0",
   })
   page: string;
 
   @ApiProperty({
     required: true,
-    default: '10',
+    default: "10",
   })
   limit: string;
 
   @ApiProperty({
-    name: 'cond',
-    type: 'object',
+    name: "cond",
+    type: "object",
     default: {},
   })
   cond: object;
@@ -27,7 +27,7 @@ export class PagingDefault {
 export class Paging extends PagingDefault {
   @ApiProperty({
     required: true,
-    default: 'TRIP',
+    default: "TRIP",
   })
   @IsString()
   platform: PLATFORM;

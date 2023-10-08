@@ -2,13 +2,17 @@ import { Injectable } from "@nestjs/common";
 import { PLATFORM_RESPONSE, tbResponse } from "@prisma/client";
 import { DataList, Paging } from "src/app.dto";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CreateResponse, UpdateResponse, UpdateResponses } from "./response.dto";
-import _ from 'lodash';
+import {
+  CreateResponse,
+  UpdateResponse,
+  UpdateResponses,
+} from "./response.dto";
+import _ from "lodash";
 
 @Injectable()
 export class ResponseService {
   constructor(private prismaService: PrismaService) {
-    console.log('init object service');
+    console.log("init object service");
   }
 
   async createResponse(data: CreateResponse): Promise<tbResponse | undefined> {
@@ -17,16 +21,16 @@ export class ResponseService {
         name: data.name,
         value: data.value,
         color: data.color,
-        platform: data.platform
-      }
-    })
+        platform: data.platform,
+      },
+    });
   }
 
   async updateResponses(data: UpdateResponses): Promise<void> {
-    console.log(data)
-    for(let i=0; i<data.response.length; i++) {
-      console.log(data.response[i])
-      await this.updateResponse(data.response[i])
+    console.log(data);
+    for (let i = 0; i < data.response.length; i++) {
+      console.log(data.response[i]);
+      await this.updateResponse(data.response[i]);
     }
   }
 
@@ -36,12 +40,12 @@ export class ResponseService {
         id: data.id,
       },
       data: {
-        ...(data.name !== undefined) && {name: data.name},
-        ...(data.value !== undefined)  && {value: data.value},
-        ...(data.color !== undefined)  && {color: data.color},
-        ...(data.platform !== undefined) && {platform: data.platform},
-      }
-    })
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.value !== undefined && { value: data.value }),
+        ...(data.color !== undefined && { color: data.color }),
+        ...(data.platform !== undefined && { platform: data.platform }),
+      },
+    });
   }
 
   async deleteResponse(id: string): Promise<tbResponse> {
@@ -57,8 +61,8 @@ export class ResponseService {
       where: {
         ...query.cond,
         platform: query.platform as PLATFORM_RESPONSE,
-      }
-    })
+      },
+    });
     const data = await this.prismaService.tbResponse.findMany({
       where: {
         ...query.cond,
@@ -66,7 +70,7 @@ export class ResponseService {
       },
       take: parseInt(query.limit),
       skip: parseInt(query.page) * parseInt(query.limit),
-    })
+    });
     return {
       count,
       page: query.page,
