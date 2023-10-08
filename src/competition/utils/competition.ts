@@ -1,12 +1,12 @@
-import { PLATFORM, TYPE_HOTEL, tbObject } from '@prisma/client';
-import { Builder, By, Capabilities } from 'selenium-webdriver';
-import { CreateHotel } from 'src/hotel/hotel.dto';
-import { ObjectService } from 'src/object/object.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { GetElement, GetElements, seleniumUrl } from 'src/utils';
+import { PLATFORM, TYPE_HOTEL, tbObject } from "@prisma/client";
+import { Builder, By, Capabilities } from "selenium-webdriver";
+import { CreateHotel } from "src/hotel/hotel.dto";
+import { ObjectService } from "src/object/object.service";
+import { PrismaService } from "src/prisma/prisma.service";
+import { GetElement, GetElements, seleniumUrl } from "src/utils";
 
 export const urlRankHotel =
-  'https://www.tripadvisor.com/Hotels-g293924-zfd9261,21371-a_ufe.true-a_sort.POPULARITY-Hanoi-Hotels.html';
+  "https://www.tripadvisor.com/Hotels-g293924-zfd9261,21371-a_ufe.true-a_sort.POPULARITY-Hanoi-Hotels.html";
 
 export const getTopHotelForTrip = async (
   prismaService: PrismaService,
@@ -29,16 +29,16 @@ export const getTopHotelForTrip = async (
 
     let lastRankAllyHotel = 0;
     objectTrips.map((obj) => {
-      if (obj.extra['rank'] > lastRankAllyHotel) {
-        lastRankAllyHotel = obj.extra['rank'];
+      if (obj.extra["rank"] > lastRankAllyHotel) {
+        lastRankAllyHotel = obj.extra["rank"];
       }
     });
-    console.log(lastRankAllyHotel, 'lastRankAllyHotel');
+    console.log(lastRankAllyHotel, "lastRankAllyHotel");
 
-    console.log('Start get top hotel');
-    const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
+    console.log("Start get top hotel");
+    const timezone = "Asia/Ho_Chi_Minh"; // Change this to the desired timezone
     const capabilities = Capabilities.firefox();
-    capabilities.set('tz', timezone);
+    capabilities.set("tz", timezone);
     // capabilities.set('moz:firefoxOptions', {
     //   args: ['--headless'],
     // });
@@ -46,7 +46,7 @@ export const getTopHotelForTrip = async (
     // .addArguments('--headless=new')
     driver = await new Builder()
       .usingServer(seleniumUrl)
-      .forBrowser('firefox')
+      .forBrowser("firefox")
       .withCapabilities(capabilities)
       .build();
 
@@ -60,28 +60,28 @@ export const getTopHotelForTrip = async (
         '//a[@data-smoke-attr="pagination-next-arrow"]',
       );
       await driver.executeScript(
-        'arguments[0].scrollIntoView(true)',
+        "arguments[0].scrollIntoView(true)",
         nextPageEle,
       );
 
-      console.log('Get list hotel one page');
+      console.log("Get list hotel one page");
       const listHotelOnePageEle = await GetElements(
         driver,
         '//span[@class="listItem"]',
       );
-      console.log(listHotelOnePageEle.length, 'all list hotel one page');
+      console.log(listHotelOnePageEle.length, "all list hotel one page");
 
       const titleEle = await GetElements(
         driver,
         `//div[@data-automation="hotel-card-title"]/a/div`,
       );
-      console.log(titleEle.length, 'all title');
+      console.log(titleEle.length, "all title");
 
       const aEle = await GetElements(
         driver,
         `//div[@data-automation="hotel-card-title"]/a`,
       );
-      console.log(aEle.length, 'all a link');
+      console.log(aEle.length, "all a link");
 
       let done = false;
 
@@ -89,7 +89,7 @@ export const getTopHotelForTrip = async (
         let sponsoredEle = undefined;
         try {
           sponsoredEle = await listHotelOnePageEle[i].findElement(
-            By.xpath('(./span/div/div/div/div)[2]/header/div/div/div/div/span'),
+            By.xpath("(./span/div/div/div/div)[2]/header/div/div/div/div/span"),
           );
         } catch (e) {}
         if (sponsoredEle) {
@@ -98,16 +98,16 @@ export const getTopHotelForTrip = async (
         // console.log('not sponsoredEle');
 
         const rank = (await titleEle[i].getText())
-          .split(' ')?.[0]
-          ?.split('.')?.[0];
-        const name = (await titleEle[i].getText()).split('.')?.[1]?.trim();
+          .split(" ")?.[0]
+          ?.split(".")?.[0];
+        const name = (await titleEle[i].getText()).split(".")?.[1]?.trim();
 
         if (parseInt(rank) > lastRankAllyHotel) {
           done = true;
           break;
         }
         listUrlHotelEnemy = listUrlHotelEnemy.concat(
-          await aEle[i].getAttribute('href'),
+          await aEle[i].getAttribute("href"),
         );
         titleHotelEnemy = titleHotelEnemy.concat(name);
         rankHotelEnemy = rankHotelEnemy.concat(parseInt(rank));
@@ -115,23 +115,23 @@ export const getTopHotelForTrip = async (
       if (done) {
         break;
       }
-      await driver.executeScript('arguments[0].click()', nextPageEle);
+      await driver.executeScript("arguments[0].click()", nextPageEle);
     }
 
     // await driver.sleep(200000);
   } catch (e) {
-    console.log(e, 'error');
+    console.log(e, "error");
     const data: tbObject[] =
       await prismaService.$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc`;
 
     return {
       url: data.map((obj) => obj.url),
       name: data.map((obj) => obj.name),
-      rank: data.map((obj) => obj.extra['rank']),
+      rank: data.map((obj) => obj.extra["rank"]),
     };
   }
   await driver.quit();
-  console.log('Get top hotel done', listUrlHotelEnemy.length);
+  console.log("Get top hotel done", listUrlHotelEnemy.length);
   console.log(
     listUrlHotelEnemy.length,
     listUrlHotelEnemy[0],
@@ -143,7 +143,7 @@ export const getTopHotelForTrip = async (
   // rankHotelEnemy = [rankHotelEnemy[0]];
 
   // Kiểm tra xem ksan đã tồn tại chưa
-  console.log('Check hotel out top and exist');
+  console.log("Check hotel out top and exist");
   const hotels = await prismaService.tbHotel.findMany({});
   for (let i = 0; i < hotels.length; i++) {
     const hotel = hotels[i];
@@ -162,7 +162,7 @@ export const getTopHotelForTrip = async (
           disable: true,
         },
       });
-      console.log('Hotel', hotel.name, 'out top');
+      console.log("Hotel", hotel.name, "out top");
     }
   }
 
@@ -184,16 +184,16 @@ export const getTopHotelForTrip = async (
             },
           });
           // const objectHotel = await prismaService.tbObject.findFirst()
-          console.log('Enable hotel', hotel.name, 'again');
+          console.log("Enable hotel", hotel.name, "again");
         }
       }
     }
     if (flag) {
       data = data.concat({
         name: titleHotelEnemy[i],
-        address: '',
-        gm: '',
-        avatar: '',
+        address: "",
+        gm: "",
+        avatar: "",
         links: {
           [PLATFORM.TRIP]: url,
         },
@@ -213,13 +213,13 @@ export const getTopHotelForTrip = async (
         platform: PLATFORM.TRIP,
         tbHotelId: newEnemyHotel.id,
       });
-      console.log(newEnemyHotel.id, 'Add new enemy object');
+      console.log(newEnemyHotel.id, "Add new enemy object");
     } catch (e) {
-      console.log(newEnemyHotel.name, 'Add new enemy object fail');
+      console.log(newEnemyHotel.name, "Add new enemy object fail");
     }
   }
-  console.log(data.length, 'Add new enemy hotels');
-  console.log('Done get top hotel');
+  console.log(data.length, "Add new enemy hotels");
+  console.log("Done get top hotel");
   return {
     url: listUrlHotelEnemy,
     name: titleHotelEnemy,

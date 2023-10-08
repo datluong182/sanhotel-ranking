@@ -1,12 +1,14 @@
-import * as bcrypt from 'bcrypt';
-import { resourceUsage } from 'process';
+import * as bcrypt from "bcrypt";
 
-const salt = process.env.SALT_DEFAULT;
+const salt = Number(process.env.SALT_ROUND);
 
 export const hash = async (text: string): Promise<string> => {
-    return bcrypt.hash(salt, text);
-}
+  return bcrypt.hash(text, salt);
+};
 
-export const compair = async (first: string, second: string): Promise<boolean> => {
-    return bcrypt.compare(first, second);
-}
+export const compair = async (
+  plain: string,
+  hashed: string,
+): Promise<boolean> => {
+  return bcrypt.compare(plain, hashed);
+};

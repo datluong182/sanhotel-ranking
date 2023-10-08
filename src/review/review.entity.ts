@@ -1,4 +1,4 @@
-import { PLATFORM, Prisma } from '@prisma/client';
+import { PLATFORM, Prisma } from "@prisma/client";
 
 export class Review {
   username: string;

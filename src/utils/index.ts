@@ -1,4 +1,4 @@
-import { By, WebDriver, WebElement } from 'selenium-webdriver';
+import { By, WebDriver, WebElement } from "selenium-webdriver";
 
 export const nomalizeName = (name: string) => {
   return name
@@ -16,7 +16,7 @@ export const GetElement = async (
   try {
     return await driver.findElement(By.xpath(xpath));
   } catch (e) {
-    console.log('Cannot find element', e);
+    console.log("Cannot find element", e);
     return null;
   }
 };
@@ -32,7 +32,7 @@ export const GetElements = async (
   try {
     return await driver.findElements(By.xpath(xpath));
   } catch (e) {
-    console.log('Cannot find elements');
+    console.log("Cannot find elements");
     return null;
   }
 };
@@ -42,18 +42,15 @@ export const ClickElement = async (
   ele: WebElement,
 ): Promise<boolean> => {
   try {
-    await driver.executeScript(
-      'arguments[0].click()',
-      ele,
-    );
+    await driver.executeScript("arguments[0].click()", ele);
     return true;
   } catch (e) {
-    console.log('Cannot click elements');
+    console.log("Cannot click elements");
     return false;
   }
 };
 
 export const seleniumUrl =
-  process.env.NODE_ENV === 'production'
+  process.env.NODE_ENV === "production"
     ? process.env.SELENIUM_URL
     : process.env.SELENIUM_URL_DEV;

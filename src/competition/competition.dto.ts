@@ -1,15 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { PLATFORM } from '@prisma/client';
+import { ApiProperty } from "@nestjs/swagger";
+import { PLATFORM } from "@prisma/client";
 
 export class QueryCompetition {
   @ApiProperty({
     required: true,
-    default: '9',
+    default: "9",
   })
   month: string;
   @ApiProperty({
     required: true,
-    default: '2023',
+    default: "2023",
   })
   year: string;
   @ApiProperty({
@@ -31,12 +31,12 @@ export class QueryAllCompetition {
   platform: PLATFORM;
   @ApiProperty({
     required: true,
-    default: '9',
+    default: "9",
   })
   month: string;
   @ApiProperty({
     required: true,
-    default: '2023',
+    default: "2023",
   })
   year: string;
 }

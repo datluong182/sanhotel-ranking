@@ -1,15 +1,15 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
-import { PLATFORM } from '@prisma/client';
-import { By, WebDriver } from 'selenium-webdriver';
-import { GetElement, GetElements } from 'src/utils';
-import { Objects } from '../object.entity';
+import { HttpException, HttpStatus } from "@nestjs/common";
+import { PLATFORM } from "@prisma/client";
+import { By, WebDriver } from "selenium-webdriver";
+import { GetElement, GetElements } from "src/utils";
+import { Objects } from "../object.entity";
 
 const extractDataBoooking = async (
   driver: WebDriver,
   platform: PLATFORM,
   url: string,
 ): Promise<Objects | undefined> => {
-  console.log('get name');
+  console.log("get name");
 
   const titleEle = await GetElement(
     driver,
@@ -19,14 +19,14 @@ const extractDataBoooking = async (
     throw new HttpException(
       {
         status: HttpStatus.BAD_REQUEST,
-        detail: 'Không tìm thấy tiêu đề',
+        detail: "Không tìm thấy tiêu đề",
       },
       HttpStatus.BAD_REQUEST,
     );
   }
   const name = await titleEle.getText();
 
-  console.log('get score');
+  console.log("get score");
   const scoreReviewEle = await GetElement(
     driver,
     '//button[@data-testid="read-all-actionable"]/div/div/div[@aria-label]',
@@ -35,16 +35,16 @@ const extractDataBoooking = async (
     throw new HttpException(
       {
         status: HttpStatus.BAD_REQUEST,
-        detail: 'Không tìm thấy điểm review',
+        detail: "Không tìm thấy điểm review",
       },
       HttpStatus.BAD_REQUEST,
     );
   }
   let text = await scoreReviewEle.getText();
-  text = text.replaceAll(',', '.');
+  text = text.replaceAll(",", ".");
   const score = parseFloat(text);
 
-  console.log('get stars');
+  console.log("get stars");
   const starsEle = await GetElements(
     driver,
     '//span[@data-testid="rating-stars"]/span',
@@ -53,14 +53,14 @@ const extractDataBoooking = async (
     throw new HttpException(
       {
         status: HttpStatus.BAD_REQUEST,
-        detail: 'Không tìm thấy số sao khách sạn',
+        detail: "Không tìm thấy số sao khách sạn",
       },
       HttpStatus.BAD_REQUEST,
     );
   }
   const stars = starsEle.length;
 
-  console.log('get total reviews');
+  console.log("get total reviews");
   const numberReviewsEle = await GetElement(
     driver,
     '//button[@data-testid="read-all-actionable"]',
@@ -69,13 +69,13 @@ const extractDataBoooking = async (
     throw new HttpException(
       {
         status: HttpStatus.BAD_REQUEST,
-        detail: 'Không tìm thấy tổng số reviews',
+        detail: "Không tìm thấy tổng số reviews",
       },
       HttpStatus.BAD_REQUEST,
     );
   }
   await driver.executeScript(
-    'arguments[0].scrollIntoView(true)',
+    "arguments[0].scrollIntoView(true)",
     numberReviewsEle,
   );
   await numberReviewsEle.click();
@@ -87,7 +87,7 @@ const extractDataBoooking = async (
 
   let liScore = [];
   await driver.executeScript(
-    'arguments[0].scrollIntoView(true)',
+    "arguments[0].scrollIntoView(true)",
     await GetElement(driver, '//div[@id="review_score_filter"]/button'),
   );
   const liScoreEles = await GetElements(
@@ -98,14 +98,14 @@ const extractDataBoooking = async (
     throw new HttpException(
       {
         status: HttpStatus.BAD_REQUEST,
-        detail: 'Không tìm thấy tổng số reviews',
+        detail: "Không tìm thấy tổng số reviews",
       },
       HttpStatus.BAD_REQUEST,
     );
   }
   for (let i = 0; i < liScoreEles.length; i++) {
     await driver.executeScript(
-      'arguments[0].click()',
+      "arguments[0].click()",
       await GetElement(driver, '//div[@id="review_score_filter"]/button'),
     );
     await driver.sleep(3000);
@@ -117,12 +117,12 @@ const extractDataBoooking = async (
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
-          detail: 'Không tìm thấy tổng số reviews',
+          detail: "Không tìm thấy tổng số reviews",
         },
         HttpStatus.BAD_REQUEST,
       );
     }
-    await driver.executeScript('arguments[0].click()', tempLiScoreEles[i]);
+    await driver.executeScript("arguments[0].click()", tempLiScoreEles[i]);
     await driver.sleep(3000);
     const selected = await GetElement(
       driver,
@@ -132,7 +132,7 @@ const extractDataBoooking = async (
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
-          detail: 'Không tìm thấy tổng số reviews',
+          detail: "Không tìm thấy tổng số reviews",
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -142,10 +142,10 @@ const extractDataBoooking = async (
 
   let numberScoreReview = [];
   for (let i = 0; i < liScore.length; i++) {
-    console.log(liScore[i], 'liScore[i]');
+    console.log(liScore[i], "liScore[i]");
     let text = liScore[i];
-    text = text.split('(');
-    text = text[1].split(')');
+    text = text.split("(");
+    text = text[1].split(")");
     numberScoreReview = numberScoreReview.concat(text[0]);
   }
 
@@ -153,14 +153,14 @@ const extractDataBoooking = async (
     driver,
     '(//div[@data-testid="PropertyReviewsRegionBlock"]/div[@class="bui-spacer--larger"]/div/div)[2]/div/div[@data-testid="review-subscore"]',
   );
-  console.log(subScoreWrapperEle.length, 'get subscores');
+  console.log(subScoreWrapperEle.length, "get subscores");
   let subScore: { [key: string]: number } = {};
   for (let i = 0; i < subScoreWrapperEle.length; i++) {
     const subScoreEle = await subScoreWrapperEle[i].findElement(
-      By.xpath('./div/div/div/div/div[text()]'),
+      By.xpath("./div/div/div/div/div[text()]"),
     );
     const keySubScoreEle = await subScoreWrapperEle[i].findElement(
-      By.xpath('./div/div/div/div/div/span'),
+      By.xpath("./div/div/div/div/div/span"),
     );
 
     subScore = {

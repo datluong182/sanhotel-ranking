@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 import {
   PLATFORM,
   PLATFORM_RESPONSE,
@@ -6,9 +6,9 @@ import {
   tbHotel,
   tbReview,
   tbStaff,
-} from '@prisma/client';
-import { DataList, PagingDefault } from 'src/app.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+} from "@prisma/client";
+import { DataList, PagingDefault } from "src/app.dto";
+import { PrismaService } from "src/prisma/prisma.service";
 import {
   CreateStaff,
   QueryRankByDayStaff,
@@ -17,13 +17,13 @@ import {
   RankingStaffHotel,
   TYPE_RANKING,
   UpdateStaff,
-} from './staff.dto';
-import _, { result } from 'lodash';
-import { nomalizeName } from 'src/utils';
-import { reviewsByDayStaff } from './performance';
-import * as moment from 'moment-timezone';
+} from "./staff.dto";
+import _, { result } from "lodash";
+import { nomalizeName } from "src/utils";
+import { reviewsByDayStaff } from "./performance";
+import * as moment from "moment-timezone";
 
-moment.tz.setDefault('Asia/Ho_Chi_Minh');
+moment.tz.setDefault("Asia/Ho_Chi_Minh");
 
 export const checkExist = (subStr: string, str: string) => {
   const regex = new RegExp(`${nomalizeName(subStr)}(?![a-zA-Z])`);
@@ -82,17 +82,17 @@ export const checkIfReviewGood = (
   review: tbReview,
 ) => {
   if (platform === PLATFORM.TRIP) {
-    if (review.extra['stars'] === 5) {
+    if (review.extra["stars"] === 5) {
       return valueReview;
     }
   }
   if (platform === PLATFORM.BOOKING) {
-    if (review.extra['score'] >= 9.0) {
+    if (review.extra["score"] >= 9.0) {
       return valueReview;
     }
   }
   if (platform === PLATFORM.GOOGLE) {
-    if (review.extra['score'] === 5) {
+    if (review.extra["score"] === 5) {
       return valueReview;
     }
   }
@@ -102,7 +102,7 @@ export const checkIfReviewGood = (
 @Injectable()
 export class StaffService {
   constructor(private prismaService: PrismaService) {
-    console.log('init staff service');
+    console.log("init staff service");
   }
 
   async rankingByDay(
@@ -131,7 +131,7 @@ export class StaffService {
         ],
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
       include: {
         tbHotel: true,
@@ -151,24 +151,24 @@ export class StaffService {
 
     let count = 1;
     while (
-      moment(query.start, 'YYYY-MM-DD')
+      moment(query.start, "YYYY-MM-DD")
         .clone()
-        .add(count, 'day')
-        .isSameOrBefore(moment(query.end, 'YYYY-MM-DD'), 'day')
+        .add(count, "day")
+        .isSameOrBefore(moment(query.end, "YYYY-MM-DD"), "day")
     ) {
-      const start = moment(query.start, 'YYYY-MM-DD')
+      const start = moment(query.start, "YYYY-MM-DD")
         .clone()
-        .add(1, 'day')
-        .format('YYYY-MM-DD');
-      const end = moment(query.start, 'YYYY-MM-DD')
+        .add(1, "day")
+        .format("YYYY-MM-DD");
+      const end = moment(query.start, "YYYY-MM-DD")
         .clone()
-        .add(count, 'day')
-        .format('YYYY-MM-DD');
+        .add(count, "day")
+        .format("YYYY-MM-DD");
 
       const tempReviews = listReviews.filter(
         (review) =>
-          moment(review.createdAt).isSameOrAfter(moment(start), 'day') &&
-          moment(review.createdAt).isSameOrBefore(moment(end), 'day'),
+          moment(review.createdAt).isSameOrAfter(moment(start), "day") &&
+          moment(review.createdAt).isSameOrBefore(moment(end), "day"),
       );
 
       const result = await this.getRankingBase(
@@ -193,10 +193,10 @@ export class StaffService {
         }
         if (item.tbStaffId === staff.id) {
           rankingByDay = rankingByDay.concat({
-            day: moment(query.start, 'YYYY-MM-DD')
+            day: moment(query.start, "YYYY-MM-DD")
               .clone()
-              .add(count, 'day')
-              .format('DD/MM/YYYY'),
+              .add(count, "day")
+              .format("DD/MM/YYYY"),
             value: rank,
           });
         }
@@ -207,7 +207,7 @@ export class StaffService {
   }
 
   async reviewsByDayStaff(query: QueryRankByDayStaff): Promise<tbReview[]> {
-    console.log('review by day');
+    console.log("review by day");
     // return [];
     return await reviewsByDayStaff(this.prismaService, query);
   }
@@ -233,7 +233,7 @@ export class StaffService {
         ],
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
       include: {
         tbHotel: true,
@@ -265,8 +265,8 @@ export class StaffService {
         (review) => review.tbHotelId === hotel.id,
       );
 
-      if (hotel.name === 'San Grand Hotel') {
-        console.log(tempReview.length, 'total review san grand');
+      if (hotel.name === "San Grand Hotel") {
+        console.log(tempReview.length, "total review san grand");
       }
 
       const tempStaff = listStaffs.filter(
@@ -285,7 +285,7 @@ export class StaffService {
 
       tempReview.map((review) => {
         if (query.platform === PLATFORM.TRIP) {
-          if (review.extra['stars'] < 5) {
+          if (review.extra["stars"] < 5) {
             tempHotel = {
               ...tempHotel,
               badReview: tempHotel?.badReview?.concat(review),
@@ -293,7 +293,7 @@ export class StaffService {
           }
         }
         if (query.platform === PLATFORM.BOOKING) {
-          if (review.extra['score'] < 9.0) {
+          if (review.extra["score"] < 9.0) {
             tempHotel = {
               ...tempHotel,
               badReview: tempHotel?.badReview?.concat(review),
@@ -334,7 +334,7 @@ export class StaffService {
         ],
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
       include: {
         tbHotel: true,
@@ -376,17 +376,17 @@ export class StaffService {
 
       for (let i = 0; i < tempReview.length; i++) {
         const review = tempReview[i];
-        if (query.platform === PLATFORM.TRIP && review.extra['stars'] !== 5) {
+        if (query.platform === PLATFORM.TRIP && review.extra["stars"] !== 5) {
           continue;
         }
         if (
           query.platform === PLATFORM.BOOKING &&
-          review.extra['score'] < 9.0
+          review.extra["score"] < 9.0
         ) {
           continue;
         }
 
-        if (query.platform === PLATFORM.GOOGLE && review.extra['score'] < 5) {
+        if (query.platform === PLATFORM.GOOGLE && review.extra["score"] < 5) {
           continue;
         }
 
@@ -421,8 +421,8 @@ export class StaffService {
   async getRanking(
     query: QueryRankingStaff,
   ): Promise<{ count: number; data: RankingStaff[] }> {
-    console.log(query, 'query');
-    query.allReview = query.allReview === 'true' ? true : false;
+    console.log(query, "query");
+    query.allReview = query.allReview === "true" ? true : false;
     const listReviews = await this.prismaService.tbReview.findMany({
       where: {
         tbHotelId: query.tbHotelId,
@@ -443,7 +443,7 @@ export class StaffService {
         ],
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
       include: {
         tbHotel: true,
@@ -473,7 +473,7 @@ export class StaffService {
     listStaffs: tbStaff[],
     allReview = true,
   ): Promise<{ count: number; data: RankingStaff[] }> {
-    console.log(listReviews.length, query.start, query.end, 'listStaffs');
+    console.log(listReviews.length, query.start, query.end, "listStaffs");
 
     let results: RankingStaff[] = [];
     listStaffs.map((staff) => {

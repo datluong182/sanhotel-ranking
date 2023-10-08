@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
-import { ScheduleModule } from '@nestjs/schedule';
-import { ObjectController } from './object.controller';
-import { ObjectService } from './object.service';
-import { PrismaModule } from '../prisma/prisma.module';
-import { HttpModule } from '@nestjs/axios';
+import { Module } from "@nestjs/common";
+import { ScheduleModule } from "@nestjs/schedule";
+import { ObjectController } from "./object.controller";
+import { ObjectService } from "./object.service";
+import { PrismaModule } from "../prisma/prisma.module";
+import { HttpModule } from "@nestjs/axios";
 // import { ObjectReviewsModule } from './objectReviews/objectReviews.module';
 
 @Module({

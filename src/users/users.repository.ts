@@ -4,33 +4,27 @@ import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
 export class UsersRepository {
-    constructor(
-        private readonly prismaService: PrismaService,
-    ) {
+  constructor(private readonly prismaService: PrismaService) {}
 
-    }
+  async createUser(input: Prisma.tbUserCreateInput) {
+    return this.prismaService.tbUser.create({
+      data: input,
+    });
+  }
 
-    async createUser(
-        input: Prisma.tbUserCreateInput
-    ) {
-        return this.prismaService.tbUser.create({
-            data: input
-        });
-    }
+  async findByUserName(username: string) {
+    return this.prismaService.tbUser.findFirst({
+      where: {
+        username,
+      },
+    });
+  }
 
-    async findByUserName(username: string) {
-        return this.prismaService.tbUser.findFirst({
-            where: {
-                username,
-            }
-        });
-    }
-
-    async findByStaffId(staffId: string) {
-        return this.prismaService.tbUser.findFirst({
-            where: {
-                staffId,
-            }
-        });
-    }
+  async findByStaffId(staffId: string) {
+    return this.prismaService.tbUser.findFirst({
+      where: {
+        staffId,
+      },
+    });
+  }
 }

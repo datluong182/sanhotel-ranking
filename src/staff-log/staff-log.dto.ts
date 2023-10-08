@@ -7,18 +7,16 @@ export class GetStaffLogByTime {
   })
   tbHotelId: string;
 
-  @ApiPropertyOptional({
-
-  })
+  @ApiPropertyOptional({})
   staffId?: string;
 
   @ApiProperty({
-    default: '2023-07-30',
+    default: "2023-07-30",
   })
   start?: string;
 
   @ApiProperty({
-    default: '2023-08-30',
+    default: "2023-08-30",
   })
   end?: string;
 }

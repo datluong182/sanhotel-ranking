@@ -5,8 +5,8 @@ import { StaffPointService } from "./staff-point.service";
 import { StaffRepository } from "src/staff/staff.repository";
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [StaffPointController],
-    providers: [StaffPointService, StaffRepository],
+  imports: [PrismaModule],
+  controllers: [StaffPointController],
+  providers: [StaffPointService, StaffRepository],
 })
 export class StaffPointModule {}

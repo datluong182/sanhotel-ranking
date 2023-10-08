@@ -1,9 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PLATFORM, Prisma, tbHotel, tbReview, tbStaff } from '@prisma/client';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PLATFORM, Prisma, tbHotel, tbReview, tbStaff } from "@prisma/client";
 
 export const TYPE_RANKING = {
-  STAFF: 'STAFF',
-  HOTEL: 'HOTEL',
+  STAFF: "STAFF",
+  HOTEL: "HOTEL",
 };
 
 export type TYPE_RANKING = (typeof TYPE_RANKING)[keyof typeof TYPE_RANKING];
@@ -11,7 +11,7 @@ export type TYPE_RANKING = (typeof TYPE_RANKING)[keyof typeof TYPE_RANKING];
 export class CreateStaff {
   @ApiProperty({
     required: true,
-    default: 'Ruby',
+    default: "Ruby",
   })
   name: string;
   @ApiProperty({
@@ -45,36 +45,36 @@ export class UpdateStaff extends CreateStaff {
 
 export class QueryRankByDayStaff {
   @ApiProperty({
-    default: '2023-06-30',
+    default: "2023-06-30",
   })
   start: string;
   @ApiProperty({
-    default: '2023-08-31',
+    default: "2023-08-31",
   })
   end: string;
   @ApiProperty({})
   tbStaffId: string;
 
   @ApiProperty({
-    default: 'TRIP',
+    default: "TRIP",
   })
   platform: PLATFORM;
 }
 
 export class QueryRankingStaff {
   @ApiProperty({
-    default: '2023-06-30',
+    default: "2023-06-30",
   })
   start: string;
   @ApiProperty({
-    default: '2023-08-31',
+    default: "2023-08-31",
   })
   end: string;
   @ApiPropertyOptional({})
   tbHotelId?: string;
 
   @ApiProperty({
-    default: 'TRIP',
+    default: "TRIP",
   })
   platform: PLATFORM;
 
