@@ -49,7 +49,8 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
-      whitelist: true,
+      // TO-DO: Add all validator for apiProperty
+      // whitelist: true,
     }),
   );
   await app.listen(PORT);

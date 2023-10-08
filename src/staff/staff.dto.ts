@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { PLATFORM, Prisma, tbHotel, tbReview, tbStaff } from "@prisma/client";
+import { StaffEnum } from "./staff.enum";
 
 export const TYPE_RANKING = {
   STAFF: "STAFF",
@@ -27,8 +28,9 @@ export class CreateStaff {
 
   @ApiProperty({
     required: true,
+    enum: StaffEnum,
   })
-  role: string;
+  role: StaffEnum;
 
   @ApiProperty({
     required: true,

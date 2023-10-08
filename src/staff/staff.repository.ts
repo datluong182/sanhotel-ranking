@@ -5,7 +5,6 @@ import { PrismaService } from "src/prisma/prisma.service";
 
 @Injectable()
 export class StaffRepository {
-  private;
 
   constructor(
     private readonly logger: Logger,
