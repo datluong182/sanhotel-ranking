@@ -43,4 +43,4 @@ EXPOSE 8001
 USER node
 
 # Start the application using dumb-init for better signal handling
-CMD ["sh", "-c", "npx prisma migrate deploy init --schema=./database/schema.prisma && npm run start"]
+CMD ["sh", "-c", "npm run migrate-prisma:prod && npm run start"]
