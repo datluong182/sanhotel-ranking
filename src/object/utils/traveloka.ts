@@ -17,7 +17,11 @@ const extractDataTraveloka = async (
       url,
     },
   );
-  console.log('Get info hotel done');
+  console.log('Get info hotel done', response?.data?.[0]);
+
+  if (!response?.data?.[0] || !response?.data?.[0]?.name) {
+    return undefined;
+  }
 
   const result: ApifyTraveloka = response?.data?.[0];
 

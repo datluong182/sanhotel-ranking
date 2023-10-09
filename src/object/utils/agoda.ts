@@ -19,6 +19,10 @@ const extractDataAgoda = async (
   );
   console.log('Get info hotel done');
 
+  if (!response?.data?.[0] || !response?.data?.[0]?.name) {
+    return undefined;
+  }
+
   const result: ApifyAgoda = response?.data?.[0];
 
   // Apify actor trả về cả thông tin khách sạn, và danh sách reviews. Cần lưu lại datasetLastRunId trong object để get danh sách reviews trong review.service
