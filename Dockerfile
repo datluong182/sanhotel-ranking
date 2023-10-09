@@ -12,7 +12,7 @@ COPY package.json .
 COPY package-lock.json .
 
 # Install dependencies for the build
-RUN npm install
+RUN npm ci
 
 # Copy the entire application source code
 COPY . .
@@ -43,4 +43,4 @@ EXPOSE 8001
 USER node
 
 # Start the application using dumb-init for better signal handling
-CMD ["sh", "-c", "npm run migrate-prisma && npm run start"]
+CMD ["sh", "-c", "npx prisma migrate deploy init --schema=./database/schema.prisma && npm run start"]
