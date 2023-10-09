@@ -9,6 +9,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "gen-interface-prisma": "pal schema typescript --schema=./database/schema.prisma --output-path=src/temp-schema",
     "migrate-prisma": "npx prisma migrate dev --name init --schema=./database/schema.prisma",
+    "migrate-prisma:prod": "prisma migrate deploy init --schema=./database/schema.prisma",
     "generate-prisma": "npx prisma generate --schema=./database/schema.prisma",
     "start": "nest start",
     "start:dev": "nest build --webpack --webpackPath webpack-hmr.config.js --watch",

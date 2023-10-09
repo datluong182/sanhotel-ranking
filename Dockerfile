@@ -12,7 +12,7 @@ COPY package.json .
 COPY package-lock.json .
 
 # Install dependencies for the build
-RUN npm install
+RUN npm ci
 
 # Copy the entire application source code
 COPY . .
@@ -28,7 +28,7 @@ COPY --chown=node:node .env .env
 COPY --chown=node:node wait-for-it.sh ./wait-for-it.sh
 
 # Install production dependencies (omit devDependencies)
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 # # Copy the Prisma client to the final location
 # COPY --chown=node:node /usr/src/app/node_modules/.prisma/client ./node_modules/.prisma/client
@@ -43,4 +43,4 @@ EXPOSE 8001
 USER node
 
 # Start the application using dumb-init for better signal handling
-CMD ["sh", "-c", "npm run migrate-prisma && npm run start"]
+CMD ["sh", "-c", "npm run migrate-prisma:prod && npm run start:prod"]
