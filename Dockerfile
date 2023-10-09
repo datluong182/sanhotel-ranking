@@ -28,7 +28,7 @@ COPY --chown=node:node .env .env
 COPY --chown=node:node wait-for-it.sh ./wait-for-it.sh
 
 # Install production dependencies (omit devDependencies)
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 # # Copy the Prisma client to the final location
 # COPY --chown=node:node /usr/src/app/node_modules/.prisma/client ./node_modules/.prisma/client
