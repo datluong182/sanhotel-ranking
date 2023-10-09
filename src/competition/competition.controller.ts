@@ -1,22 +1,18 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
-  Param,
-  Post,
   Put,
-  Query,
+  Query
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
-import { CompetitionService } from "./competition.service";
-import { DataList, PagingDefault, Paging } from "src/app.dto";
-import { tbCompetition, tbHotel, tbObjectLog } from "@prisma/client";
+import { tbCompetition } from "@prisma/client";
 import {
   QueryAllCompetition,
   QueryCompetition,
   UpdateExtraCompetition,
 } from "./competition.dto";
+import { CompetitionService } from "./competition.service";
 
 @ApiTags("competition")
 @Controller("competition")

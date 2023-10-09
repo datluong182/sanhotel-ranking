@@ -7,6 +7,14 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model tbCompany {
+  id            String          @id @default(uuid())
+  name String
+  address String
+  avatar String
+  links String
+}
+
 model tbHotel {
   id            String          @id @default(uuid())
   name          String
