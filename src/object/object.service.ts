@@ -100,6 +100,7 @@ export class ObjectService {
         ...query.cond,
         platform: query.platform as PLATFORM,
         tbHotel: {
+          ...query?.cond?.['tbHotel'],
           disable: {
             not: true,
           },
