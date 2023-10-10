@@ -6,3 +6,10 @@ export class CreateDepartmentRequestDto {
   name: string;
   image: string;
 }
+
+export class UpdateDepartmentRequestDto {
+  type: DepartmentType;
+  companyId: string;
+  name: string;
+  image: string;
+}

@@ -1,7 +1,8 @@
 import { Company } from "./companies.entity";
 import { PrismaService } from "../prisma/prisma.service";
-import { assignWith } from "lodash";
+import { Injectable } from "@nestjs/common";
 
+@Injectable()
 export class CompaniesRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
