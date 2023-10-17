@@ -7,7 +7,7 @@ ARG NPM_AUTH_TOKEN
 # copy ALL except ignored by .dockerignore
 COPY . .
 # install ALL node_modules, including 'devDependencies'
-RUN npm ci --no-optional
+RUN npm install --no-optional
 # generate prisma model
 RUN npx prisma generate --schema=./database/schema.prisma
 # build
@@ -15,7 +15,7 @@ RUN npm run build
 # prune non-production node packages
 RUN npm prune --production
 # use node-prune to remove unused files (doc,*.md,images) from node_modules
-RUN wget https://gobinaries.com/tj/node-prune && sh node-prune && node-prune
+#RUN wget https://gobinaries.com/tj/node-prune && sh node-prune && node-prune
 
 #
 # ---- Release ----
@@ -26,6 +26,11 @@ WORKDIR ${WORK_DIR}
 COPY --from=build ${WORK_DIR}/node_modules ./node_modules
 COPY --from=build ${WORK_DIR}/dist ./dist
 COPY package*.json ./
+
+
+EXPOSE 8001
+
+USER node
 
 # define CMD
 CMD npm run start:prod

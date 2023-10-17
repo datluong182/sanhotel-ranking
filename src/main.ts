@@ -14,6 +14,8 @@ async function bootstrap() {
     'http://139.59.192.14:3000',
     'http://139.59.192.14:8001',
     'http://ranking.sanhotelseries.com',
+    'http://ranking.thaisangroup.vn',
+    'https://ranking.thaisangroup.vn',
   ];
   app.enableCors({
     origin: function (origin, callback) {
