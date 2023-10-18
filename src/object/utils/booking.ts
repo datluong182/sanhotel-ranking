@@ -151,21 +151,23 @@ const extractDataBoooking = async (
 
   const subScoreWrapperEle = await GetElements(
     driver,
-    '(//div[@data-testid="PropertyReviewsRegionBlock"]/div[@class="bui-spacer--larger"]/div/div)[2]/div/div[@data-testid="review-subscore"]',
+    '//div[@data-testid="PropertyReviewsRegionBlock"]/div[@class="bui-spacer--larger"]/div/div/div/div/div',
   );
   console.log(subScoreWrapperEle.length, 'get subscores');
   let subScore: { [key: string]: number } = {};
-  for (let i = 0; i < subScoreWrapperEle.length; i++) {
-    const subScoreEle = await subScoreWrapperEle[i].findElement(
-      By.xpath('./div/div/div/div/div[text()]'),
+  for (let i = 0; i < subScoreWrapperEle.length - 1; i++) {
+    const subScoreEle = await subScoreWrapperEle[i].findElements(
+      By.xpath('./div/div/div/div'),
     );
     const keySubScoreEle = await subScoreWrapperEle[i].findElement(
-      By.xpath('./div/div/div/div/div/span'),
+      By.xpath('./div/div/div/div/span'),
     );
 
     subScore = {
       ...subScore,
-      [await keySubScoreEle.getText()]: parseFloat(await subScoreEle.getText()),
+      [await keySubScoreEle.getText()]: parseFloat(
+        await subScoreEle?.[1]?.getText(),
+      ),
     };
   }
 

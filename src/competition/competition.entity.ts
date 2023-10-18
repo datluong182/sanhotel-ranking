@@ -1,7 +1,15 @@
 import { tbHotel, tbObject, tbReview } from '@prisma/client';
 
-export interface CompetitionOtaReview {
-  name: string;
+export interface CompetitionOTA {
+  id: string;
+  tbObjectId: string;
+  tbObject: tbObject;
+  score: number;
+  month: number;
+  year: number;
   reviews: tbReview[];
-  objects: tbObject[];
+  extra?: {
+    volume?: number;
+    checkoutInMonth?: number;
+  };
 }

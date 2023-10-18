@@ -63,3 +63,45 @@ export class UpdateExtraCompetition {
   })
   checkoutInMonth: number;
 }
+
+export class QueryCompetitionOTA {
+  @ApiProperty({
+    required: true,
+    isArray: true,
+    type: String,
+    name: 'tbHotelId',
+  })
+  tbHotelIds: string[];
+  @ApiProperty({
+    required: true,
+    isArray: true,
+    type: PLATFORM,
+    name: 'platforms',
+  })
+  platforms: PLATFORM[];
+  @ApiProperty({
+    required: true,
+    name: 'month',
+  })
+  month: string;
+  @ApiProperty({
+    required: true,
+    name: 'year',
+  })
+  year: string;
+}
+
+export class UpdateCompetitionOTA {
+  @ApiProperty({
+    required: true,
+  })
+  id: string;
+  @ApiProperty({
+    name: 'data',
+    type: 'object',
+    default: {},
+  })
+  data: {
+    [key: string]: any;
+  };
+}

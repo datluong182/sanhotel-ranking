@@ -19,6 +19,9 @@ export interface ObjectExtra extends Prisma.JsonObject {
 
 export interface NewObjectLog extends tbObjectLog {
   tbHotelId: string;
+  tbCompetitionOTATbHotelId?: string;
+  tbCompetitionOTAMonth?: number;
+  tbCompetitionOTAYear?: number;
 }
 
 export interface InfoTrip {
@@ -55,6 +58,16 @@ export interface ApifyExpedia {
 }
 
 export interface ApifyTraveloka {
+  url: string;
+  name: string;
+  score: number;
+  numberScoreReview: number[];
+  extra: {
+    subScore: { [key: string]: number };
+  };
+}
+
+export interface ApifyTripcom {
   url: string;
   name: string;
   score: number;

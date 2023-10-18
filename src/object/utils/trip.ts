@@ -86,9 +86,9 @@ const extractDataTrip = async (
 //     driver,
 //     '//div[@class="ui_column  "]/div/span',
 //   );
-//   // const aboutTabEle = await GetElement(driver, '//div[@id="ABOUT_TAB"]');
-//   // await driver.executeScript('arguments[0].scrollIntoView(true);', aboutTabEle);
-//   // await driver.sleep(1000);
+// const aboutTabEle = await GetElement(driver, '//div[@id="ABOUT_TAB"]');
+// await driver.executeScript('arguments[0].scrollIntoView(true);', aboutTabEle);
+// await driver.sleep(1000);
 
 //   // const scoreReviewEles = await GetElements(
 //   //   driver,

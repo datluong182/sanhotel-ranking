@@ -20,6 +20,7 @@ import {
   ReviewGoogle,
   ReviewTraveloka,
   ReviewTrip,
+  ReviewTripcom,
 } from './review.entity';
 import extractReviewTrip from './utils/trip';
 import extractReviewBooking from './utils/booking';
@@ -29,6 +30,7 @@ import { HttpService } from '@nestjs/axios';
 import extractReviewAgoda from './utils/agoda';
 import extractReviewExpedia from './utils/expedia';
 import extractReviewTraveloka from './utils/traveloka';
+import extractReviewTripcom from './utils/tripcom';
 
 const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
 
@@ -94,7 +96,7 @@ export class ReviewService {
     });
     for (let i = 0; i < listHotels.length; i++) {
       // dev
-      // if (listHotels[i].id !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47') continue;
+      // if (listHotels[i].id !== 'ad85e6a3-f97d-4926-9e34-65add1617475') continue;
       // dev
       const hotel: tbHotel = listHotels[i];
       const temp: NewReview = await this.crawlHotel(
@@ -114,6 +116,7 @@ export class ReviewService {
         result[hotel.id].AGODA.length,
         result[hotel.id].EXPEDIA.length,
         result[hotel.id].TRAVELOKA.length,
+        result[hotel.id].TRIPCOM.length,
         'Done hotel',
       );
     }
@@ -147,6 +150,7 @@ export class ReviewService {
         AGODA: [],
         EXPEDIA: [],
         TRAVELOKA: [],
+        TRIPCOM: [],
       },
     };
     const screen = {
@@ -417,6 +421,42 @@ export class ReviewService {
           });
         } catch (e) {
           console.log(e, 'Lỗi crawl review traveloka');
+        }
+      }
+
+      if (hotel.links[PLATFORM.TRIPCOM]) {
+        try {
+          console.log('Start review TRIPCOM');
+
+          console.log(hotel.links[PLATFORM.TRIPCOM], 'Trip.com');
+          const reviewsTripcom: ReviewTripcom[] = await extractReviewTripcom(
+            this.prismaService,
+            this.httpService,
+            hotel.id,
+          );
+          newReviewHotel[hotel.id].TRIPCOM = reviewsTripcom;
+          await this.prismaService.tbReview.deleteMany({
+            where: {
+              tbHotelId: hotel.id,
+              platform: PLATFORM.TRIPCOM,
+              monthCreated: currentMonth,
+              yearCreated: currentYear,
+            },
+          });
+          await this.prismaService.tbReview.createMany({
+            data: newReviewHotel[hotel.id].TRIPCOM.map((item) => ({
+              ...item,
+              extra: {
+                score: item.extra.score,
+                reviewId: item.extra.reviewId,
+                link: item.extra.link,
+              },
+              platform: PLATFORM.TRIPCOM,
+              tbHotelId: hotel.id,
+            })),
+          });
+        } catch (e) {
+          console.log(e, 'Lỗi crawl review trip.com');
         }
       }
     } catch (e) {

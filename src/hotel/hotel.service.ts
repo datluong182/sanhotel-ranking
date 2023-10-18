@@ -202,24 +202,30 @@ export class HotelService {
         }
 
         if (query.platform === PLATFORM.AGODA) {
-          const listBooking = tempListReview.filter(
+          const listAgoda = tempListReview.filter(
             (item) => item.extra['score'] >= 9.0,
           );
-          item.data.push(listBooking.length);
+          item.data.push(listAgoda.length);
         }
 
         if (query.platform === PLATFORM.EXPEDIA) {
-          const listBooking = tempListReview.filter(
+          const listExpedia = tempListReview.filter(
             (item) => item.extra['score'] >= 9.0,
           );
-          item.data.push(listBooking.length);
+          item.data.push(listExpedia.length);
         }
 
         if (query.platform === PLATFORM.TRAVELOKA) {
-          const listBooking = tempListReview.filter(
+          const listTraveloka = tempListReview.filter(
             (item) => item.extra['score'] >= 9.0,
           );
-          item.data.push(listBooking.length);
+          item.data.push(listTraveloka.length);
+        }
+        if (query.platform === PLATFORM.TRIPCOM) {
+          const listTripcom = tempListReview.filter(
+            (item) => item.extra['score'] >= 9.0,
+          );
+          item.data.push(listTripcom.length);
         }
       }
       data.push(item);

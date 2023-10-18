@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { ReviewAgoda } from '../review.entity';
+import { ReviewAgoda, ReviewTripcom } from '../review.entity';
 import * as moment from 'moment-timezone';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PLATFORM } from '@prisma/client';
@@ -28,7 +28,7 @@ const extractReviewTraveloka = async (
 
   const results = response?.data?.[0]?.reviews ?? [];
   console.log(results?.length, 'num reviews traveloka');
-  let reviews: ReviewAgoda[] = [];
+  let reviews: ReviewTripcom[] = [];
   results.map((result) => {
     const createdAt = moment(result?.createdAt, 'YYYY-MM-DD');
     if (

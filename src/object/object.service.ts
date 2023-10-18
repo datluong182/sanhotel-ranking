@@ -21,6 +21,7 @@ import extractDataGoogle from './utils/google';
 import extractDataAgoda from './utils/agoda';
 import extractDataExpedia from './utils/expedia';
 import extractDataTraveloka from './utils/traveloka';
+import extractDataTripcom from './utils/tripcom';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -166,6 +167,12 @@ export class ObjectService {
     if (query.platform === 'TRAVELOKA') {
       data = await this.prismaService
         .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRAVELOKA' ORDER BY score desc OFFSET ${parseInt(
+        query.page,
+      )} LIMIT ${parseInt(query.limit)}`;
+    }
+    if (query.platform === 'TRIPCOM') {
+      data = await this.prismaService
+        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRIPCOM' ORDER BY score desc OFFSET ${parseInt(
         query.page,
       )} LIMIT ${parseInt(query.limit)}`;
     }
@@ -319,6 +326,32 @@ export class ObjectService {
             } đánh giá`,
           );
         }
+        if (origin.platform === PLATFORM.TRAVELOKA) {
+          messsages = messsages.concat(
+            `${i === 0 ? 'G' : 'B'}.Số lượng đánh giá ${
+              i === 0
+                ? '9+'
+                : i === 1
+                ? '7-9'
+                : i === 2
+                ? '5-7'
+                : i === 3
+                ? '3-5'
+                : '1-3'
+            }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
+              newData.numberScoreReview[i]
+            } đánh giá`,
+          );
+        }
+        if (origin.platform === PLATFORM.TRIPCOM) {
+          messsages = messsages.concat(
+            `${i === 0 ? 'G' : 'B'}.Số lượng đánh giá ${
+              i === 0 ? 'tích cực' : 'tiêu cực'
+            }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
+              newData.numberScoreReview[i]
+            } đánh giá`,
+          );
+        }
       }
     }
     return messsages;
@@ -368,6 +401,7 @@ export class ObjectService {
       AGODA: 'Agoda',
       EXPEDIA: 'Expedia',
       TRAVELOKA: 'Traveloka',
+      TRIPCOM: 'Trip.com',
     };
     let notification_text = title + 'Đã có những thay đổi:\n';
     messages.map((message) => {
@@ -399,6 +433,10 @@ export class ObjectService {
       data: {
         ...origin,
         ...data.data,
+        extra: {
+          ...(origin.extra as object),
+          ...data.data?.extra,
+        },
       },
     });
   }
@@ -478,7 +516,8 @@ export class ObjectService {
         },
         // dev
         // tbHotelId: '242c9b2a-ccf7-4efa-b7d9-feec03af2a47',
-        // platform: 'TRAVELOKA',
+        // tbHotelId: 'ad85e6a3-f97d-4926-9e34-65add1617475',
+        // platform: PLATFORM.AGODA,
         // dev
       },
       include: {
@@ -560,6 +599,11 @@ export class ObjectService {
       PLATFORM.TRAVELOKA,
       isManual,
     );
+    await this.createLastUpdate(
+      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      PLATFORM.TRIPCOM,
+      isManual,
+    );
 
     return result;
   }
@@ -614,17 +658,9 @@ export class ObjectService {
         object = await extractDataTraveloka(platform, this.httpService, url);
       }
 
-      // switch (platform) {
-      //   case PLATFORM.TRIP:
-      //     console.log('extract trip');
-      //     object = await extractDataTrip(driver, platform, url);
-      //     break;
-      //   case PLATFORM.BOOKING:
-      //     object = await extractDataBoooking(driver, platform, url);
-      //     break;
-      //   default:
-      //     break;
-      // }
+      if (platform === PLATFORM.TRIPCOM) {
+        object = await extractDataTripcom(platform, this.httpService, url);
+      }
 
       await driver.quit();
       console.log('crawl done', object);

@@ -58,7 +58,7 @@ const extractReviewTrip = async (
           HttpStatus.BAD_REQUEST,
         );
       }
-      reviewAreaEle = await GetElement(driver, '//div[@id="hrAdWrapper"]');
+      reviewAreaEle = await GetElement(driver, '//div[@id="hrReviewFilters"]');
       if (reviewAreaEle) {
         break;
       }
@@ -76,7 +76,8 @@ const extractReviewTrip = async (
       driver,
       '//label[@for="LanguageFilter_0"]',
     );
-    await languageFilterEle.click();
+    // await languageFilterEle.click();
+    await driver.executeScript('arguments[0].click()', languageFilterEle);
     console.log('get all review');
     await driver.sleep(500);
 
@@ -104,12 +105,15 @@ const extractReviewTrip = async (
       driver,
       '//div[@data-test-target="expand-review"]',
     );
-    await driver.executeScript(
-      'arguments[0].scrollIntoView(true);',
-      readMoreEle,
-    );
-    await driver.executeScript('arguments[0].click()', readMoreEle);
-    await driver.sleep(500);
+    // Nếu có review cần mở rộng thì mở rộng
+    if (readMoreEle) {
+      await driver.executeScript(
+        'arguments[0].scrollIntoView(true);',
+        readMoreEle,
+      );
+      await driver.executeScript('arguments[0].click()', readMoreEle);
+      await driver.sleep(500);
+    }
     const contentEles = await driver.findElements(
       By.xpath(
         `//div[@data-reviewId]/div/div/div[@style="max-height: none; line-break: normal; cursor: auto;"]/span/span`,

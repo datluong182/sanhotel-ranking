@@ -67,6 +67,8 @@ model tbReview {
   platform      PLATFORM
   tbObjectLog   tbObjectLog? @relation(fields: [tbObjectLogId], references: [id])
   tbObjectLogId String?
+
+  tbCompetitionOTA_Review tbCompetitionOTA_Review[]
 }
 
 model tbLastUpdateReview {
@@ -86,6 +88,8 @@ model tbObject {
   tbObjectLog       tbObjectLog[]
   tbHotel           tbHotel       @relation(fields: [tbHotelId], references: [id], onDelete: Cascade)
   tbHotelId         String
+
+  tbCompetitionOTA tbCompetitionOTA[]
 }
 
 model tbObjectLog {
@@ -131,6 +135,7 @@ enum PLATFORM {
   AGODA
   EXPEDIA
   TRAVELOKA
+  TRIPCOM
 }
 
 enum TYPE_HOTEL {
@@ -161,4 +166,24 @@ model tbCompetition {
   tbHotelId           String
 
   @@id([month, year, tbHotelId, platform])
+}
+
+model tbCompetitionOTA {
+  id         String                    @id @default(uuid())
+  tbObject   tbObject                  @relation(fields: [tbObjectId], references: [id])
+  extra      Json
+  score      Float
+  month      Int
+  year       Int
+  tbObjectId String
+  reviews    tbCompetitionOTA_Review[]
+}
+
+model tbCompetitionOTA_Review {
+  tbCompetitionOTA   tbCompetitionOTA @relation(fields: [tbCompetitionOTAId], references: [id], onDelete: Cascade)
+  tbReview           tbReview         @relation(fields: [tbReviewId], references: [id], onDelete: Cascade)
+  tbCompetitionOTAId String
+  tbReviewId         String
+
+  @@id([tbCompetitionOTAId, tbReviewId])
 }

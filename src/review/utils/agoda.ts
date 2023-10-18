@@ -35,6 +35,7 @@ const extractReviewAgoda = async (
       createdAt.isSameOrAfter(moment().startOf('month'), 'date') &&
       createdAt.isSameOrBefore(moment().endOf('month'), 'date')
     ) {
+      console.log(result, result?.createdAt, 'created at agoda');
       reviews = reviews.concat({
         title: result?.title,
         username: result?.username,
