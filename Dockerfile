@@ -1,46 +1,36 @@
-# Set the base image
-FROM node:18-slim
-
-# Install dependencies required for Prisma and other build dependencies
-RUN apt update && apt install libssl-dev dumb-init -y --no-install-recommends
-
-# Set the working directory
-WORKDIR /usr/src/app
-
-# Copy package.json and package-lock.json first to leverage Docker cache
-COPY package.json .
-COPY package-lock.json .
-
-# Install dependencies for the build
-RUN npm ci
-
-# Copy the entire application source code
+# ---- Build ----
+FROM node:18.18-alpine AS build
+ARG WORK_DIR=/var/www/node
+WORKDIR ${WORK_DIR}
+# accept npm token to access private npm registry from build arg
+ARG NPM_AUTH_TOKEN
+# copy ALL except ignored by .dockerignore
 COPY . .
-
-# Generate Prisma client
-RUN npx prisma generate --schema=/usr/src/app/database/schema.prisma
-
-# Build the application
+# install ALL node_modules, including 'devDependencies'
+RUN npm install --no-optional
+# generate prisma model
+RUN npx prisma generate --schema=./database/schema.prisma
+# build
 RUN npm run build
+# prune non-production node packages
+RUN npm prune --production
+# use node-prune to remove unused files (doc,*.md,images) from node_modules
+#RUN wget https://gobinaries.com/tj/node-prune && sh node-prune && node-prune
 
-# Copy remaining files and set ownership to node user
-COPY --chown=node:node .env .env
-COPY --chown=node:node wait-for-it.sh ./wait-for-it.sh
+#
+# ---- Release ----
+FROM node:18.18-alpine AS release
+ARG WORK_DIR=/var/www/node
+WORKDIR ${WORK_DIR}
+# copy the rest of files
+COPY --from=build ${WORK_DIR}/node_modules ./node_modules
+COPY --from=build ${WORK_DIR}/dist ./dist
+COPY package*.json ./
 
-# Install production dependencies (omit devDependencies)
-RUN npm ci --omit=dev
 
-# # Copy the Prisma client to the final location
-# COPY --chown=node:node /usr/src/app/node_modules/.prisma/client ./node_modules/.prisma/client
-
-# Set the environment variable for production
-ENV NODE_ENV production
-
-# Expose the required port
 EXPOSE 8001
 
-# Set the user to non-root node user
 USER node
 
-# Start the application using dumb-init for better signal handling
-CMD ["sh", "-c", "npm run migrate-prisma:prod && npm run start:prod"]
+# define CMD
+CMD npm run start:prod
