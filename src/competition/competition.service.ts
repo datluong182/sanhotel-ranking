@@ -27,8 +27,11 @@ import { ObjectService } from 'src/object/object.service';
 import { Cron } from '@nestjs/schedule';
 import { NewObjectLog } from 'src/object/object.entity';
 import {
+  MIN_RATIO_IN_MONTH,
   formatReview,
   getNumberReviewHighAll,
+  getRatioInMonth,
+  getScoreInMonth,
   getSummaryReviewInMonth,
 } from './utils';
 import { getTopHotelForTrip } from './utils/competition';
@@ -38,7 +41,7 @@ import { platform } from 'os';
 import extractReviewAgoda from 'src/review/utils/agoda';
 import extractDataExpedia from 'src/object/utils/expedia';
 import extractDataTraveloka from 'src/object/utils/traveloka';
-import { CompetitionOTA } from './competition.entity';
+import { CompetitionOTA, ObjectOTA } from './competition.entity';
 import {
   getReviewsOtaInMonth,
   getScoreByReviewsOtaInMonth,
@@ -580,10 +583,18 @@ export class CompetitionService {
     return {};
   }
 
-  async getCompetitionReviewOta(
-    query: QueryCompetitionOTA,
-  ): Promise<CompetitionOTA[]> {
+  async getCompetitionReviewOta(query: QueryCompetitionOTA): Promise<{
+    objects: ObjectOTA[];
+    competitions: CompetitionOTA[];
+  }> {
     console.log(query);
+    const hotels = await this.prismaService.tbHotel.findMany({
+      where: {
+        id: {
+          in: query.tbHotelIds,
+        },
+      },
+    });
     const results = await this.prismaService.tbCompetitionOTA.findMany({
       where: {
         tbObject: {
@@ -610,17 +621,89 @@ export class CompetitionService {
         },
       },
     });
-    const competitionOTA: CompetitionOTA[] = results.map((result) => ({
+    const objectOTA: ObjectOTA[] = results.map((result) => ({
       id: result.id,
       tbObject: result.tbObject,
       tbObjectId: result.tbObjectId,
       score: result.score,
       month: result.month,
       year: result.year,
-      extra: result.extra as { volume?: number; checkoutInMonth?: number },
+      extra: {
+        volume: result.extra['volume'].toString(),
+        checkoutInMonth: result.extra['checkoutInMonth'],
+      },
       reviews: result.reviews.map((review) => review.tbReview),
     }));
-    return competitionOTA;
+
+    const platforms = query.platforms;
+
+    let competitionOTA: CompetitionOTA[] = [];
+    for (let i = 0; i < hotels.length; i++) {
+      const hotel = hotels[i];
+      let temp: CompetitionOTA = {
+        name: hotel.name,
+        score: 0,
+        ratioInMonth: -1,
+        OTA: {},
+      };
+      platforms.map((platform) => {
+        const object = objectOTA.filter(
+          (obj) =>
+            obj.tbObject.platform === platform &&
+            obj.tbObject.tbHotelId === hotel.id,
+        )?.[0];
+        temp = {
+          ...temp,
+          OTA: {
+            ...temp.OTA,
+            [platform]: object,
+          },
+        };
+      });
+      competitionOTA = competitionOTA.concat(temp);
+    }
+
+    competitionOTA = competitionOTA.map((item) => {
+      const ratioInMonth = getRatioInMonth(item);
+      const score = getScoreInMonth(item);
+      // if (ratioInMonth >= MIN_RATIO_IN_MONTH) {
+      //   score = getScoreInMonth(item);
+      // }
+      return {
+        ...item,
+        score,
+        ratioInMonth,
+      };
+    });
+
+    competitionOTA = competitionOTA.sort((a, b) => {
+      // Nếu ptu a chưa đủ tỉ lệ chuyển đổi, ptu b đủ tỉ lệ chuyển đổi. Xếp b lên trước a
+      if (
+        a.ratioInMonth < MIN_RATIO_IN_MONTH &&
+        b.ratioInMonth >= MIN_RATIO_IN_MONTH
+      ) {
+        return 1;
+      }
+
+      // Nếu ptu a đủ tỉ lệ chuyển đổi, ptu b chưa đủ tỉ lệ chuyển đổi. Xếp a lên trước b
+      if (
+        a.ratioInMonth >= MIN_RATIO_IN_MONTH &&
+        b.ratioInMonth < MIN_RATIO_IN_MONTH
+      ) {
+        return -1;
+      }
+
+      // Nếu a và b cùng đủ tỉ lệ chuyển đổi
+      if (a.score != b.score) {
+        return b.score > a.score ? 1 : -1;
+      }
+      return b.ratioInMonth > a.ratioInMonth ? 1 : -1;
+    });
+
+    return {
+      objects: objectOTA,
+      competitions: competitionOTA,
+    };
   }
 
   async updateCompetitionReviewOta() {

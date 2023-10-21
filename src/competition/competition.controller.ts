@@ -24,7 +24,7 @@ import {
   UpdateCompetitionOTA,
   UpdateExtraCompetition,
 } from './competition.dto';
-import { CompetitionOTA } from './competition.entity';
+import { CompetitionOTA, ObjectOTA } from './competition.entity';
 
 @ApiTags('competition')
 @Controller('competition')
@@ -65,9 +65,10 @@ export class CompetitionController {
   }
 
   @Get('/ota-review')
-  async getCompetitionReviewOta(
-    @Query() query: QueryCompetitionOTA,
-  ): Promise<CompetitionOTA[]> {
+  async getCompetitionReviewOta(@Query() query: QueryCompetitionOTA): Promise<{
+    objects: ObjectOTA[];
+    competitions: CompetitionOTA[];
+  }> {
     return await this.competitionService.getCompetitionReviewOta(query);
   }
 

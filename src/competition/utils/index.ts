@@ -2,8 +2,11 @@ import { PLATFORM, tbReview } from '@prisma/client';
 import * as moment from 'moment-timezone';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Review } from 'src/review/review.entity';
+import { CompetitionOTA } from '../competition.entity';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
+
+export const MIN_RATIO_IN_MONTH = 0.2;
 
 export const formatReview = (review: tbReview, type: 'add' | 'remove') => {
   let message = '';
@@ -106,4 +109,46 @@ export const getSummaryReviewInMonth = async (
     numberReviewBad: reviewBad.length,
     reviewBadInMonth: reviewBad,
   };
+};
+
+export const getRatioInMonth = (competitionOTA: CompetitionOTA) => {
+  let numberReviews = 0;
+  let numberBookingCO = 0;
+  Object.keys(competitionOTA?.OTA ?? {}).map((platform) => {
+    const object = competitionOTA.OTA[platform];
+    numberReviews += object?.reviews?.length ?? 0;
+    numberBookingCO += object?.extra?.checkoutInMonth ?? 0;
+  });
+  return numberBookingCO === 0
+    ? -1
+    : parseFloat(numberReviews.toString()) / numberBookingCO;
+};
+
+export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {
+  let totalScore = 0;
+  let numberReviews = 0;
+  const numberOTA = 0;
+  let isOTA = false;
+  Object.keys(competitionOTA.OTA).map((platform) => {
+    const object = competitionOTA.OTA[platform];
+    if (!object) return;
+    if (platform === PLATFORM.TRIP || platform === PLATFORM.GOOGLE) {
+      totalScore += object.score * parseFloat(object?.extra?.volume ?? '1');
+    }
+    if (
+      platform === PLATFORM.BOOKING ||
+      platform === PLATFORM.AGODA ||
+      platform === PLATFORM.EXPEDIA ||
+      platform === PLATFORM.TRAVELOKA ||
+      platform === PLATFORM.TRIPCOM
+    ) {
+      isOTA = true;
+      numberReviews += object?.reviews?.length ?? 0;
+      totalScore += object.score * (platform === PLATFORM.TRIPCOM ? 2 : 1);
+    }
+  });
+  if (isOTA) {
+    return parseFloat(totalScore.toString()) / numberReviews;
+  }
+  return totalScore;
 };
