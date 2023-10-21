@@ -1,9 +1,9 @@
-import { By, WebDriver, until } from 'selenium-webdriver';
-import { GetElement, GetElements } from 'src/utils';
-import { HttpException, HttpStatus } from '@nestjs/common';
-import { InfoTrip, Objects } from '../object.entity';
-import { PLATFORM } from '@prisma/client';
-import { HttpService } from '@nestjs/axios';
+import { By, WebDriver, until } from "selenium-webdriver";
+import { GetElement, GetElements } from "src/utils";
+import { HttpException, HttpStatus } from "@nestjs/common";
+import { InfoTrip, Objects } from "../object.entity";
+import { PLATFORM } from "@prisma/client";
+import { HttpService } from "@nestjs/axios";
 
 const actorId = process.env.ACTOR_ID_APIFY_TRIP_INFO;
 const api_token = process.env.API_TOKEN_APIFY;
@@ -16,21 +16,21 @@ const extractDataTrip = async (
   const response = await httpService.axiosRef.post(
     `https://api.apify.com/v2/actor-tasks/${actorId}/run-sync-get-dataset-items?token=${api_token}`,
     {
-      currency: 'USD',
+      currency: "USD",
       includeAttractions: false,
       includeHotels: true,
       includePriceOffers: false,
       includeRestaurants: false,
       includeTags: true,
       includeVacationRentals: false,
-      language: 'en',
+      language: "en",
       startUrls: [
         {
           url,
         },
       ],
-      checkInDate: '',
-      checkOutDate: '',
+      checkInDate: "",
+      checkOutDate: "",
     },
   );
 

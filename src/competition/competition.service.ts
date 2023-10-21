@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import {
   PLATFORM,
   PLATFORM_RESPONSE,
@@ -9,31 +9,31 @@ import {
   tbHotel,
   tbObject,
   tbReview,
-} from '@prisma/client';
-import { DataList, PagingDefault } from 'src/app.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+} from "@prisma/client";
+import { DataList, PagingDefault } from "src/app.dto";
+import { PrismaService } from "src/prisma/prisma.service";
 import {
   QueryAllCompetition,
   QueryCompetition,
   UpdateExtraCompetition,
-} from './competition.dto';
-import _, { forInRight } from 'lodash';
-import * as moment from 'moment-timezone';
-import { NewReview, Review, ReviewGoogle } from 'src/review/review.entity';
-import { ReviewService } from 'src/review/review.service';
-import { ObjectService } from 'src/object/object.service';
-import { Cron } from '@nestjs/schedule';
-import { NewObjectLog } from 'src/object/object.entity';
+} from "./competition.dto";
+import _, { forInRight } from "lodash";
+import * as moment from "moment-timezone";
+import { NewReview, Review, ReviewGoogle } from "src/review/review.entity";
+import { ReviewService } from "src/review/review.service";
+import { ObjectService } from "src/object/object.service";
+import { Cron } from "@nestjs/schedule";
+import { NewObjectLog } from "src/object/object.entity";
 import {
   formatReview,
   getNumberReviewHighAll,
   getSummaryReviewInMonth,
-} from './utils';
-import { getTopHotelForTrip } from './utils/competition';
-import { HttpService } from '@nestjs/axios';
-import extractReviewGoogle from 'src/review/utils/google';
+} from "./utils";
+import { getTopHotelForTrip } from "./utils/competition";
+import { HttpService } from "@nestjs/axios";
+import extractReviewGoogle from "src/review/utils/google";
 
-moment.tz.setDefault('Asia/Ho_Chi_Minh');
+moment.tz.setDefault("Asia/Ho_Chi_Minh");
 
 const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
 
@@ -45,7 +45,7 @@ export class CompetitionService {
     private objectService: ObjectService,
     private readonly httpService: HttpService,
   ) {
-    console.log('init competition service');
+    console.log("init competition service");
   }
 
   async updateExtra(data: UpdateExtraCompetition) {
@@ -61,7 +61,7 @@ export class CompetitionService {
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
-          detail: 'Không cập nhật thành công',
+          detail: "Không cập nhật thành công",
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -122,7 +122,7 @@ export class CompetitionService {
       },
     });
     if (query.platform === PLATFORM.TRIP) {
-      result = result.sort((a, b) => a.extra['rank'] - b.extra['rank']);
+      result = result.sort((a, b) => a.extra["rank"] - b.extra["rank"]);
     }
     if (query.platform === PLATFORM.BOOKING) {
       result = result.sort((a, b) => b.score - a.score);
@@ -132,12 +132,12 @@ export class CompetitionService {
 
   @Cron(cronjobCrawlReviewEnv)
   async updateCompetition(): Promise<any> {
-    const currentMonth = moment().get('month') + 1;
+    const currentMonth = moment().get("month") + 1;
     // const currentMonth = 8;
-    const currentYear = moment().get('year');
+    const currentYear = moment().get("year");
 
     const startCrawl = moment();
-    console.log('Start crawl');
+    console.log("Start crawl");
 
     // ONLY FOR COMPETITION BOOKING
     // const hotelBEnemyBooking = await this.prismaService.tbHotel.findMany({
@@ -173,13 +173,13 @@ export class CompetitionService {
     // ONLY FOR COMPETITION TRIP
 
     // Get thông tin
-    console.log('Get thông tin chung');
+    console.log("Get thông tin chung");
     const newObjectLogs: NewObjectLog[] =
       await this.objectService.crawlSchedule();
 
     // Cập nhật message cho objectLog
     let count = 0;
-    console.log('Update rank trip');
+    console.log("Update rank trip");
     for (let i = 0; i < newObjectLogs.length; i++) {
       const objectLog = newObjectLogs[i];
 
@@ -191,10 +191,10 @@ export class CompetitionService {
       // );
 
       if (objectLog.platform === PLATFORM.TRIP) {
-        console.log('Update rank trip', objectLog.url);
+        console.log("Update rank trip", objectLog.url);
         for (let j = 0; j < urlTopHotel.length; j++) {
           if (objectLog.url === urlTopHotel[j]) {
-            console.log('Found url', objectLog.name);
+            console.log("Found url", objectLog.name);
             newObjectLogs[i] = {
               ...newObjectLogs[i],
               extra: {
@@ -226,9 +226,9 @@ export class CompetitionService {
         }
       }
     }
-    console.log('Updated rank for', count, 'hotels');
+    console.log("Updated rank for", count, "hotels");
 
-    console.log('Get review trên CSDL');
+    console.log("Get review trên CSDL");
     const listHotels = await this.prismaService.tbHotel.findMany();
     let oldReview: NewReview = {};
     for (let i = 0; i < listHotels.length; i++) {
@@ -271,14 +271,14 @@ export class CompetitionService {
       };
     }
 
-    console.log('Crawl review');
+    console.log("Crawl review");
     const { newReview } = await this.reviewService.crawlSchedule(
       true,
       currentMonth,
       currentYear,
     );
 
-    console.log('Update message and send noti. Only for hotel ally');
+    console.log("Update message and send noti. Only for hotel ally");
     // dev check thay đổi review
     // const newObjectLogs = await this.prismaService.tbObject.findMany();
     // let res: any = {};
@@ -308,24 +308,24 @@ export class CompetitionService {
       //   };
       // }
       // dev
-      console.log('Cập nhật message thay đổi review');
+      console.log("Cập nhật message thay đổi review");
       // Kiểm tra xem có review nào bị xoá không
       console.log(
-        'Kiểm tra xem có rv bị xoá',
+        "Kiểm tra xem có rv bị xoá",
         hotelByObjectLog.name,
         objectLog.platform,
       );
       for (let i = 0; i < listOld.length; i++) {
         let flag = false;
         for (let j = 0; j < listNew.length; j++) {
-          if (listNew[j].extra['reviewId'] === listOld[i].extra['reviewId']) {
+          if (listNew[j].extra["reviewId"] === listOld[i].extra["reviewId"]) {
             flag = true;
           }
         }
         if (!flag) {
-          const messageReview = formatReview(listOld[i], 'remove');
-          if (messageReview !== '') {
-            console.log(messageReview, 'messageReview remove');
+          const messageReview = formatReview(listOld[i], "remove");
+          if (messageReview !== "") {
+            console.log(messageReview, "messageReview remove");
             objectLog = {
               ...objectLog,
               messages: objectLog.messages.concat(messageReview),
@@ -334,21 +334,21 @@ export class CompetitionService {
         }
       }
       console.log(
-        'Kiểm tra xem có rv thêm mới',
+        "Kiểm tra xem có rv thêm mới",
         hotelByObjectLog.name,
         objectLog.platform,
       );
       for (let i = 0; i < listNew.length; i++) {
         let flag = false;
         for (let j = 0; j < listOld.length; j++) {
-          if (listNew[i].extra['reviewId'] === listOld[j].extra['reviewId']) {
+          if (listNew[i].extra["reviewId"] === listOld[j].extra["reviewId"]) {
             flag = true;
           }
         }
         if (!flag) {
-          const messageReview = formatReview(listNew[i], 'add');
-          if (messageReview !== '') {
-            console.log(messageReview, 'messageReview add');
+          const messageReview = formatReview(listNew[i], "add");
+          if (messageReview !== "") {
+            console.log(messageReview, "messageReview add");
             objectLog = {
               ...objectLog,
               messages: objectLog.messages.concat(messageReview),
@@ -357,18 +357,18 @@ export class CompetitionService {
         }
       }
 
-      console.log('Send noti');
+      console.log("Send noti");
       if (objectLog.messages.length > 0) {
-        let title = '';
+        let title = "";
         if (objectLog.platform === PLATFORM.TRIP) {
-          title = 'Kênh OTA: Tripadvisor\nKhách sạn ' + objectLog.name + '\n';
+          title = "Kênh OTA: Tripadvisor\nKhách sạn " + objectLog.name + "\n";
         }
         if (objectLog.platform === PLATFORM.BOOKING) {
-          title = 'Kênh OTA: Booking\nKhách sạn ' + objectLog.name + '\n';
+          title = "Kênh OTA: Booking\nKhách sạn " + objectLog.name + "\n";
         }
         if (objectLog.platform === PLATFORM.GOOGLE) {
           title =
-            'Kênh OTA: Google Reviews\nKhách sạn ' + objectLog.name + '\n';
+            "Kênh OTA: Google Reviews\nKhách sạn " + objectLog.name + "\n";
         }
         this.objectService.sendNoti(
           objectLog.messages,
@@ -382,7 +382,7 @@ export class CompetitionService {
 
     // return res;
 
-    console.log('Calc reivew in month');
+    console.log("Calc reivew in month");
     for (let i = 0; i < newObjectLogs.length; i++) {
       const objectLog = newObjectLogs[i];
       if (
@@ -404,24 +404,24 @@ export class CompetitionService {
         currentYear,
       );
 
-      const currentDayInMont = moment().get('date');
+      const currentDayInMont = moment().get("date");
       let reviewHigh = [],
         reviewBad = [];
-      console.log('Calc reivew high in month');
+      console.log("Calc reivew high in month");
       for (let i = 1; i <= currentDayInMont; i++) {
         let sum = 0;
         reviewHighInMonth.map((review) => {
-          if (moment(review.createdAt).get('date') === i) {
+          if (moment(review.createdAt).get("date") === i) {
             sum += 1;
           }
         });
         reviewHigh = reviewHigh.concat(sum);
       }
-      console.log('Calc reivew bad in month');
+      console.log("Calc reivew bad in month");
       for (let i = 1; i <= currentDayInMont; i++) {
         let sum = 0;
         reviewBadInMonth.map((review) => {
-          if (moment(review.createdAt).get('date') === i) {
+          if (moment(review.createdAt).get("date") === i) {
             sum += 1;
           }
         });
@@ -429,7 +429,7 @@ export class CompetitionService {
       }
 
       // Cập nhật thông tin so sánh khách sạn
-      console.log('Update competition hotel');
+      console.log("Update competition hotel");
       const originCompetition =
         await this.prismaService.tbCompetition.findFirst({
           where: {
@@ -457,12 +457,12 @@ export class CompetitionService {
                 ...(originCompetition.extra as Prisma.JsonObject),
               }),
             ...(objectLog.platform === PLATFORM.TRIP && {
-              rank: objectLog.extra['rank'],
-              totalHotel: objectLog.extra['totalHotel'],
+              rank: objectLog.extra["rank"],
+              totalHotel: objectLog.extra["totalHotel"],
             }),
             ...(objectLog.platform === PLATFORM.BOOKING && {
-              subScore: objectLog.extra['subScore'],
-              stars: objectLog.extra['stars'],
+              subScore: objectLog.extra["subScore"],
+              stars: objectLog.extra["stars"],
             }),
           },
           numberReviewHighAll: objectLog.numberScoreReview[0],
@@ -484,12 +484,12 @@ export class CompetitionService {
                 ...(originCompetition.extra as Prisma.JsonObject),
               }),
             ...(objectLog.platform === PLATFORM.TRIP && {
-              rank: objectLog.extra['rank'],
-              totalHotel: objectLog.extra['totalHotel'],
+              rank: objectLog.extra["rank"],
+              totalHotel: objectLog.extra["totalHotel"],
             }),
             ...(objectLog.platform === PLATFORM.BOOKING && {
-              subScore: objectLog.extra['subScore'],
-              stars: objectLog.extra['stars'],
+              subScore: objectLog.extra["subScore"],
+              stars: objectLog.extra["stars"],
             }),
           },
           numberReviewHighAll: objectLog.numberScoreReview[0],
@@ -505,7 +505,7 @@ export class CompetitionService {
       });
     }
 
-    console.log('Crawl hotel, review done!!', startCrawl.fromNow());
+    console.log("Crawl hotel, review done!!", startCrawl.fromNow());
     return {};
   }
 }

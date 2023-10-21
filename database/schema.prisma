@@ -7,6 +7,14 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model tbCompany {
+  id            String          @id @default(uuid())
+  name String
+  address String
+  avatar String
+  links String
+}
+
 model tbHotel {
   id            String          @id @default(uuid())
   name          String
@@ -32,6 +40,8 @@ model tbStaff {
   otherNames      String[]
   fiveStarsReview Json
   tbStaffLog      tbStaffLog[]
+  point Int?
+  staffId String?
 }
 
 model tbStaffLog {
@@ -159,4 +169,32 @@ model tbCompetition {
   tbHotelId           String
 
   @@id([month, year, tbHotelId, platform])
+}
+
+
+model tbStaffLevel {
+  id  String @id @default(uuid())
+  threshHolePoint Int
+  levelName String 
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+model tbPointHistory {
+  id  String @id @default(uuid())
+  staffId String
+  point Int
+  createdAt DateTime
+  updatedBy String
+  updatedAt DateTime
+}
+
+model tbUser {
+  id  String @id @default(uuid())
+  staffId String
+  username String 
+  password String
+  enabled Boolean
+  updatedAt DateTime 
+  createdAt DateTime
 }

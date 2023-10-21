@@ -1,4 +1,4 @@
-import { PLATFORM, Prisma, tbObjectLog } from '@prisma/client';
+import { PLATFORM, Prisma, tbObjectLog } from "@prisma/client";
 
 export interface Objects {
   name: string;

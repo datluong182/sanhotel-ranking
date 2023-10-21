@@ -1,7 +1,7 @@
-import { PrismaService } from 'src/prisma/prisma.service';
-import { QueryRankByDayStaff } from '../staff.dto';
-import { checkExist, checkExistMoreThanOne } from '../staff.service';
-import { PLATFORM, tbReview, tbStaff } from '@prisma/client';
+import { PrismaService } from "src/prisma/prisma.service";
+import { QueryRankByDayStaff } from "../staff.dto";
+import { checkExist, checkExistMoreThanOne } from "../staff.service";
+import { PLATFORM, tbReview, tbStaff } from "@prisma/client";
 
 export const reviewsByDayStaff = async (
   prismaService: PrismaService,
@@ -12,7 +12,7 @@ export const reviewsByDayStaff = async (
       id: query.tbStaffId,
     },
   });
-  console.log(staff, 'debugger;');
+  console.log(staff, "debugger;");
 
   const listStaffs = await prismaService.tbStaff.findMany({
     where: {
@@ -37,7 +37,7 @@ export const reviewsByDayStaff = async (
       ],
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: "desc",
     },
     include: {
       tbHotel: true,
@@ -50,16 +50,16 @@ export const reviewsByDayStaff = async (
     review.content.map((text) => {
       const staffs: tbStaff[] = checkExistMoreThanOne(text, listStaffs);
       if (staffs.length === 1 && staffs[0].id === staff.id) {
-        if (query.platform === PLATFORM.TRIP && review.extra['stars'] === 5) {
+        if (query.platform === PLATFORM.TRIP && review.extra["stars"] === 5) {
           checked = true;
         }
         if (
           query.platform === PLATFORM.BOOKING &&
-          review.extra['score'] >= 9.0
+          review.extra["score"] >= 9.0
         ) {
           checked = true;
         }
-        if (query.platform === PLATFORM.GOOGLE && review.extra['score'] === 5) {
+        if (query.platform === PLATFORM.GOOGLE && review.extra["score"] === 5) {
           checked = true;
         }
       }

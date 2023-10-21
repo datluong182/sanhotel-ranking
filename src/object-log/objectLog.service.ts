@@ -1,16 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { PLATFORM, Prisma, tbObjectLog } from '@prisma/client';
-import { DataList, Paging } from 'src/app.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { GetNewsfeedByTime, GetObjectLogByTime } from './objectLog.dto';
-import * as moment from 'moment-timezone';
+import { Injectable } from "@nestjs/common";
+import { PLATFORM, Prisma, tbObjectLog } from "@prisma/client";
+import { DataList, Paging } from "src/app.dto";
+import { PrismaService } from "src/prisma/prisma.service";
+import { GetNewsfeedByTime, GetObjectLogByTime } from "./objectLog.dto";
+import * as moment from "moment-timezone";
 
-moment.tz.setDefault('Asia/Ho_Chi_Minh');
+moment.tz.setDefault("Asia/Ho_Chi_Minh");
 
 @Injectable()
 export class ObjectLogService {
   constructor(private prismaService: PrismaService) {
-    console.log('init object log service');
+    console.log("init object log service");
   }
 
   async getAllObjectLog(
@@ -68,7 +68,7 @@ export class ObjectLogService {
     // );
 
     let result: tbObjectLog[];
-    if (query.platform === 'TRIP') {
+    if (query.platform === "TRIP") {
       result = await this.prismaService.$queryRaw`
         SELECT DISTINCT ON (DATE("updatedAt"), "url")
               *
@@ -81,7 +81,7 @@ export class ObjectLogService {
         ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
       `;
     }
-    if (query.platform === 'BOOKING') {
+    if (query.platform === "BOOKING") {
       result = await this.prismaService.$queryRaw`
         SELECT DISTINCT ON (DATE("updatedAt"), "url")
               *
@@ -95,7 +95,7 @@ export class ObjectLogService {
       `;
     }
 
-    if (query.platform === 'GOOGLE') {
+    if (query.platform === "GOOGLE") {
       result = await this.prismaService.$queryRaw`
         SELECT DISTINCT ON (DATE("updatedAt"), "url")
               *
@@ -154,7 +154,7 @@ export class ObjectLogService {
         isManual: true,
       },
       orderBy: {
-        updatedAt: 'desc',
+        updatedAt: "desc",
       },
     });
     const data = await this.prismaService.tbObjectLog.findMany({
@@ -195,7 +195,7 @@ export class ObjectLogService {
       skip: parseInt(query.page) * parseInt(query.limit),
       take: parseInt(query.limit),
       orderBy: {
-        updatedAt: 'desc',
+        updatedAt: "desc",
       },
     });
     return {

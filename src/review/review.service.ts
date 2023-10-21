@@ -1,30 +1,30 @@
-import { Injectable } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
+import { Cron } from "@nestjs/schedule";
+import { HttpException, HttpStatus } from "@nestjs/common";
 import {
   PLATFORM,
   tbHotel,
   tbLastUpdateReview,
   tbReview,
-} from '@prisma/client';
-import { DataList, Paging } from 'src/app.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Builder, Capabilities } from 'selenium-webdriver';
-import { Options } from 'selenium-webdriver/chrome';
-import { seleniumUrl } from 'src/utils';
+} from "@prisma/client";
+import { DataList, Paging } from "src/app.dto";
+import { PrismaService } from "src/prisma/prisma.service";
+import { Builder, Capabilities } from "selenium-webdriver";
+import { Options } from "selenium-webdriver/chrome";
+import { seleniumUrl } from "src/utils";
 import {
   NewReview,
   ReviewBooking,
   ReviewGoogle,
   ReviewTrip,
-} from './review.entity';
-import extractReviewTrip from './utils/trip';
-import extractReviewBooking from './utils/booking';
-import extractReviewGoogle from './utils/google';
-import * as moment from 'moment-timezone';
-import { HttpService } from '@nestjs/axios';
+} from "./review.entity";
+import extractReviewTrip from "./utils/trip";
+import extractReviewBooking from "./utils/booking";
+import extractReviewGoogle from "./utils/google";
+import * as moment from "moment-timezone";
+import { HttpService } from "@nestjs/axios";
 
-moment.tz.setDefault('Asia/Ho_Chi_Minh');
+moment.tz.setDefault("Asia/Ho_Chi_Minh");
 
 const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
 
@@ -34,13 +34,13 @@ export class ReviewService {
     private prismaService: PrismaService,
     private readonly httpService: HttpService,
   ) {
-    console.log('init review service');
+    console.log("init review service");
   }
 
   async getLastUpdatedReview(): Promise<tbLastUpdateReview> {
     return await this.prismaService.tbLastUpdateReview.findFirst({
       orderBy: {
-        updatedAt: 'desc',
+        updatedAt: "desc",
       },
     });
   }
@@ -71,8 +71,8 @@ export class ReviewService {
   // @Cron(cronjobCrawlReviewEnv)
   async crawlSchedule(
     isManual = true,
-    currentMonth = moment().get('month') + 1,
-    currentYear = moment().get('year'),
+    currentMonth = moment().get("month") + 1,
+    currentYear = moment().get("year"),
   ): Promise<{ newReview: NewReview; month: number; year: number }> {
     let result: NewReview = {};
 
@@ -103,10 +103,10 @@ export class ReviewService {
         result[hotel.id].TRIP.length,
         result[hotel.id].BOOKING.length,
         result[hotel.id].GOOGLE.length,
-        'Done hotel',
+        "Done hotel",
       );
     }
-    console.log('Done crawl all hotel');
+    console.log("Done crawl all hotel");
 
     // const temp: NewReview = await this.crawlHotel(listHotels[0]);
 
@@ -215,7 +215,7 @@ export class ReviewService {
     currentMonth: number,
     currentYear: number,
   ): Promise<NewReview> {
-    console.log('Start firefox');
+    console.log("Start firefox");
     const newReviewHotel: NewReview = {
       [hotel.id]: {
         TRIP: [],
@@ -229,17 +229,17 @@ export class ReviewService {
     };
     let driver;
     try {
-      const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
+      const timezone = "Asia/Ho_Chi_Minh"; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
-      capabilities.set('tz', timezone);
-      capabilities.set('moz:firefoxOptions', {
-        args: ['--headless'],
+      capabilities.set("tz", timezone);
+      capabilities.set("moz:firefoxOptions", {
+        args: ["--headless"],
       });
       // capabilities.set('browserName', 'firefox');
 
       driver = await new Builder()
         .usingServer(seleniumUrl)
-        .forBrowser('firefox')
+        .forBrowser("firefox")
         .withCapabilities(capabilities)
         .build();
 
@@ -288,10 +288,10 @@ export class ReviewService {
       // dev
 
       try {
-        console.log('Start review TRIP');
+        console.log("Start review TRIP");
         // crawl review trip
         await driver.get(hotel.links[PLATFORM.TRIP]);
-        console.log(hotel.links[PLATFORM.TRIP], 'Trip');
+        console.log(hotel.links[PLATFORM.TRIP], "Trip");
         const reviewsTrip: ReviewTrip[] = await extractReviewTrip(
           driver,
           hotel.links[PLATFORM.TRIP],
@@ -306,17 +306,17 @@ export class ReviewService {
           },
         });
       } catch (e) {
-        console.log('Lỗi crawl review trip');
+        console.log("Lỗi crawl review trip");
       }
 
       try {
-        console.log('Start review BOOKING', hotel.links[PLATFORM.BOOKING]);
+        console.log("Start review BOOKING", hotel.links[PLATFORM.BOOKING]);
         // crawl review booking
         // convert url hotel booking to review hotel booking
         let urlBooking: string = hotel.links[PLATFORM.BOOKING];
-        urlBooking = urlBooking.split('https://www.booking.com/hotel/vn/')?.[1];
-        const pagename = urlBooking.split('.')?.[0];
-        console.log(hotel.links[PLATFORM.BOOKING], 'Booking');
+        urlBooking = urlBooking.split("https://www.booking.com/hotel/vn/")?.[1];
+        const pagename = urlBooking.split(".")?.[0];
+        console.log(hotel.links[PLATFORM.BOOKING], "Booking");
         const reviewsBooking: ReviewBooking[] = await extractReviewBooking(
           driver,
           pagename,
@@ -331,14 +331,14 @@ export class ReviewService {
           },
         });
       } catch (e) {
-        console.log('Lỗi crawl review trip');
+        console.log("Lỗi crawl review trip");
       }
 
       try {
-        console.log('Start review GOOGLE');
+        console.log("Start review GOOGLE");
         await driver.get(hotel.links[PLATFORM.GOOGLE]);
 
-        console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
+        console.log(hotel.links[PLATFORM.GOOGLE], "Google");
         const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
           driver,
           this.httpService,
@@ -355,7 +355,7 @@ export class ReviewService {
           },
         });
       } catch (e) {
-        console.log('Lỗi crawl review trip');
+        console.log("Lỗi crawl review trip");
       }
 
       // save new data
@@ -396,7 +396,7 @@ export class ReviewService {
         })),
       });
     } catch (e) {
-      console.log(e, 'error');
+      console.log(e, "error");
     }
     await driver.quit();
     return newReviewHotel;

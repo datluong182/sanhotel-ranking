@@ -1,16 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { PLATFORM } from '@prisma/client';
+import { ApiProperty } from "@nestjs/swagger";
+import { PLATFORM } from "@prisma/client";
 
 export class CreateObject {
   @ApiProperty({
     required: true,
     default:
-      'https://www.tripadvisor.com/Hotel_Review-g293924-d15662004-Reviews-San_Grand_Hotel-Hanoi.html',
+      "https://www.tripadvisor.com/Hotel_Review-g293924-d15662004-Reviews-San_Grand_Hotel-Hanoi.html",
   })
   url: string;
   @ApiProperty({
     required: true,
-    default: 'TRIP',
+    default: "TRIP",
   })
   platform: PLATFORM;
   @ApiProperty({
@@ -45,7 +45,7 @@ export class UpdateManyObjectResponse {
 export class GetLastUpdate {
   @ApiProperty({
     required: true,
-    default: 'TRIP',
+    default: "TRIP",
   })
   platform: PLATFORM;
 }
@@ -53,13 +53,13 @@ export class GetLastUpdate {
 export class CreateLastUpdate {
   @ApiProperty({
     required: true,
-    default: '2023-07-31 23:00:00',
+    default: "2023-07-31 23:00:00",
   })
   date: string;
 
   @ApiProperty({
     required: true,
-    default: 'TRIP',
+    default: "TRIP",
   })
   platform: PLATFORM;
 
@@ -74,7 +74,7 @@ export class UpdateObjectByUrl {
   @ApiProperty({
     required: true,
     default:
-      'https://www.tripadvisor.com/Hotel_Review-g293924-d15662004-Reviews-San_Grand_Hotel-Hanoi.html',
+      "https://www.tripadvisor.com/Hotel_Review-g293924-d15662004-Reviews-San_Grand_Hotel-Hanoi.html",
   })
   url: string;
 
@@ -108,7 +108,7 @@ export class UpdateObjectByUrl {
 
   @ApiProperty({
     required: true,
-    default: 'TRIP',
+    default: "TRIP",
   })
   platform: PLATFORM;
 }
