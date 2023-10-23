@@ -19,7 +19,7 @@ moment.tz.setDefault('Asia/Ho_Chi_Minh');
 export class HotelService {
   constructor(
     private prismaService: PrismaService,
-    private objectLogService: ObjectLogService,
+    private objectLogService: ObjectLogService
   ) {
     console.log('init object service');
   }
@@ -28,6 +28,7 @@ export class HotelService {
     return await this.prismaService.tbHotel.create({
       data: {
         ...data,
+        disable: false,
       },
     });
   }
@@ -107,7 +108,7 @@ export class HotelService {
   // }
 
   async getChartFiveStars(
-    query: QueryFiveStars,
+    query: QueryFiveStars
   ): Promise<{ dataDate: string[]; data: { name: string; data: number[] }[] }> {
     const listHotels = await this.prismaService.tbHotel.findMany({
       where: {
@@ -127,7 +128,7 @@ export class HotelService {
         break;
       }
       dataDate.push(
-        moment(start, 'YYYY-MM-DD').add(count, 'day').format('YYYY-MM-DD'),
+        moment(start, 'YYYY-MM-DD').add(count, 'day').format('YYYY-MM-DD')
       );
       count++;
     }
@@ -175,55 +176,55 @@ export class HotelService {
               .set({ h: 0, m: 0, s: 0 })
               .isSame(
                 moment(date, 'YYYY-MM-DD').set({ h: 0, m: 0, s: 0 }),
-                'day',
+                'day'
               )
           );
         });
 
         if (query.platform === PLATFORM.TRIP) {
           const listTrip = tempListReview.filter(
-            (item) => item.extra['stars'] === 5,
+            (item) => item.extra['stars'] === 5
           );
           item.data.push(listTrip.length);
         }
 
         if (query.platform === PLATFORM.BOOKING) {
           const listBooking = tempListReview.filter(
-            (item) => item.extra['score'] >= 9.0,
+            (item) => item.extra['score'] >= 9.0
           );
           item.data.push(listBooking.length);
         }
 
         if (query.platform === PLATFORM.GOOGLE) {
           const listGoogle = tempListReview.filter(
-            (item) => item.extra['score'] === 5,
+            (item) => item.extra['score'] === 5
           );
           item.data.push(listGoogle.length);
         }
 
         if (query.platform === PLATFORM.AGODA) {
           const listAgoda = tempListReview.filter(
-            (item) => item.extra['score'] >= 9.0,
+            (item) => item.extra['score'] >= 9.0
           );
           item.data.push(listAgoda.length);
         }
 
         if (query.platform === PLATFORM.EXPEDIA) {
           const listExpedia = tempListReview.filter(
-            (item) => item.extra['score'] >= 9.0,
+            (item) => item.extra['score'] >= 9.0
           );
           item.data.push(listExpedia.length);
         }
 
         if (query.platform === PLATFORM.TRAVELOKA) {
           const listTraveloka = tempListReview.filter(
-            (item) => item.extra['score'] >= 9.0,
+            (item) => item.extra['score'] >= 9.0
           );
           item.data.push(listTraveloka.length);
         }
         if (query.platform === PLATFORM.TRIPCOM) {
           const listTripcom = tempListReview.filter(
-            (item) => item.extra['score'] >= 9.0,
+            (item) => item.extra['score'] >= 9.0
           );
           item.data.push(listTripcom.length);
         }

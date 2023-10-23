@@ -11,7 +11,7 @@ const api_token = process.env.API_TOKEN_APIFY;
 const extractDataTrip = async (
   httpService: HttpService,
   platform: PLATFORM,
-  url: string,
+  url: string
 ): Promise<Objects | undefined> => {
   const response = await httpService.axiosRef.post(
     `https://api.apify.com/v2/actor-tasks/${actorId}/run-sync-get-dataset-items?token=${api_token}`,
@@ -31,7 +31,7 @@ const extractDataTrip = async (
       ],
       checkInDate: '',
       checkOutDate: '',
-    },
+    }
   );
 
   const infoTrip: InfoTrip = response.data?.[0];
@@ -47,6 +47,7 @@ const extractDataTrip = async (
       infoTrip?.ratingHistogram?.count2 ?? 0,
       infoTrip?.ratingHistogram?.count1 ?? 0,
     ],
+    extra: {},
     // extra: {
     //   rank: infoTrip?.rankingPosition,
     //   // totalHotel: totalHotel,
