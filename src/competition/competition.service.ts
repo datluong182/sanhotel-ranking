@@ -14,6 +14,7 @@ import {
 import { DataList, PagingDefault } from 'src/app.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
+  CalCompetitionOTA,
   QueryAllCompetition,
   QueryCompetition,
   QueryCompetitionOTA,
@@ -169,6 +170,7 @@ export class CompetitionService {
       this.objectService,
     );
     console.log(urlTopHotel.length, 'rank trip');
+    return;
     // ONLY FOR COMPETITION TRIP
 
     // Get thông tin
@@ -579,7 +581,7 @@ export class CompetitionService {
 
     console.log('Crawl hotel, review done!!', startCrawl.fromNow());
     console.log('Update competition ota');
-    this.updateCompetitionReviewOta();
+    this.updateCompetitionReviewOta({});
     return {};
   }
 
@@ -629,7 +631,9 @@ export class CompetitionService {
       month: result.month,
       year: result.year,
       extra: {
-        volume: result.extra['volume'].toString(),
+        volume: result.extra['volume']
+          ? result.extra['volume'].toString()
+          : '0',
         checkoutInMonth: result.extra['checkoutInMonth'],
       },
       reviews: result.reviews.map((review) => review.tbReview),
@@ -644,6 +648,8 @@ export class CompetitionService {
         name: hotel.name,
         score: 0,
         ratioInMonth: -1,
+        numberBookingCO: 0,
+        numberReviews: 0,
         OTA: {},
       };
       platforms.map((platform) => {
@@ -664,7 +670,8 @@ export class CompetitionService {
     }
 
     competitionOTA = competitionOTA.map((item) => {
-      const ratioInMonth = getRatioInMonth(item);
+      const { ratioInMonth, numberBookingCO, numberReviews } =
+        getRatioInMonth(item);
       const score = getScoreInMonth(item);
       // if (ratioInMonth >= MIN_RATIO_IN_MONTH) {
       //   score = getScoreInMonth(item);
@@ -673,6 +680,8 @@ export class CompetitionService {
         ...item,
         score,
         ratioInMonth,
+        numberReviews,
+        numberBookingCO,
       };
     });
 
@@ -706,10 +715,14 @@ export class CompetitionService {
     };
   }
 
-  async updateCompetitionReviewOta() {
-    const currentMonth = moment().get('month') + 1;
+  async updateCompetitionReviewOta(data: CalCompetitionOTA) {
+    let currentMonth = moment().get('month') + 1;
     // const currentMonth = 8;
-    const currentYear = moment().get('year');
+    let currentYear = moment().get('year');
+    if (data.month && data.year) {
+      currentMonth = parseInt(data.month);
+      currentYear = parseInt(data.year);
+    }
 
     const objectsAlly = await this.prismaService.tbObject.findMany({
       where: {
@@ -730,6 +743,9 @@ export class CompetitionService {
       const reviews = await getReviewsOtaInMonth(
         this.prismaService,
         objectAlly,
+        false,
+        currentMonth,
+        currentYear,
       );
 
       const totalScore = getScoreByReviewsOtaInMonth(
@@ -740,6 +756,8 @@ export class CompetitionService {
       const origin = await this.prismaService.tbCompetitionOTA.findFirst({
         where: {
           tbObjectId: objectAlly.id,
+          month: currentMonth,
+          year: currentYear,
         },
       });
 

@@ -156,17 +156,18 @@ const extractDataBoooking = async (
   console.log(subScoreWrapperEle.length, 'get subscores');
   let subScore: { [key: string]: number } = {};
   for (let i = 0; i < subScoreWrapperEle.length - 1; i++) {
-    const subScoreEle = await subScoreWrapperEle[i].findElements(
-      By.xpath('./div/div/div/div'),
+    if (i % 2 !== 0) continue;
+    const subScoreEle = await subScoreWrapperEle[i].findElement(
+      By.xpath('./div/div/div[contains(@id, "label")]'),
     );
     const keySubScoreEle = await subScoreWrapperEle[i].findElement(
-      By.xpath('./div/div/div/div/span'),
+      By.xpath('./div/div/div/span'),
     );
 
     subScore = {
       ...subScore,
       [await keySubScoreEle.getText()]: parseFloat(
-        await subScoreEle?.[1]?.getText(),
+        await subScoreEle?.getText(),
       ),
     };
   }

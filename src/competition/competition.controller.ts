@@ -18,6 +18,7 @@ import {
   tbObjectLog,
 } from '@prisma/client';
 import {
+  CalCompetitionOTA,
   QueryAllCompetition,
   QueryCompetition,
   QueryCompetitionOTA,
@@ -46,8 +47,10 @@ export class CompetitionController {
   }
 
   @Put('/ota-review')
-  async updateCompetitionReviewOta(): Promise<void> {
-    await this.competitionService.updateCompetitionReviewOta();
+  async updateCompetitionReviewOta(
+    @Body() data: CalCompetitionOTA,
+  ): Promise<void> {
+    await this.competitionService.updateCompetitionReviewOta(data);
   }
 
   @Put('/ota-review/update-property')

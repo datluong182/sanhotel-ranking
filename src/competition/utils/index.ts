@@ -119,9 +119,14 @@ export const getRatioInMonth = (competitionOTA: CompetitionOTA) => {
     numberReviews += object?.reviews?.length ?? 0;
     numberBookingCO += object?.extra?.checkoutInMonth ?? 0;
   });
-  return numberBookingCO === 0
-    ? -1
-    : parseFloat(numberReviews.toString()) / numberBookingCO;
+  return {
+    ratioInMonth:
+      numberBookingCO === 0
+        ? -1
+        : parseFloat(numberReviews.toString()) / numberBookingCO,
+    numberReviews,
+    numberBookingCO,
+  };
 };
 
 export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {

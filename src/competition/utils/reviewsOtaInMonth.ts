@@ -8,10 +8,12 @@ export const getReviewsOtaInMonth = async (
   prismaService: PrismaService,
   objectOTA: tbObject,
   highReview = false,
+  month: number,
+  year: number,
 ) => {
-  const currentMonth = moment().get('month') + 1;
+  const currentMonth = month;
   // const currentMonth = 8;
-  const currentYear = moment().get('year');
+  const currentYear = year;
   let reviews = await prismaService.tbReview.findMany({
     where: {
       tbHotelId: objectOTA.tbHotelId,
