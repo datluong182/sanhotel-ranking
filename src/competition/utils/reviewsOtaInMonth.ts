@@ -8,10 +8,12 @@ export const getReviewsOtaInMonth = async (
   prismaService: PrismaService,
   objectOTA: tbObject,
   highReview = false,
+  month: number,
+  year: number,
 ) => {
-  const currentMonth = moment().get('month') + 1;
+  const currentMonth = month;
   // const currentMonth = 8;
-  const currentYear = moment().get('year');
+  const currentYear = year;
   let reviews = await prismaService.tbReview.findMany({
     where: {
       tbHotelId: objectOTA.tbHotelId,
@@ -34,7 +36,8 @@ export const getReviewsOtaInMonth = async (
       objectOTA.platform === PLATFORM.AGODA ||
       objectOTA.platform === PLATFORM.EXPEDIA ||
       objectOTA.platform === PLATFORM.TRAVELOKA ||
-      objectOTA.platform === PLATFORM.TRIPCOM) &&
+      objectOTA.platform === PLATFORM.TRIPCOM ||
+      objectOTA.platform === PLATFORM.SANHN) &&
     highReview
   ) {
     reviews = reviews.filter((review) => review.extra['score'] >= 9.0);
@@ -61,7 +64,8 @@ export const getScoreByReviewsOtaInMonth = (
       platform === PLATFORM.AGODA ||
       platform === PLATFORM.EXPEDIA ||
       platform === PLATFORM.TRIPCOM ||
-      platform === PLATFORM.TRAVELOKA
+      platform === PLATFORM.TRAVELOKA ||
+      platform === PLATFORM.SANHN
     ) {
       score += review?.extra?.['score'];
     }

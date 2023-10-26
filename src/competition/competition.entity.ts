@@ -18,5 +18,7 @@ export interface CompetitionOTA {
   name: string;
   score: number;
   ratioInMonth: number;
+  numberReviews: number;
+  numberBookingCO: number;
   OTA: { [key: string]: ObjectOTA };
 }

@@ -158,7 +158,7 @@ const extractDataBoooking = async (
   for (let i = 0; i < subScoreWrapperEle.length - 1; i++) {
     if (i % 2 !== 0) continue;
     const subScoreEle = await subScoreWrapperEle[i].findElement(
-      By.xpath('./div/div/div[contains(@id,"label")]')
+      By.xpath('./div/div/div[contains(@id, "label")]')
     );
     const keySubScoreEle = await subScoreWrapperEle[i].findElement(
       By.xpath('./div/div/div/span')

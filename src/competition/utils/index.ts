@@ -119,9 +119,14 @@ export const getRatioInMonth = (competitionOTA: CompetitionOTA) => {
     numberReviews += object?.reviews?.length ?? 0;
     numberBookingCO += object?.extra?.checkoutInMonth ?? 0;
   });
-  return numberBookingCO === 0
-    ? -1
-    : parseFloat(numberReviews.toString()) / numberBookingCO;
+  return {
+    ratioInMonth:
+      numberBookingCO === 0
+        ? -1
+        : parseFloat(numberReviews.toString()) / numberBookingCO,
+    numberReviews,
+    numberBookingCO,
+  };
 };
 
 export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {
@@ -140,7 +145,8 @@ export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {
       platform === PLATFORM.AGODA ||
       platform === PLATFORM.EXPEDIA ||
       platform === PLATFORM.TRAVELOKA ||
-      platform === PLATFORM.TRIPCOM
+      platform === PLATFORM.TRIPCOM ||
+      platform === PLATFORM.SANHN
     ) {
       isOTA = true;
       numberReviews += object?.reviews?.length ?? 0;

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PLATFORM } from '@prisma/client';
 
 export class QueryCompetition {
@@ -89,6 +89,28 @@ export class QueryCompetitionOTA {
     name: 'year',
   })
   year: string;
+}
+
+export class CompetitionOTA {
+  @ApiProperty({
+    required: true,
+  })
+  id: string;
+  @ApiProperty({
+    name: 'data',
+    type: 'object',
+    default: {},
+  })
+  data: {
+    [key: string]: any;
+  };
+}
+
+export class CalCompetitionOTA {
+  @ApiPropertyOptional({})
+  month?: string;
+  @ApiPropertyOptional({})
+  year?: string;
 }
 
 export class UpdateCompetitionOTA {

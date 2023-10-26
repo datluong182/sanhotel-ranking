@@ -8,6 +8,12 @@ import { GetElement, GetElements, seleniumUrl } from 'src/utils';
 export const urlRankHotel =
   'https://www.tripadvisor.com/Hotels-g293924-zfd9261,21371-a_ufe.true-a_sort.POPULARITY-Hanoi-Hotels.html';
 
+const compareUrlHotel = (urlA: string, urlB: string): boolean => {
+  const hotelIdA = urlA.split('-')?.[2]?.split('d')?.[1];
+  const hotelIdB = urlB.split('-')?.[2]?.split('d')?.[1];
+  return hotelIdA === hotelIdB;
+};
+
 export const getTopHotelForTrip = async (
   prismaService: PrismaService,
   objectService: ObjectService,
@@ -21,27 +27,40 @@ export const getTopHotelForTrip = async (
   let titleHotelEnemy = [];
   let rankHotelEnemy = [];
   try {
+    let lastAllyHotel: tbObject = undefined;
     const objectTrips = await prismaService.tbObject.findMany({
       where: {
         platform: PLATFORM.TRIP,
+        tbHotel: {
+          type: TYPE_HOTEL.ALLY,
+        },
       },
     });
-
-    let lastRankAllyHotel = 0;
-    objectTrips.map((obj) => {
-      if (obj.extra['rank'] > lastRankAllyHotel) {
-        lastRankAllyHotel = obj.extra['rank'];
+    objectTrips.map((object) => {
+      if (
+        !lastAllyHotel ||
+        object.extra['rank'] > lastAllyHotel.extra['rank']
+      ) {
+        lastAllyHotel = object;
       }
     });
-    console.log(lastRankAllyHotel, 'lastRankAllyHotel');
+    console.log(lastAllyHotel.name, 'lastRankAllyHotel');
+
+    // let lastRankAllyHotel = 0;
+    // objectTrips.map((obj) => {
+    // if (obj.extra['rank'] > lastRankAllyHotel) {
+    //   lastRankAllyHotel = obj.extra['rank'];
+    // }
+    // });
+    // console.log(lastRankAllyHotel, 'lastRankAllyHotel');
 
     console.log('Start get top hotel');
     const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
     const capabilities = Capabilities.firefox();
     capabilities.set('tz', timezone);
-    // capabilities.set('moz:firefoxOptions', {
-    //   args: ['--headless'],
-    // });
+    capabilities.set('moz:firefoxOptions', {
+      args: ['--headless'],
+    });
     // const option = new Options().addArguments('--no-proxy-server');
     // .addArguments('--headless=new')
     driver = await new Builder()
@@ -102,15 +121,15 @@ export const getTopHotelForTrip = async (
           ?.split('.')?.[0];
         const name = (await titleEle[i].getText()).split('.')?.[1]?.trim();
 
-        if (parseInt(rank) > lastRankAllyHotel) {
+        const href = await aEle[i].getAttribute('href');
+
+        listUrlHotelEnemy = listUrlHotelEnemy.concat(href);
+        titleHotelEnemy = titleHotelEnemy.concat(name);
+        rankHotelEnemy = rankHotelEnemy.concat(parseInt(rank));
+        if (compareUrlHotel(href, lastAllyHotel.url)) {
           done = true;
           break;
         }
-        listUrlHotelEnemy = listUrlHotelEnemy.concat(
-          await aEle[i].getAttribute('href'),
-        );
-        titleHotelEnemy = titleHotelEnemy.concat(name);
-        rankHotelEnemy = rankHotelEnemy.concat(parseInt(rank));
       }
       if (done) {
         break;
@@ -149,7 +168,7 @@ export const getTopHotelForTrip = async (
     const hotel = hotels[i];
     let flag = false;
     listUrlHotelEnemy.map((url) => {
-      if (url === hotel.links[PLATFORM.TRIP]) {
+      if (compareUrlHotel(url, hotel.links[PLATFORM.TRIP])) {
         flag = true;
       }
     });
@@ -172,7 +191,7 @@ export const getTopHotelForTrip = async (
     let flag = true;
     for (let j = 0; j < hotels.length; j++) {
       const hotel = hotels[j];
-      if (hotel.links[PLATFORM.TRIP] === url) {
+      if (compareUrlHotel(url, hotel.links[PLATFORM.TRIP])) {
         flag = false;
         if (hotel.disable) {
           await prismaService.tbHotel.update({
@@ -183,7 +202,7 @@ export const getTopHotelForTrip = async (
               disable: false,
             },
           });
-          // const objectHotel = await prismaService.tbObject.findFirst()
+          const objectHotel = await prismaService.tbObject.findFirst();
           console.log('Enable hotel', hotel.name, 'again');
         }
       }
