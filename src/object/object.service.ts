@@ -644,9 +644,9 @@ export class ObjectService {
       const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
       capabilities.set('tz', timezone);
-      capabilities.set('moz:firefoxOptions', {
-        args: ['--headless'],
-      });
+      // capabilities.set('moz:firefoxOptions', {
+      //   args: ['--headless'],
+      // });
 
       console.log('start extract');
 
@@ -696,10 +696,18 @@ export class ObjectService {
       }
 
       if (platform === PLATFORM.SANHN) {
+        driver = await new Builder()
+          .usingServer(seleniumUrl)
+          .forBrowser('firefox')
+          .withCapabilities(capabilities)
+          .build();
+
+        console.log(url, 'go to url');
+        await driver.get(url);
         object = await extractDataSanHN(driver, platform, url);
       }
 
-      await driver.quit();
+      if (driver) await driver.quit();
       console.log('crawl done', object);
       // return undefined;
       // if (platform === PLATFORM.TRIP) {
