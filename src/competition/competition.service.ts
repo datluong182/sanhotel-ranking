@@ -170,7 +170,6 @@ export class CompetitionService {
       this.objectService,
     );
     console.log(urlTopHotel.length, 'rank trip');
-    return;
     // ONLY FOR COMPETITION TRIP
 
     // Get thông tin
@@ -300,6 +299,16 @@ export class CompetitionService {
         },
       });
 
+      // Review san hn cũ
+      const listRvSanHN = await this.prismaService.tbReview.findMany({
+        where: {
+          tbHotelId: hotel.id,
+          monthCreated: currentMonth,
+          yearCreated: currentYear,
+          platform: PLATFORM.SANHN,
+        },
+      });
+
       //@ts-ignore
       oldReview = {
         ...oldReview,
@@ -311,6 +320,7 @@ export class CompetitionService {
           EXPEDIA: listRvExpedia,
           TRAVELOKA: listRvTraveloka,
           TRIPCOM: listRvTripcom,
+          SANHN: listRvSanHN,
         },
       };
     }
@@ -443,6 +453,9 @@ export class CompetitionService {
         }
         if (objectLog.platform === PLATFORM.TRIPCOM) {
           title = 'Kênh OTA: Trip.com\nKhách sạn ' + objectLog.name + '\n';
+        }
+        if (objectLog.platform === PLATFORM.SANHN) {
+          title = 'Kênh OTA: San HN\nKhách sạn ' + objectLog.name + '\n';
         }
 
         this.objectService.sendNoti(

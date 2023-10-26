@@ -145,7 +145,8 @@ export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {
       platform === PLATFORM.AGODA ||
       platform === PLATFORM.EXPEDIA ||
       platform === PLATFORM.TRAVELOKA ||
-      platform === PLATFORM.TRIPCOM
+      platform === PLATFORM.TRIPCOM ||
+      platform === PLATFORM.SANHN
     ) {
       isOTA = true;
       numberReviews += object?.reviews?.length ?? 0;

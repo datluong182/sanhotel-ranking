@@ -18,6 +18,7 @@ import {
   ReviewBooking,
   ReviewExpedia,
   ReviewGoogle,
+  ReviewSanHN,
   ReviewTraveloka,
   ReviewTrip,
   ReviewTripcom,
@@ -117,6 +118,7 @@ export class ReviewService {
         result[hotel.id].EXPEDIA.length,
         result[hotel.id].TRAVELOKA.length,
         result[hotel.id].TRIPCOM.length,
+        result[hotel.id].SANHN.length,
         'Done hotel',
       );
     }
@@ -151,6 +153,7 @@ export class ReviewService {
         EXPEDIA: [],
         TRAVELOKA: [],
         TRIPCOM: [],
+        SANHN: [],
       },
     };
     const screen = {
@@ -457,6 +460,54 @@ export class ReviewService {
           });
         } catch (e) {
           console.log(e, 'Lỗi crawl review trip.com');
+        }
+      }
+
+      if (hotel.links[PLATFORM.SANHN]) {
+        try {
+          driver = await new Builder()
+            .usingServer(seleniumUrl)
+            .forBrowser('firefox')
+            .withCapabilities(capabilities)
+            .build();
+
+          console.log('Start review SANHN', hotel.links[PLATFORM.SANHN]);
+          // crawl review booking
+          // convert url hotel booking to review hotel booking
+          let urlSanHN: string = hotel.links[PLATFORM.SANHN];
+          urlSanHN = urlSanHN.split('https://www.booking.com/hotel/vn/')?.[1];
+          const pagename = urlSanHN.split('.')?.[0];
+          console.log(hotel.links[PLATFORM.SANHN], 'SanHN');
+          const reviewsSanHN: ReviewSanHN[] = await extractReviewBooking(
+            driver,
+            pagename,
+          );
+          newReviewHotel[hotel.id].SANHN = reviewsSanHN;
+          await this.prismaService.tbReview.deleteMany({
+            where: {
+              tbHotelId: hotel.id,
+              platform: PLATFORM.SANHN,
+              monthCreated: currentMonth,
+              yearCreated: currentYear,
+            },
+          });
+          await this.prismaService.tbReview.createMany({
+            data: newReviewHotel[hotel.id].SANHN.map((item) => ({
+              ...item,
+              extra: {
+                score: item.extra.score,
+                reviewId: item.extra.reviewId,
+                link: item.extra.link,
+              },
+              platform: PLATFORM.SANHN,
+              tbHotelId: hotel.id,
+            })),
+          });
+        } catch (e) {
+          console.log(e, 'Lỗi crawl review SanHn');
+        } finally {
+          await driver.quit();
+          await sleep(1000);
         }
       }
     } catch (e) {

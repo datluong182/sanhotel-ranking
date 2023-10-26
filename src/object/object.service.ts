@@ -22,6 +22,7 @@ import extractDataAgoda from './utils/agoda';
 import extractDataExpedia from './utils/expedia';
 import extractDataTraveloka from './utils/traveloka';
 import extractDataTripcom from './utils/tripcom';
+import extractDataSanHN from './utils/sanhn';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -176,6 +177,12 @@ export class ObjectService {
         query.page,
       )} LIMIT ${parseInt(query.limit)}`;
     }
+    if (query.platform === 'SANHN') {
+      data = await this.prismaService
+        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'SANHN' ORDER BY score desc OFFSET ${parseInt(
+        query.page,
+      )} LIMIT ${parseInt(query.limit)}`;
+    }
 
     return {
       count,
@@ -282,6 +289,24 @@ export class ObjectService {
             } đánh giá`,
           );
         }
+        if (origin.platform === PLATFORM.SANHN) {
+          messsages = messsages.concat(
+            `${i === 0 ? 'G' : 'B'}.Số lượng đánh giá ${
+              i === 0
+                ? '9+'
+                : i === 1
+                ? '7-9'
+                : i === 2
+                ? '5-7'
+                : i === 3
+                ? '3-5'
+                : '1-3'
+            }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
+              newData.numberScoreReview[i]
+            } đánh giá`,
+          );
+        }
+
         if (origin.platform === PLATFORM.GOOGLE) {
           messsages = messsages.concat(
             `${5 - i === 5 ? 'G' : 'B'}.Số lượng đánh giá ${
@@ -402,6 +427,7 @@ export class ObjectService {
       EXPEDIA: 'Expedia',
       TRAVELOKA: 'Traveloka',
       TRIPCOM: 'Trip.com',
+      SANHN: 'San HN',
     };
     let notification_text = title + 'Đã có những thay đổi:\n';
     messages.map((message) => {
@@ -604,6 +630,11 @@ export class ObjectService {
       PLATFORM.TRIPCOM,
       isManual,
     );
+    await this.createLastUpdate(
+      moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
+      PLATFORM.SANHN,
+      isManual,
+    );
 
     return result;
   }
@@ -660,6 +691,10 @@ export class ObjectService {
 
       if (platform === PLATFORM.TRIPCOM) {
         object = await extractDataTripcom(platform, this.httpService, url);
+      }
+
+      if (platform === PLATFORM.SANHN) {
+        object = await extractDataSanHN(driver, platform, url);
       }
 
       await driver.quit();
