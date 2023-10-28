@@ -38,7 +38,7 @@ async function sleep(time) {
 export class ObjectService {
   constructor(
     private prismaService: PrismaService,
-    private readonly httpService: HttpService,
+    private readonly httpService: HttpService
   ) {
     console.log('init object service');
   }
@@ -63,7 +63,7 @@ export class ObjectService {
   async createLastUpdate(
     date: string,
     platform: PLATFORM,
-    isManual = true,
+    isManual = true
   ): Promise<void> {
     await this.prismaService.tbLastUpdate.create({
       data: {
@@ -96,16 +96,13 @@ export class ObjectService {
     //     },
     //   },
     // );
-    // console.log(response.data, 'hubspot');
     const count = await this.prismaService.tbObject.count({
       where: {
         ...query.cond,
         platform: query.platform as PLATFORM,
         tbHotel: {
           ...query?.cond?.['tbHotel'],
-          disable: {
-            not: true,
-          },
+          disable: false,
         },
       },
     });
@@ -150,37 +147,37 @@ export class ObjectService {
     if (query.platform === 'GOOGLE') {
       data = await this.prismaService
         .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'GOOGLE' ORDER BY score desc OFFSET ${parseInt(
-        query.page,
+        query.page
       )} LIMIT ${parseInt(query.limit)}`;
     }
     if (query.platform === 'AGODA') {
       data = await this.prismaService
         .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'AGODA' ORDER BY score desc OFFSET ${parseInt(
-        query.page,
+        query.page
       )} LIMIT ${parseInt(query.limit)}`;
     }
     if (query.platform === 'EXPEDIA') {
       data = await this.prismaService
         .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'EXPEDIA' ORDER BY score desc OFFSET ${parseInt(
-        query.page,
+        query.page
       )} LIMIT ${parseInt(query.limit)}`;
     }
     if (query.platform === 'TRAVELOKA') {
       data = await this.prismaService
         .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRAVELOKA' ORDER BY score desc OFFSET ${parseInt(
-        query.page,
+        query.page
       )} LIMIT ${parseInt(query.limit)}`;
     }
     if (query.platform === 'TRIPCOM') {
       data = await this.prismaService
         .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'TRIPCOM' ORDER BY score desc OFFSET ${parseInt(
-        query.page,
+        query.page
       )} LIMIT ${parseInt(query.limit)}`;
     }
     if (query.platform === 'SANHN') {
       data = await this.prismaService
         .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'SANHN' ORDER BY score desc OFFSET ${parseInt(
-        query.page,
+        query.page
       )} LIMIT ${parseInt(query.limit)}`;
     }
 
@@ -234,9 +231,7 @@ export class ObjectService {
           origin.extra?.rank > newData.extra.rank ? 'U.' : 'D.'
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           //@ts-ignore
-        }Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${
-          newData.extra.rank
-        }`,
+        }Xếp hạng thay đổi từ #${origin.extra?.rank} đến #${newData.extra.rank}`
       );
     }
     if (
@@ -253,7 +248,7 @@ export class ObjectService {
         //@ts-ignore
         `${
           origin.score > newData.score ? 'D.' : 'U.'
-        }Điểm đánh giá thay đổi từ ${origin.score} đến ${newData.score}`,
+        }Điểm đánh giá thay đổi từ ${origin.score} đến ${newData.score}`
       );
     }
     for (let i = 0; i < origin.numberScoreReview.length; i++) {
@@ -269,7 +264,7 @@ export class ObjectService {
               5 - i
             } sao thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
-            } đánh giá`,
+            } đánh giá`
           );
         }
         if (origin.platform === PLATFORM.BOOKING) {
@@ -286,7 +281,7 @@ export class ObjectService {
                 : '1-3'
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
-            } đánh giá`,
+            } đánh giá`
           );
         }
         if (origin.platform === PLATFORM.SANHN) {
@@ -303,7 +298,7 @@ export class ObjectService {
                 : '1-3'
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
-            } đánh giá`,
+            } đánh giá`
           );
         }
 
@@ -313,7 +308,7 @@ export class ObjectService {
               5 - i
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
-            } đánh giá`,
+            } đánh giá`
           );
         }
         if (origin.platform === PLATFORM.AGODA) {
@@ -330,7 +325,7 @@ export class ObjectService {
                 : '1-6'
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
-            } đánh giá`,
+            } đánh giá`
           );
         }
 
@@ -348,7 +343,7 @@ export class ObjectService {
                 : '1-3'
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
-            } đánh giá`,
+            } đánh giá`
           );
         }
         if (origin.platform === PLATFORM.TRAVELOKA) {
@@ -365,7 +360,7 @@ export class ObjectService {
                 : '1-3'
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
-            } đánh giá`,
+            } đánh giá`
           );
         }
         if (origin.platform === PLATFORM.TRIPCOM) {
@@ -374,7 +369,7 @@ export class ObjectService {
               i === 0 ? 'tích cực' : 'tiêu cực'
             }đ thay đổi từ ${origin.numberScoreReview[i]} đánh giá thành ${
               newData.numberScoreReview[i]
-            } đánh giá`,
+            } đánh giá`
           );
         }
       }
@@ -410,7 +405,7 @@ export class ObjectService {
     title = '',
     tbHotelId: string,
     platform: PLATFORM,
-    object: tbObject,
+    object: tbObject
   ): Promise<void> {
     // const objLog = await this.prismaService.tbObjectLog.findFirst({
     //   where: {
@@ -439,7 +434,7 @@ export class ObjectService {
     const url = `https://api.telegram.org/bot${
       process.env.API_KEY_TELE
     }/sendMessage?chat_id=${process.env.CHAT_ID_TELE}&text=${encodeURIComponent(
-      notification_text,
+      notification_text
     )}&parse_mode=html&disable_web_page_preview=true`;
     console.log(url, object, 'url');
     this.httpService.axiosRef.get(url);
@@ -469,7 +464,7 @@ export class ObjectService {
 
   async updateObject(
     data: tbObject,
-    updatedAt: Date | undefined = undefined,
+    updatedAt: Date | undefined = undefined
   ): Promise<{ updated: tbObject; messages: string[] }> {
     const hotel = await this.prismaService.tbHotel.findFirst({
       where: {
@@ -586,7 +581,7 @@ export class ObjectService {
           isManual,
           tbObjectId: id,
           updatedAt: moment(
-            new Date(moment(updatedAt).format('YYYY-MM-DD HH:mm:ss')),
+            new Date(moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'))
           ).toDate(),
         },
       });
@@ -598,42 +593,42 @@ export class ObjectService {
     await this.createLastUpdate(
       moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
       PLATFORM.TRIP,
-      isManual,
+      isManual
     );
     await this.createLastUpdate(
       moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
       PLATFORM.BOOKING,
-      isManual,
+      isManual
     );
     await this.createLastUpdate(
       moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
       PLATFORM.GOOGLE,
-      isManual,
+      isManual
     );
     await this.createLastUpdate(
       moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
       PLATFORM.AGODA,
-      isManual,
+      isManual
     );
     await this.createLastUpdate(
       moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
       PLATFORM.EXPEDIA,
-      isManual,
+      isManual
     );
     await this.createLastUpdate(
       moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
       PLATFORM.TRAVELOKA,
-      isManual,
+      isManual
     );
     await this.createLastUpdate(
       moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
       PLATFORM.TRIPCOM,
-      isManual,
+      isManual
     );
     await this.createLastUpdate(
       moment(updatedAt).format('YYYY-MM-DD HH:mm:ss'),
       PLATFORM.SANHN,
-      isManual,
+      isManual
     );
 
     return result;
@@ -641,7 +636,7 @@ export class ObjectService {
 
   async crawlObject(
     url: string,
-    platform: PLATFORM,
+    platform: PLATFORM
   ): Promise<Objects | undefined> {
     let driver;
     try {
@@ -649,19 +644,10 @@ export class ObjectService {
       const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
       capabilities.set('tz', timezone);
-      capabilities.set('moz:firefoxOptions', {
-        args: ['--headless'],
-      });
-      // const option = new Options().addArguments('--no-proxy-server');
-      // .addArguments('--headless=new')
-      driver = await new Builder()
-        .usingServer(seleniumUrl)
-        .forBrowser('firefox')
-        .withCapabilities(capabilities)
-        .build();
+      // capabilities.set('moz:firefoxOptions', {
+      //   args: ['--headless'],
+      // });
 
-      console.log(url);
-      await driver.get(url);
       console.log('start extract');
 
       let object: Objects;
@@ -670,10 +656,26 @@ export class ObjectService {
         object = await extractDataTrip(this.httpService, platform, url);
       }
       if (platform === PLATFORM.BOOKING) {
+        driver = await new Builder()
+          .usingServer(seleniumUrl)
+          .forBrowser('firefox')
+          .withCapabilities(capabilities)
+          .build();
+
+        console.log(url, 'go to url');
+        await driver.get(url);
         object = await extractDataBoooking(driver, platform, url);
       }
 
       if (platform === PLATFORM.GOOGLE) {
+        driver = await new Builder()
+          .usingServer(seleniumUrl)
+          .forBrowser('firefox')
+          .withCapabilities(capabilities)
+          .build();
+
+        console.log(url, 'go to url');
+        await driver.get(url);
         object = await extractDataGoogle(driver, platform, url);
       }
 
@@ -694,10 +696,18 @@ export class ObjectService {
       }
 
       if (platform === PLATFORM.SANHN) {
+        driver = await new Builder()
+          .usingServer(seleniumUrl)
+          .forBrowser('firefox')
+          .withCapabilities(capabilities)
+          .build();
+
+        console.log(url, 'go to url');
+        await driver.get(url);
         object = await extractDataSanHN(driver, platform, url);
       }
 
-      await driver.quit();
+      if (driver) await driver.quit();
       console.log('crawl done', object);
       // return undefined;
       // if (platform === PLATFORM.TRIP) {
@@ -714,7 +724,7 @@ export class ObjectService {
       console.log(e, 'error');
     }
 
-    await driver.quit();
+    if (driver) await driver.quit();
     return undefined;
   }
 }

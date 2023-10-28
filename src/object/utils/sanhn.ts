@@ -8,7 +8,7 @@ import extractDataBoooking from './booking';
 const extractDataSanHN = async (
   driver: WebDriver,
   platform: PLATFORM,
-  url: string,
+  url: string
 ): Promise<Objects | undefined> => {
   const { name, score, extra, numberScoreReview, updatedAt } =
     await extractDataBoooking(driver, PLATFORM.BOOKING, url);
