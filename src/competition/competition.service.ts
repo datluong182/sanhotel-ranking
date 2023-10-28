@@ -685,7 +685,11 @@ export class CompetitionService {
     competitionOTA = competitionOTA.map((item) => {
       const { ratioInMonth, numberBookingCO, numberReviews } =
         getRatioInMonth(item);
-      const score = getScoreInMonth(item);
+      const {
+        totalScore: score,
+        scoreMinus,
+        scorePlus,
+      } = getScoreInMonth(item);
       // if (ratioInMonth >= MIN_RATIO_IN_MONTH) {
       //   score = getScoreInMonth(item);
       // }
@@ -695,32 +699,45 @@ export class CompetitionService {
         ratioInMonth,
         numberReviews,
         numberBookingCO,
+        extra: {
+          scoreMinus,
+          scorePlus,
+        },
       };
     });
 
-    competitionOTA = competitionOTA.sort((a, b) => {
-      // Nếu ptu a chưa đủ tỉ lệ chuyển đổi, ptu b đủ tỉ lệ chuyển đổi. Xếp b lên trước a
-      if (
-        a.ratioInMonth < MIN_RATIO_IN_MONTH &&
-        b.ratioInMonth >= MIN_RATIO_IN_MONTH
-      ) {
-        return 1;
-      }
+    if (
+      platforms.length !== 1 ||
+      (platforms.length === 1 &&
+        platforms[0] !== PLATFORM.TRIP &&
+        platforms[0] !== PLATFORM.GOOGLE)
+    ) {
+      competitionOTA = competitionOTA.sort((a, b) => {
+        // Nếu ptu a chưa đủ tỉ lệ chuyển đổi, ptu b đủ tỉ lệ chuyển đổi. Xếp b lên trước a
+        if (
+          a.ratioInMonth < MIN_RATIO_IN_MONTH &&
+          b.ratioInMonth >= MIN_RATIO_IN_MONTH
+        ) {
+          return 1;
+        }
 
-      // Nếu ptu a đủ tỉ lệ chuyển đổi, ptu b chưa đủ tỉ lệ chuyển đổi. Xếp a lên trước b
-      if (
-        a.ratioInMonth >= MIN_RATIO_IN_MONTH &&
-        b.ratioInMonth < MIN_RATIO_IN_MONTH
-      ) {
-        return -1;
-      }
+        // Nếu ptu a đủ tỉ lệ chuyển đổi, ptu b chưa đủ tỉ lệ chuyển đổi. Xếp a lên trước b
+        if (
+          a.ratioInMonth >= MIN_RATIO_IN_MONTH &&
+          b.ratioInMonth < MIN_RATIO_IN_MONTH
+        ) {
+          return -1;
+        }
 
-      // Nếu a và b cùng đủ tỉ lệ chuyển đổi
-      if (a.score != b.score) {
-        return b.score > a.score ? 1 : -1;
-      }
-      return b.ratioInMonth > a.ratioInMonth ? 1 : -1;
-    });
+        // Nếu a và b cùng đủ tỉ lệ chuyển đổi
+        if (a.score != b.score) {
+          return b.score > a.score ? 1 : -1;
+        }
+        return b.ratioInMonth > a.ratioInMonth ? 1 : -1;
+      });
+    } else {
+      competitionOTA = competitionOTA.sort((a, b) => b.score - a.score);
+    }
 
     return {
       objects: objectOTA,

@@ -44,7 +44,11 @@ export const getTopHotelForTrip = async (
         lastAllyHotel = object;
       }
     });
-    console.log(lastAllyHotel.name, 'lastRankAllyHotel');
+    console.log(
+      lastAllyHotel.name,
+      lastAllyHotel.extra?.['rank'],
+      'lastRankAllyHotel',
+    );
 
     // let lastRankAllyHotel = 0;
     // objectTrips.map((obj) => {

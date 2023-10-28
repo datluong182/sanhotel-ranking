@@ -7,6 +7,7 @@ import { CompetitionOTA } from '../competition.entity';
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
 export const MIN_RATIO_IN_MONTH = 0.2;
+export const SCORE_MINUS = 8;
 
 export const formatReview = (review: tbReview, type: 'add' | 'remove') => {
   let message = '';
@@ -131,6 +132,8 @@ export const getRatioInMonth = (competitionOTA: CompetitionOTA) => {
 
 export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {
   let totalScore = 0;
+  let scorePlus = 0;
+  let scoreMinus = 0;
   let numberReviews = 0;
   const numberOTA = 0;
   let isOTA = false;
@@ -138,7 +141,23 @@ export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {
     const object = competitionOTA.OTA[platform];
     if (!object) return;
     if (platform === PLATFORM.TRIP || platform === PLATFORM.GOOGLE) {
-      totalScore += object.score * parseFloat(object?.extra?.volume ?? '1');
+      let objectScorePlus = 0;
+      let objectScoreMinus = 0;
+      object.reviews.map((review) => {
+        if (platform === PLATFORM.TRIP) {
+          if (review.extra['stars'] === 5) objectScorePlus += 1;
+          if (review.extra['stars'] < 5) objectScoreMinus += 1;
+        }
+        if (platform === PLATFORM.GOOGLE) {
+          if (review.extra['score'] === 5.0) objectScorePlus += 1;
+          if (review.extra['score'] < 5.0) objectScoreMinus += 1;
+        }
+      });
+      scorePlus += objectScorePlus;
+      scoreMinus += objectScoreMinus;
+      totalScore +=
+        (scorePlus - scoreMinus * SCORE_MINUS) *
+        parseFloat(object?.extra?.volume ?? '1');
     }
     if (
       platform === PLATFORM.BOOKING ||
@@ -150,11 +169,23 @@ export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {
     ) {
       isOTA = true;
       numberReviews += object?.reviews?.length ?? 0;
-      totalScore += object.score * (platform === PLATFORM.TRIPCOM ? 2 : 1);
+      const totalScoreObject = object.reviews.reduce(
+        (sum, current) => sum + (current?.extra?.['score'] ?? 0),
+        0,
+      );
+      totalScore += totalScoreObject * (platform === PLATFORM.TRIPCOM ? 2 : 1);
     }
   });
   if (isOTA) {
-    return parseFloat(totalScore.toString()) / numberReviews;
+    return {
+      totalScore: parseFloat(totalScore.toString()) / numberReviews,
+      scoreMinus: 0,
+      scorePlus: 0,
+    };
   }
-  return totalScore;
+  return {
+    totalScore,
+    scoreMinus,
+    scorePlus,
+  };
 };

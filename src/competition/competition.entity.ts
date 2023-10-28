@@ -20,5 +20,9 @@ export interface CompetitionOTA {
   ratioInMonth: number;
   numberReviews: number;
   numberBookingCO: number;
+  extra?: {
+    scorePlus?: number;
+    scoreMinus?: number;
+  };
   OTA: { [key: string]: ObjectOTA };
 }
