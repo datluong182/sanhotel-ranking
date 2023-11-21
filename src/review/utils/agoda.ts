@@ -11,7 +11,7 @@ const api_token = process.env.API_TOKEN_APIFY;
 const extractReviewAgoda = async (
   prismaService: PrismaService,
   httpService: HttpService,
-  hotelId: string,
+  hotelId: string
 ): Promise<ReviewAgoda[] | undefined> => {
   const currentMonth = moment().get('month') + 1;
   const currentYear = moment().get('year');
@@ -23,7 +23,7 @@ const extractReviewAgoda = async (
   });
   console.log('Get datasetId Agoda', object.extra['datasetId']);
   const response = await httpService.axiosRef.get(
-    `https://api.apify.com/v2/datasets/${object.extra?.['datasetId']}/items?token=${api_token}`,
+    `https://api.apify.com/v2/datasets/${object.extra?.['datasetId']}/items?token=${api_token}`
   );
 
   const results = response?.data?.[0]?.reviews ?? [];

@@ -15,6 +15,7 @@ export interface ObjectExtra extends Prisma.JsonObject {
   totalHotel?: number;
   stars?: number;
   subScore?: { [key: string]: number };
+  roomsByDay?: RoomsByDay[] & Prisma.JsonArray;
 }
 
 export interface NewObjectLog extends tbObjectLog {
@@ -35,6 +36,18 @@ export interface InfoTrip {
     count4: number;
     count5: number;
   };
+}
+
+export interface RoomsBooking {
+  name: string;
+  typeRooms: Array<{ id: string; price: string; occupancy: number }>;
+  numberRooms: number;
+}
+
+export interface RoomsByDay {
+  checkInDate: string;
+  checkOutDate: string;
+  rooms: RoomsBooking[];
 }
 
 export interface ApifyAgoda {

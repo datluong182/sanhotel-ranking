@@ -1,14 +1,23 @@
-import { PLATFORM, TYPE_HOTEL, tbObject } from '@prisma/client';
+import { PLATFORM, Prisma, TYPE_HOTEL, tbObject } from '@prisma/client';
 import { Builder, By, Capabilities } from 'selenium-webdriver';
 import { CreateHotel } from 'src/hotel/hotel.dto';
 import { ObjectService } from 'src/object/object.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GetElement, GetElements, seleniumUrl } from 'src/utils';
+import {
+  getReviewsOtaInMonth,
+  getScoreByReviewsOtaInMonth,
+} from './reviewsOtaInMonth';
+import { getSummaryReviewInMonth } from '.';
+import { NewObjectLog } from 'src/object/object.entity';
+import * as moment from 'moment-timezone';
+
+moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
 export const urlRankHotel =
   'https://www.tripadvisor.com/Hotels-g293924-zfd9261,21371-a_ufe.true-a_sort.POPULARITY-Hanoi-Hotels.html';
 
-const compareUrlHotel = (urlA: string, urlB: string): boolean => {
+export const compareUrlHotel = (urlA: string, urlB: string): boolean => {
   const hotelIdA = urlA.split('-')?.[2]?.split('d')?.[1];
   const hotelIdB = urlB.split('-')?.[2]?.split('d')?.[1];
   return hotelIdA === hotelIdB;
@@ -16,7 +25,7 @@ const compareUrlHotel = (urlA: string, urlB: string): boolean => {
 
 export const getTopHotelForTrip = async (
   prismaService: PrismaService,
-  objectService: ObjectService,
+  objectService: ObjectService
 ): Promise<{
   url: string[];
   name: string[];
@@ -47,7 +56,7 @@ export const getTopHotelForTrip = async (
     console.log(
       lastAllyHotel.name,
       lastAllyHotel.extra?.['rank'],
-      'lastRankAllyHotel',
+      'lastRankAllyHotel'
     );
 
     // let lastRankAllyHotel = 0;
@@ -80,29 +89,29 @@ export const getTopHotelForTrip = async (
 
       const nextPageEle = await GetElement(
         driver,
-        '//a[@data-smoke-attr="pagination-next-arrow"]',
+        '//a[@data-smoke-attr="pagination-next-arrow"]'
       );
       await driver.executeScript(
         'arguments[0].scrollIntoView(true)',
-        nextPageEle,
+        nextPageEle
       );
 
       console.log('Get list hotel one page');
       const listHotelOnePageEle = await GetElements(
         driver,
-        '//span[@class="listItem"]',
+        '//span[@class="listItem"]'
       );
       console.log(listHotelOnePageEle.length, 'all list hotel one page');
 
       const titleEle = await GetElements(
         driver,
-        `//div[@data-automation="hotel-card-title"]/a/*`,
+        `//div[@data-automation="hotel-card-title"]/a/*`
       );
       console.log(titleEle.length, 'all title');
 
       const aEle = await GetElements(
         driver,
-        `//div[@data-automation="hotel-card-title"]/a`,
+        `//div[@data-automation="hotel-card-title"]/a`
       );
       console.log(aEle.length, 'all a link');
 
@@ -112,7 +121,7 @@ export const getTopHotelForTrip = async (
         let sponsoredEle = undefined;
         try {
           sponsoredEle = await listHotelOnePageEle[i].findElement(
-            By.xpath('(./span/div/div/div/div)[2]/header/div/div/div/div/span'),
+            By.xpath('(./span/div/div/div/div)[2]/header/div/div/div/div/span')
           );
         } catch (e) {}
         if (sponsoredEle) {
@@ -158,7 +167,7 @@ export const getTopHotelForTrip = async (
   console.log(
     listUrlHotelEnemy.length,
     listUrlHotelEnemy[0],
-    titleHotelEnemy[0],
+    titleHotelEnemy[0]
   );
 
   // listUrlHotelEnemy = [listUrlHotelEnemy[0]];
@@ -248,4 +257,200 @@ export const getTopHotelForTrip = async (
     name: titleHotelEnemy,
     rank: rankHotelEnemy,
   };
+};
+
+export const updateCompetitionOTABase = async (
+  prismaService: PrismaService,
+  object: tbObject,
+  currentMonth: number,
+  currentYear: number
+) => {
+  const reviews = await getReviewsOtaInMonth(
+    prismaService,
+    object,
+    false,
+    currentMonth,
+    currentYear
+  );
+
+  const totalScore = getScoreByReviewsOtaInMonth(reviews, object.platform);
+
+  const origin = await prismaService.tbCompetitionOTA.findFirst({
+    where: {
+      tbObjectId: object.id,
+      month: currentMonth,
+      year: currentYear,
+    },
+  });
+
+  console.log(
+    totalScore,
+    reviews.length,
+    object.name,
+    object.platform,
+    origin,
+    object
+  );
+
+  if (origin && origin != null) {
+    await prismaService.tbCompetitionOTA.update({
+      where: {
+        id: origin.id,
+      },
+      data: {
+        tbObjectId: object.id,
+        month: currentMonth,
+        year: currentYear,
+        score: totalScore,
+      },
+    });
+    await prismaService.tbCompetitionOTA_Review.deleteMany({
+      where: {
+        tbCompetitionOTAId: origin.id,
+      },
+    });
+    await prismaService.tbCompetitionOTA_Review.createMany({
+      data: reviews.map((review) => ({
+        tbCompetitionOTAId: origin.id,
+        tbReviewId: review.id,
+      })),
+    });
+  } else {
+    const newCompetitionOTA = await prismaService.tbCompetitionOTA.create({
+      data: {
+        tbObjectId: object?.id,
+        month: currentMonth,
+        year: currentYear,
+        score: totalScore,
+        extra: {},
+        type: TYPE_HOTEL.ALLY,
+      },
+    });
+    await prismaService.tbCompetitionOTA_Review.createMany({
+      data: reviews.map((review) => ({
+        tbCompetitionOTAId: newCompetitionOTA.id,
+        tbReviewId: review.id,
+      })),
+    });
+  }
+};
+
+export const calcCompetitionBase = async (
+  objectsLog: tbObject[] | NewObjectLog[],
+  prismaService: PrismaService,
+  currentMonth: number,
+  currentYear: number
+) => {
+  for (let i = 0; i < objectsLog.length; i++) {
+    const objectLog = objectsLog[i];
+    if (
+      objectLog.platform !== PLATFORM.TRIP
+      // objectLog.platform !== PLATFORM.BOOKING
+    ) {
+      continue;
+    }
+    const {
+      numberReviewBad,
+      reviewBadInMonth,
+      numberReviewHigh,
+      reviewHighInMonth,
+    } = await getSummaryReviewInMonth(
+      prismaService,
+      objectLog.platform,
+      objectLog.tbHotelId,
+      currentMonth,
+      currentYear
+    );
+
+    const currentDayInMont = moment().get('date');
+    let reviewHigh = [],
+      reviewBad = [];
+    console.log('Calc reivew high in month');
+    for (let i = 1; i <= currentDayInMont; i++) {
+      let sum = 0;
+      reviewHighInMonth.map((review) => {
+        if (moment(review.createdAt).get('date') === i) {
+          sum += 1;
+        }
+      });
+      reviewHigh = reviewHigh.concat(sum);
+    }
+    console.log('Calc reivew bad in month');
+    for (let i = 1; i <= currentDayInMont; i++) {
+      let sum = 0;
+      reviewBadInMonth.map((review) => {
+        if (moment(review.createdAt).get('date') === i) {
+          sum += 1;
+        }
+      });
+      reviewBad = reviewBad.concat(sum);
+    }
+
+    // Cập nhật thông tin so sánh khách sạn
+    console.log('Update competition hotel');
+    const originCompetition = await prismaService.tbCompetition.findFirst({
+      where: {
+        month: currentMonth,
+        year: currentYear,
+        tbHotelId: objectLog.tbHotelId,
+        platform: objectLog.platform,
+      },
+    });
+    await prismaService.tbCompetition.upsert({
+      where: {
+        month_year_tbHotelId_platform: {
+          month: currentMonth,
+          year: currentYear,
+          tbHotelId: objectLog.tbHotelId,
+          platform: objectLog.platform,
+        },
+      },
+      create: {
+        month: currentMonth,
+        year: currentYear,
+        extra: {
+          ...(originCompetition &&
+            originCompetition.extra && {
+              ...(originCompetition.extra as Prisma.JsonObject),
+            }),
+          ...(objectLog.platform === PLATFORM.TRIP && {
+            rank: objectLog.extra['rank'],
+            totalHotel: objectLog.extra['totalHotel'],
+          }),
+        },
+        numberReviewHighAll: objectLog.numberScoreReview[0],
+        numberReviewHigh,
+        reviewHigh,
+        numberReviewBad,
+        reviewBad,
+        score: objectLog.score,
+        tbHotelId: objectLog.tbHotelId,
+        updatedAt: new Date(),
+        platform: objectLog.platform,
+      },
+      update: {
+        month: currentMonth,
+        year: currentYear,
+        extra: {
+          ...(originCompetition &&
+            originCompetition.extra && {
+              ...(originCompetition.extra as Prisma.JsonObject),
+            }),
+          ...(objectLog.platform === PLATFORM.TRIP && {
+            rank: objectLog.extra['rank'],
+            totalHotel: objectLog.extra['totalHotel'],
+          }),
+        },
+        numberReviewHighAll: objectLog.numberScoreReview[0],
+        numberReviewHigh,
+        reviewHigh,
+        numberReviewBad,
+        reviewBad,
+        score: objectLog.score,
+        tbHotelId: objectLog.tbHotelId,
+        updatedAt: new Date(),
+        platform: objectLog.platform,
+      },
+    });
+  }
 };

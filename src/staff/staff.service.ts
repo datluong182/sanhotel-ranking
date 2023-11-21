@@ -33,7 +33,7 @@ export const checkExist = (subStr: string, str: string) => {
 export const checkAnotherExist = (
   staffId: string,
   listStaffs: tbStaff[],
-  text: string,
+  text: string
 ) => {
   let flag = false;
   listStaffs.map((staff) => {
@@ -54,7 +54,7 @@ export const checkAnotherExist = (
 
 export const checkExistMoreThanOne = (
   text: string,
-  listStaffs: tbStaff[],
+  listStaffs: tbStaff[]
 ): tbStaff[] => {
   let results: tbStaff[] = [];
   listStaffs.map((staff) => {
@@ -79,7 +79,7 @@ export const checkExistMoreThanOne = (
 export const checkIfReviewGood = (
   platform: PLATFORM,
   valueReview: number,
-  review: tbReview,
+  review: tbReview
 ) => {
   if (platform === PLATFORM.TRIP) {
     if (review.extra['stars'] === 5) {
@@ -106,7 +106,7 @@ export class StaffService {
   }
 
   async rankingByDay(
-    query: QueryRankByDayStaff,
+    query: QueryRankByDayStaff
   ): Promise<{ day: string; value: number }[]> {
     const staff = await this.prismaService.tbStaff.findFirst({
       where: {
@@ -168,7 +168,7 @@ export class StaffService {
       const tempReviews = listReviews.filter(
         (review) =>
           moment(review.createdAt).isSameOrAfter(moment(start), 'day') &&
-          moment(review.createdAt).isSameOrBefore(moment(end), 'day'),
+          moment(review.createdAt).isSameOrBefore(moment(end), 'day')
       );
 
       const result = await this.getRankingBase(
@@ -181,7 +181,7 @@ export class StaffService {
         },
         tempReviews,
         listStaffs,
-        true,
+        true
       );
 
       let rank = 0;
@@ -213,7 +213,7 @@ export class StaffService {
   }
 
   async getRankingHotelBadReview(
-    query: QueryRankingStaff,
+    query: QueryRankingStaff
   ): Promise<{ count: number; data: RankingStaffHotel[] }> {
     const listReviews = await this.prismaService.tbReview.findMany({
       where: {
@@ -262,7 +262,7 @@ export class StaffService {
 
     listHotels.map((hotel) => {
       const tempReview = listReviews.filter(
-        (review) => review.tbHotelId === hotel.id,
+        (review) => review.tbHotelId === hotel.id
       );
 
       if (hotel.name === 'San Grand Hotel') {
@@ -270,7 +270,7 @@ export class StaffService {
       }
 
       const tempStaff = listStaffs.filter(
-        (staff) => staff.tbHotelId === hotel.id,
+        (staff) => staff.tbHotelId === hotel.id
       );
 
       let tempHotel: RankingStaffHotel = {
@@ -314,7 +314,7 @@ export class StaffService {
   }
 
   async getRankingHotel(
-    query: QueryRankingStaff,
+    query: QueryRankingStaff
   ): Promise<{ count: number; data: RankingStaffHotel[] }> {
     const listReviews = await this.prismaService.tbReview.findMany({
       where: {
@@ -367,11 +367,11 @@ export class StaffService {
         platform: query.platform,
       };
       const tempReview = listReviews.filter(
-        (review) => review.tbHotelId === hotel.id,
+        (review) => review.tbHotelId === hotel.id
       );
 
       const tempStaff = listStaffs.filter(
-        (staff) => staff.tbHotelId === hotel.id,
+        (staff) => staff.tbHotelId === hotel.id
       );
 
       for (let i = 0; i < tempReview.length; i++) {
@@ -409,7 +409,7 @@ export class StaffService {
     });
 
     results = results.sort(
-      (result1, result2) => result2.fiveStarsReview - result1.fiveStarsReview,
+      (result1, result2) => result2.fiveStarsReview - result1.fiveStarsReview
     );
 
     return {
@@ -419,7 +419,7 @@ export class StaffService {
   }
 
   async getRanking(
-    query: QueryRankingStaff,
+    query: QueryRankingStaff
   ): Promise<{ count: number; data: RankingStaff[] }> {
     console.log(query, 'query');
     query.allReview = query.allReview === 'true' ? true : false;
@@ -463,7 +463,7 @@ export class StaffService {
       query,
       listReviews,
       listStaffs,
-      query.allReview,
+      query.allReview
     );
   }
 
@@ -471,7 +471,7 @@ export class StaffService {
     query: QueryRankingStaff,
     listReviews: tbReview[],
     listStaffs: tbStaff[],
-    allReview = true,
+    allReview = true
   ): Promise<{ count: number; data: RankingStaff[] }> {
     console.log(listReviews.length, query.start, query.end, 'listStaffs');
 
@@ -493,12 +493,12 @@ export class StaffService {
 
       // lấy danh sách các review khách sạn của nhân viên hiện tại
       const tempReview = listReviews.filter(
-        (review) => review.tbHotelId === staff.tbHotelId,
+        (review) => review.tbHotelId === staff.tbHotelId
       );
 
       // Lấy danh sách những nhân viên cùng khách sạn với nhân viên hiện tại
       const tempStaffs = listStaffs.filter(
-        (s) => s.tbHotelId === staff.tbHotelId,
+        (s) => s.tbHotelId === staff.tbHotelId
       );
 
       let sum = 0;

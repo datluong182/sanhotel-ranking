@@ -33,34 +33,34 @@ export class StaffController {
 
   @Post('/chart-review-by-day')
   async reviewsByDayStaff(
-    @Body() data: QueryRankByDayStaff,
+    @Body() data: QueryRankByDayStaff
   ): Promise<tbReview[]> {
     return await this.staffService.reviewsByDayStaff(data);
   }
 
   @Post('/chart-ranking-by-day')
   async rankingByDayStaff(
-    @Body() data: QueryRankByDayStaff,
+    @Body() data: QueryRankByDayStaff
   ): Promise<{ day: string; value: number }[]> {
     return await this.staffService.rankingByDay(data);
   }
 
   @Get('/ranking')
   async getRanking(
-    @Query() query: QueryRankingStaff,
+    @Query() query: QueryRankingStaff
   ): Promise<{ count: number; data: RankingStaff[] }> {
     return await this.staffService.getRanking(query);
   }
   @Get('/ranking-hotel')
   async getRankingHotel(
-    @Query() query: QueryRankingStaff,
+    @Query() query: QueryRankingStaff
   ): Promise<{ count: number; data: RankingStaffHotel[] }> {
     return await this.staffService.getRankingHotel(query);
   }
 
   @Get('/ranking-hotel/bad-review')
   async getRankingHotelBadReview(
-    @Query() query: QueryRankingStaff,
+    @Query() query: QueryRankingStaff
   ): Promise<{ count: number; data: RankingStaffHotel[] }> {
     return await this.staffService.getRankingHotelBadReview(query);
   }

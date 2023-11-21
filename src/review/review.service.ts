@@ -43,7 +43,7 @@ async function sleep(time) {
 export class ReviewService {
   constructor(
     private prismaService: PrismaService,
-    private readonly httpService: HttpService,
+    private readonly httpService: HttpService
   ) {
     console.log('init review service');
   }
@@ -83,7 +83,7 @@ export class ReviewService {
   async crawlSchedule(
     isManual = true,
     currentMonth = moment().get('month') + 1,
-    currentYear = moment().get('year'),
+    currentYear = moment().get('year')
   ): Promise<{ newReview: NewReview; month: number; year: number }> {
     let result: NewReview = {};
 
@@ -97,13 +97,17 @@ export class ReviewService {
     });
     for (let i = 0; i < listHotels.length; i++) {
       // dev
-      // if (listHotels[i].id !== 'ad85e6a3-f97d-4926-9e34-65add1617475') continue;
+      if (listHotels[i].id === 'b50f91fe-d8e0-4e61-9322-e9a9011d6597') {
+        // Hiện tại chỉ get thông tin TRIP và GOOGLE của San Dinning không get reviews.
+        continue;
+      }
+      // if (listHotels[i].id !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47') continue;
       // dev
       const hotel: tbHotel = listHotels[i];
       const temp: NewReview = await this.crawlHotel(
         hotel,
         currentMonth,
-        currentYear,
+        currentYear
       );
       result = {
         ...result,
@@ -119,9 +123,10 @@ export class ReviewService {
         result[hotel.id].TRAVELOKA.length,
         result[hotel.id].TRIPCOM.length,
         result[hotel.id].SANHN.length,
-        'Done hotel',
+        'Done hotel'
       );
     }
+
     console.log('Done crawl all hotel');
 
     // const temp: NewReview = await this.crawlHotel(listHotels[0]);
@@ -141,7 +146,7 @@ export class ReviewService {
   async crawlHotel(
     hotel: tbHotel,
     currentMonth: number,
-    currentYear: number,
+    currentYear: number
   ): Promise<NewReview> {
     console.log('Start firefox');
     const newReviewHotel: NewReview = {
@@ -165,9 +170,9 @@ export class ReviewService {
       const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
       const capabilities = Capabilities.firefox();
       capabilities.set('tz', timezone);
-      capabilities.set('moz:firefoxOptions', {
-        args: ['--headless'],
-      });
+      // capabilities.set('moz:firefoxOptions', {
+      //   args: ['--headless'],
+      // });
       // capabilities.set('browserName', 'firefox');
 
       // driver = await new Builder()
@@ -186,11 +191,12 @@ export class ReviewService {
 
           console.log('Start review TRIP');
           // crawl review trip
-          await driver.get(hotel.links[PLATFORM.TRIP]);
+          // await driver.get(hotel.links[PLATFORM.TRIP]);
           console.log(hotel.links[PLATFORM.TRIP], 'Trip');
+
           const reviewsTrip: ReviewTrip[] = await extractReviewTrip(
             driver,
-            hotel.links[PLATFORM.TRIP],
+            hotel.links[PLATFORM.TRIP]
           );
           newReviewHotel[hotel.id].TRIP = reviewsTrip;
           await this.prismaService.tbReview.deleteMany({
@@ -234,13 +240,13 @@ export class ReviewService {
           // convert url hotel booking to review hotel booking
           let urlBooking: string = hotel.links[PLATFORM.BOOKING];
           urlBooking = urlBooking.split(
-            'https://www.booking.com/hotel/vn/',
+            'https://www.booking.com/hotel/vn/'
           )?.[1];
           const pagename = urlBooking.split('.')?.[0];
           console.log(hotel.links[PLATFORM.BOOKING], 'Booking');
           const reviewsBooking: ReviewBooking[] = await extractReviewBooking(
             driver,
-            pagename,
+            pagename
           );
           newReviewHotel[hotel.id].BOOKING = reviewsBooking;
           await this.prismaService.tbReview.deleteMany({
@@ -286,7 +292,7 @@ export class ReviewService {
           const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
             driver,
             this.httpService,
-            hotel.links[PLATFORM.GOOGLE],
+            hotel.links[PLATFORM.GOOGLE]
           );
           newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
           // console.log(reviewsGoogle.length, 'reviewsGoogle');
@@ -326,7 +332,7 @@ export class ReviewService {
           const reviewsAgoda: ReviewAgoda[] = await extractReviewAgoda(
             this.prismaService,
             this.httpService,
-            hotel.id,
+            hotel.id
           );
           newReviewHotel[hotel.id].AGODA = reviewsAgoda;
           await this.prismaService.tbReview.deleteMany({
@@ -362,7 +368,7 @@ export class ReviewService {
           const reviewsExpedia: ReviewExpedia[] = await extractReviewExpedia(
             this.prismaService,
             this.httpService,
-            hotel.id,
+            hotel.id
           );
           newReviewHotel[hotel.id].EXPEDIA = reviewsExpedia;
           await this.prismaService.tbReview.deleteMany({
@@ -399,7 +405,7 @@ export class ReviewService {
             await extractReviewTraveloka(
               this.prismaService,
               this.httpService,
-              hotel.id,
+              hotel.id
             );
           newReviewHotel[hotel.id].TRAVELOKA = reviewsTraveloka;
           await this.prismaService.tbReview.deleteMany({
@@ -435,7 +441,7 @@ export class ReviewService {
           const reviewsTripcom: ReviewTripcom[] = await extractReviewTripcom(
             this.prismaService,
             this.httpService,
-            hotel.id,
+            hotel.id
           );
           newReviewHotel[hotel.id].TRIPCOM = reviewsTripcom;
           await this.prismaService.tbReview.deleteMany({
@@ -480,7 +486,7 @@ export class ReviewService {
           console.log(hotel.links[PLATFORM.SANHN], 'SanHN');
           const reviewsSanHN: ReviewSanHN[] = await extractReviewBooking(
             driver,
-            pagename,
+            pagename
           );
           newReviewHotel[hotel.id].SANHN = reviewsSanHN;
           await this.prismaService.tbReview.deleteMany({
@@ -511,7 +517,7 @@ export class ReviewService {
         }
       }
     } catch (e) {
-      console.log(e, 'error');
+      console.log(e, 'debug error');
     }
 
     return newReviewHotel;

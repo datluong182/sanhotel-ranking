@@ -106,6 +106,13 @@ export class CompetitionOTA {
   };
 }
 
+export class CalCompetition {
+  @ApiPropertyOptional({})
+  month?: string;
+  @ApiPropertyOptional({})
+  year?: string;
+}
+
 export class CalCompetitionOTA {
   @ApiPropertyOptional({})
   month?: string;

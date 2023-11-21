@@ -18,6 +18,7 @@ import {
   tbObjectLog,
 } from '@prisma/client';
 import {
+  CalCompetition,
   CalCompetitionOTA,
   QueryAllCompetition,
   QueryCompetition,
@@ -34,35 +35,40 @@ export class CompetitionController {
 
   @Get()
   async getCompetition(
-    @Query() query: QueryCompetition,
+    @Query() query: QueryCompetition
   ): Promise<tbCompetition | undefined> {
     return await this.competitionService.getCompetition(query);
   }
 
+  @Put()
+  async calcCompetition(@Body() data: CalCompetition): Promise<void> {
+    await this.competitionService.calcCompetition(data);
+  }
+
   @Get('/all')
   async getAllCompetition(
-    @Query() query: QueryAllCompetition,
+    @Query() query: QueryAllCompetition
   ): Promise<tbCompetition[]> {
     return await this.competitionService.getAllCompetition(query);
   }
 
   @Put('/ota-review')
   async updateCompetitionReviewOta(
-    @Body() data: CalCompetitionOTA,
+    @Body() data: CalCompetitionOTA
   ): Promise<void> {
     await this.competitionService.updateCompetitionReviewOta(data);
   }
 
   @Put('/ota-review/update-property')
   async updatePropertyCompetitionReviewOta(
-    @Body() data: UpdateCompetitionOTA,
+    @Body() data: UpdateCompetitionOTA
   ): Promise<void> {
     await this.competitionService.updatePropertyCompetitionOTA(data);
   }
 
   @Put('/ota-review/update-property/many')
   async updatePropertyManyCompetitionReviewOta(
-    @Body() data: UpdateCompetitionOTA[],
+    @Body() data: UpdateCompetitionOTA[]
   ): Promise<void> {
     await this.competitionService.updatePropertyManyCompetitionOTA(data);
   }

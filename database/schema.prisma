@@ -7,6 +7,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model tbConfig {
+  key   String @id
+  value Json
+}
+
 model tbHotel {
   id            String          @id @default(uuid())
   name          String
@@ -178,6 +183,7 @@ model tbCompetitionOTA {
   year       Int
   tbObjectId String
   reviews    tbCompetitionOTA_Review[]
+  type       TYPE_HOTEL?
 }
 
 model tbCompetitionOTA_Review {

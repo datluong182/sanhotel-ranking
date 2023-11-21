@@ -14,7 +14,7 @@ export class ObjectLogService {
   }
 
   async getAllObjectLog(
-    query: GetObjectLogByTime,
+    query: GetObjectLogByTime
   ): Promise<{ count: number; data: tbObjectLog[] }> {
     let result: tbObjectLog[];
     if (query.platform === PLATFORM.TRIP) {
@@ -25,7 +25,7 @@ export class ObjectLogService {
         WHERE url = ${
           query.url
         } and platform = 'TRIP' and "updatedAt"::date > ${new Date(
-        query.start,
+        query.start
       )} and "updatedAt"::date < ${new Date(query.end)}
         ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
       `;
@@ -38,7 +38,7 @@ export class ObjectLogService {
         WHERE url = ${
           query.url
         } and platform = 'BOOKING' and "updatedAt"::date > ${new Date(
-        query.start,
+        query.start
       )} and "updatedAt"::date < ${new Date(query.end)}
         ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
       `;
@@ -52,7 +52,7 @@ export class ObjectLogService {
         WHERE url = ${
           query.url
         } and platform = 'GOOGLE' and "updatedAt"::date > ${new Date(
-        query.start,
+        query.start
       )} and "updatedAt"::date < ${new Date(query.end)}
         ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
       `;
@@ -66,7 +66,7 @@ export class ObjectLogService {
         WHERE url = ${
           query.url
         } and platform = 'AGODA' and "updatedAt"::date > ${new Date(
-        query.start,
+        query.start
       )} and "updatedAt"::date < ${new Date(query.end)}
         ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
       `;
@@ -80,7 +80,7 @@ export class ObjectLogService {
         WHERE url = ${
           query.url
         } and platform = 'EXPEDIA' and "updatedAt"::date > ${new Date(
-        query.start,
+        query.start
       )} and "updatedAt"::date < ${new Date(query.end)}
         ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
       `;
@@ -94,7 +94,7 @@ export class ObjectLogService {
         WHERE url = ${
           query.url
         } and platform = 'TRAVELOKA' and "updatedAt"::date > ${new Date(
-        query.start,
+        query.start
       )} and "updatedAt"::date < ${new Date(query.end)}
         ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
       `;
@@ -108,7 +108,7 @@ export class ObjectLogService {
         WHERE url = ${
           query.url
         } and platform = 'TRIPCOM' and "updatedAt"::date > ${new Date(
-        query.start,
+        query.start
       )} and "updatedAt"::date < ${new Date(query.end)}
         ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
       `;
@@ -122,7 +122,7 @@ export class ObjectLogService {
         WHERE url = ${
           query.url
         } and platform = 'SANHN' and "updatedAt"::date > ${new Date(
-        query.start,
+        query.start
       )} and "updatedAt"::date < ${new Date(query.end)}
         ORDER BY DATE("updatedAt"), "url", "updatedAt" DESC;
       `;
@@ -135,7 +135,7 @@ export class ObjectLogService {
   }
 
   async getAllNewsfeed(
-    query: GetNewsfeedByTime,
+    query: GetNewsfeedByTime
   ): Promise<DataList<tbObjectLog>> {
     const count = await this.prismaService.tbObjectLog.count({
       where: {

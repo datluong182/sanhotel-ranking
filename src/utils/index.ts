@@ -11,13 +11,13 @@ export const nomalizeName = (name: string) => {
 
 export const GetElement = async (
   driver: WebDriver | WebElement,
-  xpath: string,
+  xpath: string
 ) => {
   try {
     let ele = undefined;
     let count = 1;
     while (true) {
-      if (count > 10) {
+      if (count > 3) {
         return null;
       }
       try {
@@ -45,13 +45,13 @@ export function getRndInteger(min: number, max: number) {
 
 export const GetElements = async (
   driver: WebDriver | WebElement,
-  xpath: string,
+  xpath: string
 ): Promise<WebElement[]> => {
   try {
     let eles = undefined;
     let count = 1;
     while (true) {
-      if (count > 10) {
+      if (count > 3) {
         return null;
       }
       try {
@@ -75,7 +75,7 @@ export const GetElements = async (
 
 export const ClickElement = async (
   driver: WebDriver,
-  ele: WebElement,
+  ele: WebElement
 ): Promise<boolean> => {
   try {
     await driver.executeScript('arguments[0].click()', ele);
@@ -90,3 +90,5 @@ export const seleniumUrl =
   process.env.NODE_ENV === 'production'
     ? process.env.SELENIUM_URL
     : process.env.SELENIUM_URL_DEV;
+
+export const CONFIG_GLOBAL = 'CONFIG_GLOBAL';

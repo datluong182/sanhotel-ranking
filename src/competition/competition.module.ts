@@ -6,6 +6,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { ReviewModule } from 'src/review/review.module';
 import { ObjectModule } from 'src/object/object.module';
 import { HttpModule } from '@nestjs/axios';
+import { ConfigModule } from 'src/config/config.module';
 // import { ObjectReviewsModule } from './objectReviews/objectReviews.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { HttpModule } from '@nestjs/axios';
     ReviewModule,
     ObjectModule,
     HttpModule,
+    ConfigModule,
   ],
   controllers: [CompetitionController],
   providers: [CompetitionService],

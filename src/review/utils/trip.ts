@@ -37,11 +37,12 @@ const monthNum = [
 
 const extractReviewTrip = async (
   driver: WebDriver,
-  url: string,
+  url: string
 ): Promise<ReviewTrip[] | undefined> => {
   let result: ReviewTrip[] = [];
   let count = 1;
   console.log('Start crawl trip');
+  await driver.get(url);
   while (true) {
     // if (count > 5) {
     //   break;
@@ -55,7 +56,7 @@ const extractReviewTrip = async (
             status: HttpStatus.BAD_REQUEST,
             detail: 'Không tìm thấy',
           },
-          HttpStatus.BAD_REQUEST,
+          HttpStatus.BAD_REQUEST
         );
       }
       reviewAreaEle = await GetElement(driver, '//div[@id="hrReviewFilters"]');
@@ -67,14 +68,14 @@ const extractReviewTrip = async (
     }
     await driver.executeScript(
       'arguments[0].scrollIntoView(true);',
-      reviewAreaEle,
+      reviewAreaEle
     );
     await driver.sleep(500);
     console.log('go to review');
 
     const languageFilterEle = await GetElement(
       driver,
-      '//label[@for="LanguageFilter_0"]',
+      '//label[@for="LanguageFilter_0"]'
     );
     // await languageFilterEle.click();
     await driver.executeScript('arguments[0].click()', languageFilterEle);
@@ -83,41 +84,41 @@ const extractReviewTrip = async (
 
     const reviewItems = await GetElements(
       driver,
-      '//div[@data-test-target="HR_CC_CARD"]',
+      '//div[@data-test-target="HR_CC_CARD"]'
     );
     console.log('get number review', reviewItems.length);
     const usernameEles = await GetElements(
       driver,
-      '//div[@data-test-target="HR_CC_CARD"]/div/div/div/span/a',
+      '//div[@data-test-target="HR_CC_CARD"]/div/div/div/span/a'
     );
     console.log('get all username review', usernameEles.length);
     const createdAtEles = await GetElements(
       driver,
-      '//div[@data-test-target="HR_CC_CARD"]/div/div/div/span[contains(text(), "wrote")]',
+      '//div[@data-test-target="HR_CC_CARD"]/div/div/div/span[contains(text(), "wrote")]'
     );
     console.log('get all createdAt review', createdAtEles.length);
     const titleEles = await GetElements(
       driver,
-      '//div[@data-test-target="review-title"]/a/span/span',
+      '//div[@data-test-target="review-title"]/a/span/span'
     );
     console.log('get all title review', titleEles.length);
     const readMoreEle = await GetElement(
       driver,
-      '//div[@data-test-target="expand-review"]',
+      '//div[@data-test-target="expand-review"]'
     );
     // Nếu có review cần mở rộng thì mở rộng
     if (readMoreEle) {
       await driver.executeScript(
         'arguments[0].scrollIntoView(true);',
-        readMoreEle,
+        readMoreEle
       );
       await driver.executeScript('arguments[0].click()', readMoreEle);
       await driver.sleep(500);
     }
     const contentEles = await driver.findElements(
       By.xpath(
-        `//div[@data-reviewId]/div/div/div[@style="max-height: none; line-break: normal; cursor: auto;"]/span/span`,
-      ),
+        `//div[@data-reviewId]/div/div/div[@style="max-height: none; line-break: normal; cursor: auto;"]/span/span`
+      )
     );
     console.log('get all content review', contentEles.length);
     const linkEles = await GetElements(driver, '//div[@data-reviewid]');
@@ -135,7 +136,7 @@ const extractReviewTrip = async (
           status: HttpStatus.BAD_REQUEST,
           detail: 'Không tìm thấy',
         },
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.BAD_REQUEST
       );
     }
 
@@ -143,6 +144,12 @@ const extractReviewTrip = async (
     let cancel = false;
 
     for (let i = 0; i < reviewItems.length; i++) {
+      await driver.executeScript(
+        'arguments[0].scrollIntoView(true)',
+        reviewItems[i]
+      );
+      await driver.sleep(1000);
+      // console.log(i, 'i');
       //stars
       const script = `return  window.getComputedStyle(document.querySelectorAll('div[data-test-target="review-rating"]')[${i}].querySelector("span"), '::after').getPropertyValue('content')`;
       const contentValue: string = await driver.executeScript(script);
@@ -158,6 +165,7 @@ const extractReviewTrip = async (
 
       const content = [await contentEles[i].getText()];
       const currentMonthName = moment().format('MMMM').substring(0, 3);
+      // console.log(await createdAtEles[i].getText(), 'createAtEle');
       const createdAtString: string = ((await createdAtEles[i].getText()) ?? '')
         .split('wrote a review')?.[1]
         ?.trim();
@@ -165,7 +173,10 @@ const extractReviewTrip = async (
       let day = '',
         monthStr = '',
         year = '';
-      if (createdAtString.search('Yesterday') === -1) {
+      if (
+        createdAtString.search('Yesterday') === -1 &&
+        createdAtString.search('Today') === -1
+      ) {
         const arr = createdAtString.split(' ');
 
         if (
@@ -189,9 +200,10 @@ const extractReviewTrip = async (
           year = arr[1].trim();
         }
       } else {
+        const subtractDay = createdAtString.search('Yesterday') !== -1 ? 1 : 0;
         day = moment()
           .set({ hour: 12, minute: 0, second: 0 })
-          .subtract(1, 'day')
+          .subtract(subtractDay, 'day')
           .get('date')
           .toString()
           .padStart(2, '0');
@@ -212,7 +224,7 @@ const extractReviewTrip = async (
 
       const createdAt = moment(
         `${day}/${monthStr}/${year} 00:00:00`,
-        'DD/MM/YYYY HH:mm:ss',
+        'DD/MM/YYYY HH:mm:ss'
       ).toDate();
       // console.log(`${day}/${monthStr}/${year}`, moment(`${day}/${monthStr}/${year} 12:00:00`, "DD/MM/YYYY HH:mm:ss").toISOString(), "trip createdAt")
 
@@ -221,16 +233,26 @@ const extractReviewTrip = async (
       if (
         moment(
           `${day}/${monthStr}/${year} 00:00:00`,
-          'DD/MM/YYYY HH:mm:ss',
+          'DD/MM/YYYY HH:mm:ss'
         ).isBefore(moment().startOf('month').set({ h: 0, m: 0, s: 0 }))
       ) {
+        console.log('Check is fav review or not?');
+        const favReviewEle = await GetElement(
+          reviewItems[i],
+          `./div/div[text()="Hotel's Favorite"]`
+        );
+        if (favReviewEle) {
+          console.log('Fav review. Continue...');
+          continue;
+        }
+
         console.log(
           'last review of month',
           moment(
             `${day}/${monthStr}/${year} 00:00:00`,
-            'DD/MM/YYYY HH:mm:ss',
+            'DD/MM/YYYY HH:mm:ss'
           ).format('DD/MM/YYYY'),
-          result[result.length - 1],
+          result[result.length - 1]
         );
         cancel = true;
         break;
@@ -243,11 +265,11 @@ const extractReviewTrip = async (
         monthCreated:
           moment(
             `${day}/${monthStr}/${year} 00:00:00`,
-            'DD/MM/YYYY HH:mm:ss',
+            'DD/MM/YYYY HH:mm:ss'
           ).get('month') + 1,
         yearCreated: moment(
           `${day}/${monthStr}/${year} 00:00:00`,
-          'DD/MM/YYYY HH:mm:ss',
+          'DD/MM/YYYY HH:mm:ss'
         ).get('year'),
         title: await titleEles[i].getText(),
         content,
@@ -271,7 +293,7 @@ const extractReviewTrip = async (
           status: HttpStatus.BAD_REQUEST,
           detail: 'Không tìm thấy',
         },
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.BAD_REQUEST
       );
     }
     const classNextBtn = await nextBtnEle.getAttribute('class');

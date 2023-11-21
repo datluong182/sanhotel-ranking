@@ -536,7 +536,7 @@ export class ObjectService {
           },
         },
         // dev
-        // tbHotelId: '242c9b2a-ccf7-4efa-b7d9-feec03af2a47',
+        // tbHotelId: 'b50f91fe-d8e0-4e61-9322-e9a9011d6597',
         // tbHotelId: 'ad85e6a3-f97d-4926-9e34-65add1617475',
         // platform: PLATFORM.AGODA,
         // dev
@@ -639,92 +639,114 @@ export class ObjectService {
     platform: PLATFORM
   ): Promise<Objects | undefined> {
     let driver;
-    try {
-      console.log('Start firefox', platform, seleniumUrl);
-      const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
-      const capabilities = Capabilities.firefox();
-      capabilities.set('tz', timezone);
-      // capabilities.set('moz:firefoxOptions', {
-      //   args: ['--headless'],
-      // });
-
-      console.log('start extract');
-
-      let object: Objects;
-
-      if (platform === PLATFORM.TRIP) {
-        object = await extractDataTrip(this.httpService, platform, url);
+    let tryAgain = 1;
+    while (true) {
+      if (tryAgain > 5) {
+        console.log('Timeout', tryAgain);
+        break;
       }
-      if (platform === PLATFORM.BOOKING) {
-        driver = await new Builder()
-          .usingServer(seleniumUrl)
-          .forBrowser('firefox')
-          .withCapabilities(capabilities)
-          .build();
+      try {
+        console.log('Start firefox', platform, seleniumUrl);
+        const timezone = 'Asia/Ho_Chi_Minh'; // Change this to the desired timezone
+        const capabilities = Capabilities.firefox();
+        capabilities.set('tz', timezone);
+        capabilities.set('moz:firefoxOptions', {
+          args: ['--headless'],
+        });
 
-        console.log(url, 'go to url');
-        await driver.get(url);
-        object = await extractDataBoooking(driver, platform, url);
+        console.log('start extract');
+
+        let object: Objects;
+
+        if (platform === PLATFORM.TRIP) {
+          object = await extractDataTrip(this.httpService, platform, url);
+        }
+        if (platform === PLATFORM.BOOKING) {
+          driver = await new Builder()
+            .usingServer(seleniumUrl)
+            .forBrowser('firefox')
+            .withCapabilities(capabilities)
+            .build();
+
+          console.log(url, 'go to url');
+          await driver.get(url);
+          object = await extractDataBoooking(
+            driver,
+            platform,
+            url,
+            seleniumUrl,
+            capabilities
+          );
+        }
+
+        if (platform === PLATFORM.GOOGLE) {
+          driver = await new Builder()
+            .usingServer(seleniumUrl)
+            .forBrowser('firefox')
+            .withCapabilities(capabilities)
+            .build();
+
+          console.log(url, 'go to url');
+          await driver.get(url);
+          object = await extractDataGoogle(driver, platform, url);
+          await driver.quit();
+        }
+
+        if (platform === PLATFORM.AGODA) {
+          object = await extractDataAgoda(platform, this.httpService, url);
+        }
+
+        if (platform === PLATFORM.EXPEDIA) {
+          object = await extractDataExpedia(platform, this.httpService, url);
+        }
+
+        if (platform === PLATFORM.TRAVELOKA) {
+          object = await extractDataTraveloka(platform, this.httpService, url);
+        }
+
+        if (platform === PLATFORM.TRIPCOM) {
+          object = await extractDataTripcom(platform, this.httpService, url);
+        }
+
+        if (platform === PLATFORM.SANHN) {
+          driver = await new Builder()
+            .usingServer(seleniumUrl)
+            .forBrowser('firefox')
+            .withCapabilities(capabilities)
+            .build();
+
+          console.log(url, 'go to url');
+          await driver.get(url);
+          object = await extractDataSanHN(
+            driver,
+            platform,
+            url,
+            seleniumUrl,
+            capabilities
+          );
+        }
+
+        console.log('crawl done', object);
+        // return undefined;
+        // if (platform === PLATFORM.TRIP) {
+        // const sleep = new Promise((resole, reject) => {
+        //   setTimeout(() => {
+        //     resole('Sleep 3s');
+        //   }, 3000);
+        // });
+        // console.log(await sleep);
+        // }
+
+        return object;
+      } catch (e) {
+        console.log(e, 'error');
+        console.log('Re-run. Try again', tryAgain);
+        if (driver) await driver.quit();
       }
-
-      if (platform === PLATFORM.GOOGLE) {
-        driver = await new Builder()
-          .usingServer(seleniumUrl)
-          .forBrowser('firefox')
-          .withCapabilities(capabilities)
-          .build();
-
-        console.log(url, 'go to url');
-        await driver.get(url);
-        object = await extractDataGoogle(driver, platform, url);
-      }
-
-      if (platform === PLATFORM.AGODA) {
-        object = await extractDataAgoda(platform, this.httpService, url);
-      }
-
-      if (platform === PLATFORM.EXPEDIA) {
-        object = await extractDataExpedia(platform, this.httpService, url);
-      }
-
-      if (platform === PLATFORM.TRAVELOKA) {
-        object = await extractDataTraveloka(platform, this.httpService, url);
-      }
-
-      if (platform === PLATFORM.TRIPCOM) {
-        object = await extractDataTripcom(platform, this.httpService, url);
-      }
-
-      if (platform === PLATFORM.SANHN) {
-        driver = await new Builder()
-          .usingServer(seleniumUrl)
-          .forBrowser('firefox')
-          .withCapabilities(capabilities)
-          .build();
-
-        console.log(url, 'go to url');
-        await driver.get(url);
-        object = await extractDataSanHN(driver, platform, url);
-      }
-
-      if (driver) await driver.quit();
-      console.log('crawl done', object);
-      // return undefined;
-      // if (platform === PLATFORM.TRIP) {
-      // const sleep = new Promise((resole, reject) => {
-      //   setTimeout(() => {
-      //     resole('Sleep 3s');
-      //   }, 3000);
-      // });
-      // console.log(await sleep);
-      // }
-
-      return object;
-    } catch (e) {
-      console.log(e, 'error');
+      tryAgain++;
     }
 
-    if (driver) await driver.quit();
+    // if (driver) await driver.quit();
     return undefined;
   }
 }
