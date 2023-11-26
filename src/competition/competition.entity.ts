@@ -19,10 +19,12 @@ export interface CompetitionOTA {
   score: number;
   ratioInMonth: number;
   numberReviews: number;
+  totalScoreNoDevice: number;
   numberBookingCO: number;
   extra?: {
     scorePlus?: number;
     scoreMinus?: number;
   };
+  tbHotelId: string;
   OTA: { [key: string]: ObjectOTA };
 }

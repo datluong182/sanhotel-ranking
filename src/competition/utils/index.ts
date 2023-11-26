@@ -42,7 +42,7 @@ export const formatReview = (review: tbReview, type: 'add' | 'remove') => {
 export const getNumberReviewHighAll = async (
   prismaService: PrismaService,
   platform: PLATFORM,
-  tbHotelId: string,
+  tbHotelId: string
 ): Promise<number> => {
   let reviews = await prismaService.tbReview.findMany({
     where: {
@@ -67,7 +67,7 @@ export const getSummaryReviewInMonth = async (
   platform: PLATFORM,
   tbHotelId: string,
   month: number,
-  year: number,
+  year: number
 ): Promise<{
   numberReviewHigh: number;
   reviewHighInMonth: tbReview[];
@@ -171,7 +171,7 @@ export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {
       numberReviews += object?.reviews?.length ?? 0;
       const totalScoreObject = object.reviews.reduce(
         (sum, current) => sum + (current?.extra?.['score'] ?? 0),
-        0,
+        0
       );
       totalScore += totalScoreObject * (platform === PLATFORM.TRIPCOM ? 2 : 1);
     }
@@ -179,12 +179,14 @@ export const getScoreInMonth = (competitionOTA: CompetitionOTA) => {
   if (isOTA) {
     return {
       totalScore: parseFloat(totalScore.toString()) / numberReviews,
+      totalScoreNoDevice: totalScore ?? 0,
       scoreMinus: 0,
       scorePlus: 0,
     };
   }
   return {
     totalScore,
+    totalScoreNoDevice: totalScore ?? 0,
     scoreMinus,
     scorePlus,
   };

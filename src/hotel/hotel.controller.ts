@@ -49,6 +49,14 @@ export class HotelController {
     return await this.hotelService.updateHotel(data);
   }
 
+  @Put('many')
+  async updateManyHotels(
+    @Body() data: UpdateHotel[]
+  ): Promise<tbHotel[] | undefined> {
+    console.log('Start');
+    return await this.hotelService.updateManyHotels(data);
+  }
+
   @Delete(':id')
   async deleteHotel(@Param('id') id: string): Promise<tbHotel> {
     return await this.hotelService.deleteHotel(id);

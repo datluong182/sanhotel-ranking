@@ -34,6 +34,14 @@ export class HotelService {
     });
   }
 
+  async updateManyHotels(data: UpdateHotel[]): Promise<tbHotel[] | undefined> {
+    let res: tbHotel[] = [];
+    for (let i = 0; i < data.length; i++) {
+      res = res.concat(await this.updateHotel(data[i]));
+    }
+    return res;
+  }
+
   async updateHotel(data: UpdateHotel): Promise<tbHotel | undefined> {
     return await this.prismaService.tbHotel.update({
       where: {
@@ -82,6 +90,7 @@ export class HotelService {
       disable: hotel.disable,
       avatar: hotel.avatar,
       address: hotel.address,
+      extra: hotel.extra,
       objects: objectsByHotel,
     };
   }

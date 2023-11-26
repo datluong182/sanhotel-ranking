@@ -729,10 +729,12 @@ export class CompetitionService {
       const hotel = hotels[i];
       let temp: CompetitionOTA = {
         name: hotel.name,
+        tbHotelId: hotel.id,
         score: 0,
         ratioInMonth: -1,
         numberBookingCO: 0,
         numberReviews: 0,
+        totalScoreNoDevice: 0,
         OTA: {},
       };
       platforms.map((platform) => {
@@ -757,6 +759,7 @@ export class CompetitionService {
         getRatioInMonth(item);
       const {
         totalScore: score,
+        totalScoreNoDevice,
         scoreMinus,
         scorePlus,
       } = getScoreInMonth(item);
@@ -769,6 +772,7 @@ export class CompetitionService {
         score,
         ratioInMonth,
         numberReviews,
+        totalScoreNoDevice,
         numberBookingCO,
         extra: {
           scoreMinus,
