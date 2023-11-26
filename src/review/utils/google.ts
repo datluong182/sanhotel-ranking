@@ -12,9 +12,8 @@ const actorId = process.env.ACTOR_ID_APIFY_GOOGLE_REVIEW;
 const api_token = process.env.API_TOKEN_APIFY;
 
 const extractReviewGoogle = async (
-  driver: WebDriver | undefined,
   httpService: HttpService,
-  url: string,
+  url: string
 ): Promise<ReviewGoogle[] | undefined> => {
   let result: ReviewGoogle[] = [];
   const currentMonth = moment().get('month') + 1;
@@ -52,7 +51,7 @@ const extractReviewGoogle = async (
       searchMatching: 'all',
       placeMinimumStars: '',
       allPlacesNoSearchAction: '',
-    },
+    }
   );
   const place: PlaceGoogle = response.data?.[0];
 

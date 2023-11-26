@@ -145,10 +145,26 @@ export class ObjectService {
       }
     }
     if (query.platform === 'GOOGLE') {
-      data = await this.prismaService
-        .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'GOOGLE' ORDER BY score desc OFFSET ${parseInt(
-        query.page
-      )} LIMIT ${parseInt(query.limit)}`;
+      if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ALLY) {
+        data = await this.prismaService
+          .$queryRaw`SELECT * FROM "tbHotel", "tbObject" WHERE "tbHotel"."type"='ALLY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'GOOGLE' ORDER BY score desc OFFSET ${
+          parseInt(query.page) * parseInt(query.limit)
+        } LIMIT ${parseInt(query.limit)}`;
+      } else if (query?.cond?.['tbHotel']?.type === TYPE_HOTEL.ENEMY) {
+        data = await this.prismaService
+          .$queryRaw`SELECT * FROM "tbHotel", "tbObject" WHERE "tbHotel"."type"='ENEMY' and "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'GOOGLE' ORDER BY score desc OFFSET ${
+          parseInt(query.page) * parseInt(query.limit)
+        } LIMIT ${parseInt(query.limit)}`;
+      } else {
+        data = await this.prismaService
+          .$queryRaw`SELECT * FROM "tbHotel", "tbObject" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'GOOGLE' ORDER BY score desc OFFSET ${
+          parseInt(query.page) * parseInt(query.limit)
+        } LIMIT ${parseInt(query.limit)}`;
+      }
+      // data = await this.prismaService
+      //   .$queryRaw`SELECT * FROM "tbObject" WHERE "platform" = 'GOOGLE' ORDER BY score desc OFFSET ${parseInt(
+      //   query.page
+      // )} LIMIT ${parseInt(query.limit)}`;
     }
     if (query.platform === 'AGODA') {
       data = await this.prismaService

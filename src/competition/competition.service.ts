@@ -58,7 +58,7 @@ import {
   getReviewsOtaInMonth,
   getScoreByReviewsOtaInMonth,
 } from './utils/reviewsOtaInMonth';
-import extractReviewTrip from 'src/review/utils/trip';
+import extractReviewTrip from 'src/review/utils/trip_old';
 import { Builder, Capabilities } from 'selenium-webdriver';
 import { CONFIG_GLOBAL, seleniumUrl } from 'src/utils';
 import { ConfigService } from 'src/config/config.service';
@@ -125,7 +125,6 @@ export class CompetitionService {
   @Cron(cronjobCrawlReviewEnv)
   async updateCompetition(): Promise<any> {
     // dev
-    // return this.objectService.craw;
     // return this.reviewService.crawlSchedule();
     // dev
 
@@ -761,6 +760,7 @@ export class CompetitionService {
         scoreMinus,
         scorePlus,
       } = getScoreInMonth(item);
+      console.log(item.name, scoreMinus, scorePlus, score);
       // if (ratioInMonth >= MIN_RATIO_IN_MONTH) {
       //   score = getScoreInMonth(item);
       // }

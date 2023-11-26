@@ -97,10 +97,6 @@ export class ReviewService {
     });
     for (let i = 0; i < listHotels.length; i++) {
       // dev
-      if (listHotels[i].id === 'b50f91fe-d8e0-4e61-9322-e9a9011d6597') {
-        // Hiện tại chỉ get thông tin TRIP và GOOGLE của San Dinning không get reviews.
-        continue;
-      }
       // if (listHotels[i].id !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47') continue;
       // dev
       const hotel: tbHotel = listHotels[i];
@@ -183,21 +179,18 @@ export class ReviewService {
 
       if (hotel.links[PLATFORM.TRIP]) {
         try {
-          driver = await new Builder()
-            .usingServer(seleniumUrl)
-            .forBrowser('firefox')
-            .withCapabilities(capabilities)
-            .build();
-
           console.log('Start review TRIP');
           // crawl review trip
           // await driver.get(hotel.links[PLATFORM.TRIP]);
           console.log(hotel.links[PLATFORM.TRIP], 'Trip');
 
           const reviewsTrip: ReviewTrip[] = await extractReviewTrip(
-            driver,
-            hotel.links[PLATFORM.TRIP]
+            this.httpService,
+            hotel.links[PLATFORM.TRIP],
+            currentMonth,
+            currentYear
           );
+          console.log(hotel, 'hotel');
           newReviewHotel[hotel.id].TRIP = reviewsTrip;
           await this.prismaService.tbReview.deleteMany({
             where: {
@@ -222,8 +215,6 @@ export class ReviewService {
         } catch (e) {
           console.log(e, 'Lỗi crawl review trip');
         } finally {
-          await driver.quit();
-          await sleep(1000);
         }
       }
 
@@ -279,23 +270,12 @@ export class ReviewService {
 
       if (hotel.links[PLATFORM.GOOGLE]) {
         try {
-          driver = await new Builder()
-            .usingServer(seleniumUrl)
-            .forBrowser('firefox')
-            .withCapabilities(capabilities)
-            .build();
-
-          console.log('Start review GOOGLE');
-          await driver.get(hotel.links[PLATFORM.GOOGLE]);
-
           console.log(hotel.links[PLATFORM.GOOGLE], 'Google');
           const reviewsGoogle: ReviewGoogle[] = await extractReviewGoogle(
-            driver,
             this.httpService,
             hotel.links[PLATFORM.GOOGLE]
           );
           newReviewHotel[hotel.id].GOOGLE = reviewsGoogle;
-          // console.log(reviewsGoogle.length, 'reviewsGoogle');
           await this.prismaService.tbReview.deleteMany({
             where: {
               tbHotelId: hotel.id,
@@ -319,8 +299,6 @@ export class ReviewService {
         } catch (e) {
           console.log(e, 'Lỗi crawl review google');
         } finally {
-          await driver.quit();
-          await sleep(1000);
         }
       }
 

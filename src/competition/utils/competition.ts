@@ -42,6 +42,10 @@ export const getTopHotelForTrip = async (
         platform: PLATFORM.TRIP,
         tbHotel: {
           type: TYPE_HOTEL.ALLY,
+          // Không tính San Dinning
+          id: {
+            not: 'b50f91fe-d8e0-4e61-9322-e9a9011d6597',
+          },
         },
       },
     });

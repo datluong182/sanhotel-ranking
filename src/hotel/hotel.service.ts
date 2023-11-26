@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import {
   PLATFORM,
   PLATFORM_RESPONSE,
@@ -12,6 +12,7 @@ import { CreateHotel, QueryFiveStars, UpdateHotel } from './hotel.dto';
 import _ from 'lodash';
 import { ObjectLogService } from 'src/object-log/objectLog.service';
 import * as moment from 'moment-timezone';
+import { HotelDetail } from './hotel.entity';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -52,12 +53,37 @@ export class HotelService {
     });
   }
 
-  async getOneHotel(id: string): Promise<tbHotel | undefined> {
-    return await this.prismaService.tbHotel.findFirst({
+  async getOneHotel(id: string): Promise<HotelDetail | undefined> {
+    const objectsByHotel = await this.prismaService.tbObject.findMany({
+      where: {
+        tbHotelId: id,
+      },
+    });
+    const hotel = await this.prismaService.tbHotel.findFirst({
       where: {
         id,
       },
     });
+    if (!hotel) {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          detail: 'Can not find hotel',
+        },
+        HttpStatus.BAD_REQUEST
+      );
+    }
+    return {
+      name: hotel.name,
+      type: hotel.type,
+      links: hotel.links,
+      id: hotel.id,
+      gm: hotel.gm,
+      disable: hotel.disable,
+      avatar: hotel.avatar,
+      address: hotel.address,
+      objects: objectsByHotel,
+    };
   }
 
   async getAllHotel(query: PagingDefault): Promise<DataList<tbHotel>> {

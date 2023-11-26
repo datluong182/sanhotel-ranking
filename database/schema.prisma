@@ -1,6 +1,6 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL_DEV")
 }
 
 generator client {
@@ -26,6 +26,7 @@ model tbHotel {
   tbCompetition tbCompetition[]
   type          TYPE_HOTEL?
   disable       Boolean?
+  extra         Json?
 }
 
 model tbStaff {

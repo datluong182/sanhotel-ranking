@@ -13,6 +13,7 @@ import { HotelService } from './hotel.service';
 import { DataList, PagingDefault, Paging } from 'src/app.dto';
 import { tbHotel, tbObjectLog } from '@prisma/client';
 import { CreateHotel, QueryFiveStars, UpdateHotel } from './hotel.dto';
+import { HotelDetail } from './hotel.entity';
 
 @ApiTags('hotel')
 @Controller('hotel')
@@ -26,13 +27,13 @@ export class HotelController {
 
   @Get('/five-stars')
   async getChartFiveStars(
-    @Query() query: QueryFiveStars,
+    @Query() query: QueryFiveStars
   ): Promise<{ dataDate: string[]; data: { name: string; data: number[] }[] }> {
     return await this.hotelService.getChartFiveStars(query);
   }
 
   @Get(':id')
-  async getOneHotel(@Param('id') id: string): Promise<tbHotel | undefined> {
+  async getOneHotel(@Param('id') id: string): Promise<HotelDetail | undefined> {
     return await this.hotelService.getOneHotel(id);
   }
 
