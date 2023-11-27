@@ -506,11 +506,11 @@ export class StaffService {
       let sum = 0;
       tempReview.map((review) => {
         review.content.map((text) => {
-          if (staff.id === '1dee72b0-5d21-4949-a567-718a164c85b4') {
-            sum += checkIfReviewGood(review.platform, 1, review);
-            tempStaff.reviews.push(review);
-            return;
-          }
+          // if (staff.id === '1dee72b0-5d21-4949-a567-718a164c85b4') {
+          //   sum += checkIfReviewGood(review.platform, 1, review);
+          //   tempStaff.reviews.push(review);
+          //   return;
+          // }
           const staffMentioned = checkExistMoreThanOne(text, tempStaffs);
           const currentStaffExist =
             staffMentioned.filter((s) => s.id === tempStaff.tbStaffId).length >
