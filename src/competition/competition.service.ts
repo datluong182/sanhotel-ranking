@@ -122,12 +122,53 @@ export class CompetitionService {
     return result;
   }
 
-  @Cron(cronjobCrawlReviewEnv)
-  async updateCompetition(): Promise<any> {
-    // dev
-    // return this.reviewService.crawlSchedule();
-    // dev
+  async sendNotiStartCrawl() {
+    try {
+      const urlStart = `https://api.telegram.org/bot${
+        process.env.API_KEY_TELE
+      }/sendMessage?chat_id=${
+        process.env.CHAT_ID_TELE
+      }&text=${encodeURIComponent(
+        'Bắt đầu'
+      )}&parse_mode=html&disable_web_page_preview=true`;
+      await this.httpService.axiosRef.get(urlStart);
+    } catch (error) {
+      console.log('Send noti Telegram Start crawl ERROR: ', error);
+    }
+  }
 
+  async sendNotiEndCrawl() {
+    try {
+      const urlEnd = `https://api.telegram.org/bot${
+        process.env.API_KEY_TELE
+      }/sendMessage?chat_id=${
+        process.env.CHAT_ID_TELE
+      }&text=${encodeURIComponent(
+        'Kết thúc'
+      )}&parse_mode=html&disable_web_page_preview=true`;
+      await this.httpService.axiosRef.get(urlEnd);
+    } catch (error) {
+      console.log('Send noti Telegram End crawl ERROR: ', error);
+    }
+  }
+
+  async sendNotiCrawlError(message: string) {
+    try {
+      const urlEnd = `https://api.telegram.org/bot${
+        process.env.API_KEY_TELE
+      }/sendMessage?chat_id=${
+        process.env.CHAT_ID_TELE
+      }&text=${encodeURIComponent(
+        'ERROR: ' + message
+      )}&parse_mode=html&disable_web_page_preview=true`;
+      await this.httpService.axiosRef.get(urlEnd);
+    } catch (error) {
+      console.log('Send noti Telegram End crawl ERROR: ', error);
+    }
+  }
+
+  @Cron(cronjobCrawlReviewEnv)
+  async crawlHotelAndReview(): Promise<void> {
     const isCrawling = await this.configService.getStatusCrawlService();
     if (isCrawling) {
       throw new HttpException(
@@ -140,18 +181,30 @@ export class CompetitionService {
     }
     await this.configService.updateStatusCrawlService(true);
 
+    const startCrawl = moment();
+    console.log('Start crawl');
+    void this.sendNotiStartCrawl();
+
+    try {
+      await this.updateCompetition();
+      console.log('Crawl hotel, review done!!', startCrawl.fromNow());
+      void this.sendNotiEndCrawl();
+    } catch (error) {
+      console.log('Crawl hotel, review ERROR!!', error);
+      void this.sendNotiCrawlError(error?.message || '');
+    }
+
+    await this.configService.updateStatusCrawlService(false);
+  }
+
+  async updateCompetition(): Promise<any> {
+    // dev
+    // return this.reviewService.crawlSchedule();
+    // dev
+
     const currentMonth = moment().get('month') + 1;
     // const currentMonth = 8;
     const currentYear = moment().get('year');
-
-    const startCrawl = moment();
-    console.log('Start crawl');
-    const urlStart = `https://api.telegram.org/bot${
-      process.env.API_KEY_TELE
-    }/sendMessage?chat_id=${process.env.CHAT_ID_TELE}&text=${encodeURIComponent(
-      'Bắt đầu'
-    )}&parse_mode=html&disable_web_page_preview=true`;
-    this.httpService.axiosRef.get(urlStart);
 
     // return await extractDataTraveloka(
     //   PLATFORM.EXPEDIA,
@@ -632,16 +685,9 @@ export class CompetitionService {
     //   });
     // }
 
-    console.log('Crawl hotel, review done!!', startCrawl.fromNow());
     console.log('Update competition ota');
-    this.updateCompetitionReviewOta({});
-    const urlEnd = `https://api.telegram.org/bot${
-      process.env.API_KEY_TELE
-    }/sendMessage?chat_id=${process.env.CHAT_ID_TELE}&text=${encodeURIComponent(
-      'Kết thúc'
-    )}&parse_mode=html&disable_web_page_preview=true`;
-    this.httpService.axiosRef.get(urlEnd);
-    await this.configService.updateStatusCrawlService(false);
+    await this.updateCompetitionReviewOta({});
+
     return {};
   }
 
