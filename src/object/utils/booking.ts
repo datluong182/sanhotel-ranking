@@ -130,7 +130,10 @@ const extractDataBoooking = async (
     await driver.sleep(1500);
     const selected = await GetElement(
       driver,
-      '//div[@id="review_score_filter"]/button/span/span[@class="review-filter-item__counter"]'
+      `(//div[@id="review_score_filter"]/div/div/ul/li/button/span[@class="review-filter-item__counter"])[${
+        i + 1
+      }]`
+      // '//div[@id="review_score_filter"]/button/span/span[@class="review-filter-item__counter"]'
     );
     if (!selected) {
       throw new HttpException(
