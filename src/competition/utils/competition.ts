@@ -158,7 +158,10 @@ export const getTopHotelForTrip = async (
   } catch (e) {
     console.log(e, 'error');
     const data: tbObject[] =
-      await prismaService.$queryRaw`SELECT * FROM "tbObject", "tbHotel" WHERE "tbHotel"."disable"!=true and "tbHotel"."id"="tbObject"."tbHotelId" and "platform" = 'TRIP' ORDER BY ("extra"->'rank') asc`;
+      await prismaService.$queryRaw`select "tbObject".* from "tbObject"
+          inner join "tbHotel" on "tbObject"."tbHotelId" = "tbHotel"."id" 
+          where "tbHotel"."disable"!=true and "tbObject"."platform" = 'TRIP'
+          ORDER BY ("tbObject"."extra"->'rank') asc`;
     await driver.quit();
     return {
       url: data.map((obj) => obj.url),
