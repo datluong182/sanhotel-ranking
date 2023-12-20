@@ -83,6 +83,6 @@ export class CompetitionController {
 
   @Get('/check-manual')
   async checkManual(): Promise<any> {
-    return await this.competitionService.updateCompetition();
+    return await this.competitionService.crawlHotelAndReview();
   }
 }
