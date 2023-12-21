@@ -1,16 +1,6 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Post,
-  Body,
-  Delete,
-  Param,
-  Put,
-  Patch,
-} from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { tbObjectLog } from '@prisma/client';
-import { DataList, Paging } from '../app.dto';
+
 import { ObjectLogService } from './objectLog.service';
 import { ApiTags } from '@nestjs/swagger';
 import { GetNewsfeedByTime, GetObjectLogByTime } from './objectLog.dto';
@@ -22,14 +12,14 @@ export class ObjectLogController {
 
   @Get()
   async getAllObjectLog(
-    @Query() query: GetObjectLogByTime,
+    @Query() query: GetObjectLogByTime
   ): Promise<{ count: number; data: tbObjectLog[] }> {
     return await this.objectService.getAllObjectLog(query);
   }
 
   @Get('/newsfeed')
   async getAllNewsfeed(
-    @Query() query: GetNewsfeedByTime,
+    @Query() query: GetNewsfeedByTime
   ): Promise<{ count: number; data: tbObjectLog[] }> {
     return await this.objectService.getAllNewsfeed(query);
   }
