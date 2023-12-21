@@ -151,9 +151,12 @@ const extractDataBoooking = async (
   for (let i = 0; i < liScore.length; i++) {
     console.log(liScore[i], 'liScore[i]');
     let text = liScore[i];
-    text = text.split('(');
-    text = text[1].split(')');
-    numberScoreReview = numberScoreReview.concat(text[0]);
+    text = text?.split('(');
+    if (text && text.length) text = text[1].split(')');
+    numberScoreReview = numberScoreReview.concat(text ? text[0] : '0');
+    if (!text) {
+      console.log('ERROR:  get booking info - numberScoreReview');
+    }
   }
 
   const subScoreWrapperEle = await GetElements(
