@@ -396,3 +396,8 @@ Temporary Items
 # Local
 .env
 dist
+
+# Benchmark Results
+postgres/
+postgres-old/
+
