@@ -9,6 +9,45 @@ export class ConfigService {
     this.updateStatusCrawlService(false);
   }
 
+  async updateConfig(key: string, value: any) {
+    const configGlobal = await this.prismaService.tbConfig.findFirst({
+      where: {
+        key,
+      },
+    });
+    if (configGlobal) {
+      await this.prismaService.tbConfig.update({
+        where: {
+          key,
+        },
+        data: {
+          value: {
+            ...(configGlobal.value as object),
+            ...value,
+          },
+        },
+      });
+    } else {
+      await this.prismaService.tbConfig.create({
+        data: {
+          key: CONFIG_GLOBAL,
+          value: {
+            ...value,
+          },
+        },
+      });
+    }
+  }
+
+  async getConfig(key: string, field: string) {
+    const configGlobal = await this.prismaService.tbConfig.findFirst({
+      where: {
+        key: CONFIG_GLOBAL,
+      },
+    });
+    return configGlobal?.value?.[field] ?? undefined;
+  }
+
   async updateStatusCrawlService(status: boolean) {
     const configGlobal = await this.prismaService.tbConfig.findFirst({
       where: {

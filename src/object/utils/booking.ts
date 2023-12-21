@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { PLATFORM, Prisma } from '@prisma/client';
 import { Builder, By, Capabilities, WebDriver } from 'selenium-webdriver';
-import { GetElement, GetElements } from 'src/utils';
+import { ClickElement, GetElement, GetElements } from 'src/utils';
 import { Objects, RoomsBooking, RoomsByDay } from '../object.entity';
 import * as moment from 'moment-timezone';
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
@@ -64,31 +64,43 @@ const extractDataBoooking = async (
   }
   const stars = starsEle.length;
 
-  console.log('get total reviews');
-  const numberReviewsEle = await GetElement(
-    driver,
-    '//button[@data-testid="read-all-actionable"]'
-  );
-  if (!numberReviewsEle) {
-    throw new HttpException(
-      {
-        status: HttpStatus.BAD_REQUEST,
-        detail: 'Không tìm thấy tổng số reviews',
-      },
-      HttpStatus.BAD_REQUEST
-    );
-  }
-  await driver.executeScript(
-    'arguments[0].scrollIntoView(true)',
-    numberReviewsEle
-  );
-  await numberReviewsEle.click();
-  // await driver.executeScript(
-  //   'arguments[0].click()',
-  //   numberReviewsEle,
+  // console.log('get total reviews');
+  // const numberReviewsEle = await GetElement(
+  //   driver,
+  //   '//button[@data-testid="read-all-actionable"]/div/span/span'
   // );
-  await driver.sleep(2000);
+  // if (!numberReviewsEle) {
+  //   throw new HttpException(
+  //     {
+  //       status: HttpStatus.BAD_REQUEST,
+  //       detail: 'Không tìm thấy tổng số reviews',
+  //     },
+  //     HttpStatus.BAD_REQUEST
+  //   );
+  // }
+  // await driver.executeScript(
+  //   'arguments[0].scrollIntoView(true)',
+  //   numberReviewsEle
+  // );
+  // await driver.sleep(1500);
+  // console.log('Click total reviews');
+  // // await driver.executeScript('arguments[0].click()', numberReviewsEle);
+  // const res = await ClickElement(driver, numberReviewsEle);
+  // if (!res) {
+  //   throw new HttpException(
+  //     {
+  //       status: HttpStatus.BAD_REQUEST,
+  //       detail: 'Không mở được drawer reviews',
+  //     },
+  //     HttpStatus.BAD_REQUEST
+  //   );
+  // }
+  console.log('Redirect url tab-review');
+  await driver.get(url + '#tab-reviews');
+  console.log('Sleep 3s');
+  await driver.sleep(3000);
 
+  console.log('Get number reviews');
   let liScore = [];
   await driver.executeScript(
     'arguments[0].scrollIntoView(true)',
@@ -109,10 +121,14 @@ const extractDataBoooking = async (
   }
   for (let i = 0; i < liScoreEles.length; i++) {
     await driver.executeScript(
+      'arguments[0].scrollIntoView(true)',
+      await GetElement(driver, '//div[@id="review_score_filter"]/button')
+    );
+    await driver.executeScript(
       'arguments[0].click()',
       await GetElement(driver, '//div[@id="review_score_filter"]/button')
     );
-    await driver.sleep(1500);
+    await driver.sleep(2000);
     const tempLiScoreEles = await GetElements(
       driver,
       '//div[@id="review_score_filter"]/div/div/ul/li/button/span[@class="review-filter-item__counter"]'
@@ -127,13 +143,10 @@ const extractDataBoooking = async (
       );
     }
     await driver.executeScript('arguments[0].click()', tempLiScoreEles[i]);
-    await driver.sleep(1500);
+    await driver.sleep(2000);
     const selected = await GetElement(
       driver,
-      `(//div[@id="review_score_filter"]/div/div/ul/li/button/span[@class="review-filter-item__counter"])[${
-        i + 1
-      }]`
-      // '//div[@id="review_score_filter"]/button/span/span[@class="review-filter-item__counter"]'
+      `//div[@id="review_score_filter"]/button/span/span[@class="review-filter-item__counter"]`
     );
     if (!selected) {
       throw new HttpException(
@@ -144,9 +157,10 @@ const extractDataBoooking = async (
         HttpStatus.BAD_REQUEST
       );
     }
+    console.log(await selected.getText(), 'debugger');
     liScore = liScore.concat(await selected.getText());
   }
-
+  console.log(liScore, 'liScore');
   let numberScoreReview = [];
   for (let i = 0; i < liScore.length; i++) {
     console.log(liScore[i], 'liScore[i]');
@@ -156,19 +170,45 @@ const extractDataBoooking = async (
     numberScoreReview = numberScoreReview.concat(text[0]);
   }
 
+  console.log('Đóng drawer');
+  const closeDrawerBtnEle = await GetElement(
+    driver,
+    '//div[@data-id="hp-reviews-sliding"]/div/div[@class="sliding-panel-widget-close-button"]'
+  );
+  if (!closeDrawerBtnEle) {
+    throw new HttpException(
+      {
+        status: HttpStatus.BAD_REQUEST,
+        detail: 'Không tìm thấy btn đóng drawer',
+      },
+      HttpStatus.BAD_REQUEST
+    );
+  }
+  await driver.executeScript(
+    'arguments[0].scrollIntoView(true)',
+    closeDrawerBtnEle
+  );
+  await driver.executeScript('arguments[0].click()', closeDrawerBtnEle);
+  await driver.sleep(1000);
+
+  console.log('Get sub scores');
   const subScoreWrapperEle = await GetElements(
     driver,
     '//div[@data-testid="PropertyReviewsRegionBlock"]/div[@class="bui-spacer--larger"]/div/div/div/div/div'
   );
-  console.log(subScoreWrapperEle.length, 'get subscores');
+  console.log(subScoreWrapperEle.length, ' subscores');
+  await driver.executeScript(
+    'arguments[0].scrollIntoView(true)',
+    subScoreWrapperEle?.[0]
+  );
   let subScore: { [key: string]: number } = {};
   for (let i = 0; i < subScoreWrapperEle.length - 1; i++) {
     if (i % 2 !== 0) continue;
     const subScoreEle = await subScoreWrapperEle[i].findElement(
-      By.xpath('./div/div/div[contains(@id, "label")]')
+      By.xpath('./div/div/div/div[contains(@id, "label")]')
     );
     const keySubScoreEle = await subScoreWrapperEle[i].findElement(
-      By.xpath('./div/div/div/span')
+      By.xpath('./div/div/div/div/span')
     );
 
     subScore = {

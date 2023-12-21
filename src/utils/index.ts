@@ -9,6 +9,10 @@ export const nomalizeName = (name: string) => {
     .trim();
 };
 
+export function getRndInteger(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
 export const GetElement = async (
   driver: WebDriver | WebElement,
   xpath: string
@@ -38,10 +42,6 @@ export const GetElement = async (
     return null;
   }
 };
-
-export function getRndInteger(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min)) + min;
-}
 
 export const GetElements = async (
   driver: WebDriver | WebElement,
@@ -77,13 +77,23 @@ export const ClickElement = async (
   driver: WebDriver,
   ele: WebElement
 ): Promise<boolean> => {
-  try {
-    await driver.executeScript('arguments[0].click()', ele);
-    return true;
-  } catch (e) {
-    console.log('Cannot click elements');
-    return false;
+  let count = 1;
+  while (count <= 5) {
+    try {
+      await driver.executeScript('arguments[0].click()', ele);
+      return true;
+    } catch (e) {
+      console.log('Cannot click elements');
+      const sleep = new Promise((resole, reject) => {
+        setTimeout(() => {
+          resole('Sleep 2s');
+        }, 2000);
+      });
+      console.log(await sleep);
+      count += 1;
+    }
   }
+  return false;
 };
 
 export const seleniumUrl =

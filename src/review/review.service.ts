@@ -32,6 +32,8 @@ import extractReviewAgoda from './utils/agoda';
 import extractReviewExpedia from './utils/expedia';
 import extractReviewTraveloka from './utils/traveloka';
 import extractReviewTripcom from './utils/tripcom';
+import { ConfigService } from 'src/config/config.service';
+import { appendLogFile, convertLog } from 'src/competition/utils/logs';
 
 const cronjobCrawlReviewEnv = process.env.CRONJOB_CRAWL_REVIEW;
 
@@ -43,7 +45,8 @@ async function sleep(time) {
 export class ReviewService {
   constructor(
     private prismaService: PrismaService,
-    private readonly httpService: HttpService
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService
   ) {
     console.log('init review service');
   }
@@ -100,6 +103,15 @@ export class ReviewService {
       // if (listHotels[i].id !== '242c9b2a-ccf7-4efa-b7d9-feec03af2a47') continue;
       // dev
       const hotel: tbHotel = listHotels[i];
+      await appendLogFile(
+        this.configService,
+        false,
+        convertLog(
+          'Crawl review hotel: ' + hotel.name,
+          'tbReview.crawlSchedule',
+          'LOG'
+        )
+      );
       const temp: NewReview = await this.crawlHotel(
         hotel,
         currentMonth,
@@ -109,21 +121,27 @@ export class ReviewService {
         ...result,
         ...temp,
       };
-      console.log(
-        hotel.name,
-        result[hotel.id].TRIP.length,
-        result[hotel.id].BOOKING.length,
-        result[hotel.id].GOOGLE.length,
-        result[hotel.id].AGODA.length,
-        result[hotel.id].EXPEDIA.length,
-        result[hotel.id].TRAVELOKA.length,
-        result[hotel.id].TRIPCOM.length,
-        result[hotel.id].SANHN.length,
-        'Done hotel'
+      await appendLogFile(
+        this.configService,
+        false,
+        convertLog(
+          [
+            'Crawl review hotel: ' + hotel.name + ' DONE',
+            `TRIP: ${result[hotel.id].TRIP.length}`,
+            `BOOKING: ${result[hotel.id].TRIP.length}`,
+            `GOOGLE: ${result[hotel.id].TRIP.length}`,
+            `AGODA: ${result[hotel.id].TRIP.length}`,
+            `EXPEDIA: ${result[hotel.id].TRIP.length}`,
+            `TRAVELOKA: ${result[hotel.id].TRIP.length}`,
+            `TRIPCOM: ${result[hotel.id].TRIP.length}`,
+            `SANHN: ${result[hotel.id].TRIP.length}`,
+            'Done crawl all hotel',
+          ],
+          'tbReview.crawlSchedule',
+          'STATUS'
+        )
       );
     }
-
-    console.log('Done crawl all hotel');
 
     // const temp: NewReview = await this.crawlHotel(listHotels[0]);
 
@@ -495,7 +513,15 @@ export class ReviewService {
         }
       }
     } catch (e) {
-      console.log(e, 'debug error');
+      await appendLogFile(
+        this.configService,
+        false,
+        convertLog(
+          'Crawl review hotel: ' + hotel.name + ' error:' + e?.message,
+          'tbReview.crawlHotel',
+          'ERROR'
+        )
+      );
     }
 
     return newReviewHotel;

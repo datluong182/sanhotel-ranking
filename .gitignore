@@ -401,3 +401,6 @@ dist
 postgres/
 postgres-old/
 
+# Log files
+logs/
+

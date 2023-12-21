@@ -15,6 +15,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - /root/sanhotel-ranking/logs:/usr/src/app/logs
   # chrome:
   #   image: selenium/node-chrome:beta
   #   container_name: chrome-ranking

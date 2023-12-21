@@ -23,6 +23,8 @@ import extractDataExpedia from './utils/expedia';
 import extractDataTraveloka from './utils/traveloka';
 import extractDataTripcom from './utils/tripcom';
 import extractDataSanHN from './utils/sanhn';
+import { ConfigService } from 'src/config/config.service';
+import { appendLogFile, convertLog } from 'src/competition/utils/logs';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -38,7 +40,8 @@ async function sleep(time) {
 export class ObjectService {
   constructor(
     private prismaService: PrismaService,
-    private readonly httpService: HttpService
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService
   ) {
     console.log('init object service');
   }
@@ -487,6 +490,15 @@ export class ObjectService {
         id: data.tbHotelId,
       },
     });
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog(
+        `Crawl tbObject ${data.name}, ${data.platform}`,
+        'objectService.updateObject',
+        'LOG'
+      )
+    );
     const object = await this.crawlObject(data.url, data.platform);
     if (!object) return undefined;
     const origin = await this.prismaService.tbObject.findFirst({
@@ -553,8 +565,8 @@ export class ObjectService {
         },
         // dev
         // tbHotelId: 'b50f91fe-d8e0-4e61-9322-e9a9011d6597',
-        // tbHotelId: 'ad85e6a3-f97d-4926-9e34-65add1617475',
-        // platform: PLATFORM.AGODA,
+        // tbHotelId: '1fbd2f84-af9b-4077-837f-0bd6134f45bc',
+        // platform: PLATFORM.BOOKING,
         // dev
       },
       include: {
@@ -570,7 +582,15 @@ export class ObjectService {
       const updated = resultCrawl?.updated ?? undefined;
       const messages = resultCrawl?.messages ?? [];
       if (!updated) {
-        console.log('Get info', listObjects[i].name, 'FAIL');
+        await appendLogFile(
+          this.configService,
+          false,
+          convertLog(
+            'Get info' + listObjects[i].name + ' FAIL',
+            'objectService.crawlSchedule',
+            'LOG'
+          )
+        );
         continue;
       }
       const temp = {
@@ -667,7 +687,7 @@ export class ObjectService {
         const capabilities = Capabilities.firefox();
         capabilities.set('tz', timezone);
         capabilities.set('moz:firefoxOptions', {
-          args: ['--headless'],
+          // args: ['--headless'],
         });
 
         console.log('start extract');
@@ -742,7 +762,15 @@ export class ObjectService {
           );
         }
 
-        console.log('crawl done', object);
+        await appendLogFile(
+          this.configService,
+          false,
+          convertLog(
+            `Crawl tbObject ${object.name}, ${object.platform} DONE`,
+            'objectService.crawlObject',
+            'LOG'
+          )
+        );
         // return undefined;
         // if (platform === PLATFORM.TRIP) {
         // const sleep = new Promise((resole, reject) => {
@@ -755,6 +783,15 @@ export class ObjectService {
 
         return object;
       } catch (e) {
+        await appendLogFile(
+          this.configService,
+          false,
+          convertLog(
+            `Crawl tbObject error: ${e?.message}`,
+            'objectService.crawlObject',
+            'ERROR'
+          )
+        );
         console.log(e, 'error');
         console.log('Re-run. Try again', tryAgain);
         if (driver) await driver.quit();

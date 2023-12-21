@@ -27,6 +27,8 @@ RUN npm run build
 COPY --chown=node:node .env .env
 COPY --chown=node:node wait-for-it.sh ./wait-for-it.sh
 
+RUN chmod 777 ./logs
+
 # Install production dependencies (omit devDependencies)
 RUN npm install --omit=dev
 

@@ -62,6 +62,7 @@ import extractReviewTrip from 'src/review/utils/trip_old';
 import { Builder, Capabilities } from 'selenium-webdriver';
 import { CONFIG_GLOBAL, seleniumUrl } from 'src/utils';
 import { ConfigService } from 'src/config/config.service';
+import { appendLogFile, convertLog } from './utils/logs';
 
 moment.tz.setDefault('Asia/Ho_Chi_Minh');
 
@@ -181,16 +182,46 @@ export class CompetitionService {
     }
     await this.configService.updateStatusCrawlService(true);
 
+    const numberCrawl =
+      (await this.configService.getConfig(CONFIG_GLOBAL, 'numberCrawl')) ?? 0;
+    console.log(numberCrawl, 'numberCrawl');
+    await this.configService.updateConfig(CONFIG_GLOBAL, {
+      numberCrawl: numberCrawl + 1,
+    });
+
+    await appendLogFile(this.configService, true);
+
     const startCrawl = moment();
-    console.log('Start crawl');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog('Start crawl', 'crawlHotelAndReview', 'LOG')
+    );
+
     void this.sendNotiStartCrawl();
 
     try {
       await this.updateCompetition();
-      console.log('Crawl hotel, review done!!', startCrawl.fromNow());
+      await appendLogFile(
+        this.configService,
+        false,
+        convertLog(
+          ['Crawl hotel, review done!!' + startCrawl.fromNow(), 'Kết thúc'],
+          'crawlHotelAndReview',
+          'STATUS'
+        )
+      );
       void this.sendNotiEndCrawl();
     } catch (error) {
-      console.log('Crawl hotel, review ERROR!!', error);
+      await appendLogFile(
+        this.configService,
+        false,
+        convertLog(
+          'Crawl hotel, review ERROR!!' + error?.message ?? '',
+          'crawlHotelAndReview',
+          'ERROR'
+        )
+      );
       void this.sendNotiCrawlError(error?.message || '');
     }
 
@@ -199,7 +230,7 @@ export class CompetitionService {
 
   async updateCompetition(): Promise<any> {
     // dev
-    // return this.reviewService.crawlSchedule();
+    // return await this.objectService.crawlSchedule();
     // dev
 
     const currentMonth = moment().get('month') + 1;
@@ -260,17 +291,37 @@ export class CompetitionService {
       this.prismaService,
       this.objectService
     );
-    console.log(urlTopHotel.length, 'rank trip');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog(
+        `Rank tripadvisor has ${urlTopHotel.length} hotels`,
+        'updateCompetition',
+        'STATUS'
+      )
+    );
     // ONLY FOR COMPETITION TRIP
 
     // Get thông tin
-    console.log('Get thông tin chung');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog(`Get info tbObject`, 'updateCompetition', 'LOG')
+    );
     const newObjectLogs: NewObjectLog[] =
       await this.objectService.crawlSchedule();
 
     // Cập nhật message cho objectLog
     let count = 0;
-    console.log('Update rank trip');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog(
+        `Update rank tripadvisor with index`,
+        'updateCompetition',
+        'LOG'
+      )
+    );
     for (let i = 0; i < newObjectLogs.length; i++) {
       const objectLog = newObjectLogs[i];
 
@@ -282,10 +333,8 @@ export class CompetitionService {
       // );
 
       if (objectLog.platform === PLATFORM.TRIP) {
-        console.log('Update rank trip', objectLog.url);
         for (let j = 0; j < urlTopHotel.length; j++) {
           if (compareUrlHotel(objectLog.url, urlTopHotel[j])) {
-            console.log('Found url', objectLog.name);
             newObjectLogs[i] = {
               ...newObjectLogs[i],
               extra: {
@@ -317,9 +366,21 @@ export class CompetitionService {
         }
       }
     }
-    console.log('Updated rank for', count, 'hotels');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog(
+        'Updated rank for' + count + 'hotels',
+        'updateCompetition',
+        'STATUS'
+      )
+    );
 
-    console.log('Get review trên CSDL');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog('Get reviews in db', 'updateCompetition', 'LOG')
+    );
     const listHotels = await this.prismaService.tbHotel.findMany();
     let oldReview: NewReview = {};
     for (let i = 0; i < listHotels.length; i++) {
@@ -420,14 +481,26 @@ export class CompetitionService {
       };
     }
 
-    console.log('Crawl review');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog('Crawl reviews', 'updateCompetition', 'LOG')
+    );
     const { newReview } = await this.reviewService.crawlSchedule(
       true,
       currentMonth,
       currentYear
     );
 
-    console.log('Update message and send noti. Only for hotel ally');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog(
+        'Update message and send noti. Only for hotel ally',
+        'updateCompetition',
+        'LOG'
+      )
+    );
     // dev check thay đổi review
     // const newObjectLogs = await this.prismaService.tbObject.findMany({
     //   where: {
@@ -465,12 +538,17 @@ export class CompetitionService {
       //   };
       // }
       // dev
-      console.log('Cập nhật message thay đổi review');
-      // Kiểm tra xem có review nào bị xoá không
-      console.log(
-        'Kiểm tra xem có rv bị xoá',
-        hotelByObjectLog.name,
-        objectLog.platform
+      await appendLogFile(
+        this.configService,
+        false,
+        convertLog(
+          [
+            'Update reviews change',
+            `Check review delete ${hotelByObjectLog.name} ${objectLog.platform}`,
+          ],
+          'updateCompetition',
+          'LOG'
+        )
       );
       for (let i = 0; i < listOld.length; i++) {
         let flag = false;
@@ -490,10 +568,14 @@ export class CompetitionService {
           }
         }
       }
-      console.log(
-        'Kiểm tra xem có rv thêm mới',
-        hotelByObjectLog.name,
-        objectLog.platform
+      await appendLogFile(
+        this.configService,
+        false,
+        convertLog(
+          `Check review delete ${hotelByObjectLog.name} ${objectLog.platform}`,
+          'updateCompetition',
+          'LOG'
+        )
       );
       for (let i = 0; i < listNew.length; i++) {
         let flag = false;
@@ -514,7 +596,15 @@ export class CompetitionService {
         }
       }
 
-      console.log('Update message objectlog');
+      await appendLogFile(
+        this.configService,
+        false,
+        convertLog(
+          `Update message change tbObjectLog`,
+          'updateCompetition',
+          'LOG'
+        )
+      );
       await this.prismaService.tbObjectLog.update({
         where: {
           id: objectLog.id,
@@ -524,7 +614,11 @@ export class CompetitionService {
         },
       });
 
-      console.log('Send noti');
+      await appendLogFile(
+        this.configService,
+        false,
+        convertLog(`Send notification changes Tele`, 'updateCompetition', 'LOG')
+      );
       if (objectLog.messages.length > 0) {
         let title = '';
         if (objectLog.platform === PLATFORM.TRIP) {
@@ -564,7 +658,11 @@ export class CompetitionService {
       }
     }
 
-    console.log('Calc reivew in month');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog(`Calc review in month`, 'updateCompetition', 'LOG')
+    );
     await calcCompetitionBase(
       newObjectLogs,
       this.prismaService,
@@ -685,7 +783,11 @@ export class CompetitionService {
     //   });
     // }
 
-    console.log('Update competition ota');
+    await appendLogFile(
+      this.configService,
+      false,
+      convertLog(`Update competition ota`, 'updateCompetition', 'LOG')
+    );
     await this.updateCompetitionReviewOta({});
 
     return {};
