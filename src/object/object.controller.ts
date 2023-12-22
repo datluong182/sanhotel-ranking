@@ -40,7 +40,7 @@ export class ObjectController {
 
   @Get('/last-update')
   async getLastUpdate(
-    @Query() query: GetLastUpdate,
+    @Query() query: GetLastUpdate
   ): Promise<{ updatedAt: Date }> {
     return await this.objectService.getLastUpdate(query);
   }
@@ -50,13 +50,13 @@ export class ObjectController {
     return await this.objectService.createLastUpdate(
       data.date,
       data.platform,
-      data.isManual,
+      data.isManual
     );
   }
 
   @Post()
   async createObjectTrip(
-    @Body() data: CreateObject,
+    @Body() data: CreateObject
   ): Promise<tbObject | undefined> {
     console.log('Start');
     return await this.objectService.createObject(data);

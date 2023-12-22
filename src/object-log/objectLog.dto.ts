@@ -4,6 +4,8 @@ import { PLATFORM } from '@prisma/client';
 export class GetObjectLogByTime {
   @ApiProperty({
     default: 'TRIP',
+    required: true,
+    enum: PLATFORM,
   })
   platform: PLATFORM;
 
@@ -47,13 +49,13 @@ export class GetNewsfeedByTime {
   end: string;
 
   @ApiProperty({
-    default: "0",
+    default: '0',
     required: true,
   })
   page: string;
 
-   @ApiProperty({
-    default: "10",
+  @ApiProperty({
+    default: '10',
     required: true,
   })
   limit: string;
